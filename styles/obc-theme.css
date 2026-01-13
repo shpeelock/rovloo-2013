@@ -1,0 +1,160 @@
+
+html {
+  background-color: black;
+}
+
+body.obc-theme {
+  background: url('../images/cssthemes/outrageous2/bkg.jpg') center 26px repeat-x #000 !important;
+}
+
+/* OBC Theme - Navigation Bar */
+body.obc-theme .site-header,
+body.obc-theme #navigation-container {
+  background: url('../images/cssthemes/outrageous2/bg-obc_header.png') repeat-x !important;
+}
+
+/* OBC Theme - Logo Button */
+body.obc-theme #navigation-container a.btn-logo,
+body.obc-theme #navigation-container a.btn-logo:visited,
+body.obc-theme #navigation-container a.btn-logo:hover {
+  background: url('../images/cssthemes/outrageous2/btn-obc_logo.png') no-repeat top !important;
+}
+
+body.obc-theme #navigation-container .HeaderDivider {
+  border-left: 1px solid #909090;
+}
+
+body.obc-theme #navigation-container a.btn-logo:hover {
+  background-position: bottom !important;
+}
+
+body.obc-theme #HeaderContainer {
+  background: url('../images/cssthemes/outrageous2/head_02.jpg') center -1px no-repeat !important;
+}
+
+body.obc-theme #Header {
+  background: transparent !important;
+}
+
+body.obc-theme .Navigation,
+body.obc-theme #MainNav {
+  background: url('../images/cssthemes/outrageous2/topNav_black.png') repeat-x #1a1a1a !important;
+}
+
+body.obc-theme #MainNav li a {
+  color: #fff !important;
+}
+
+body.obc-theme #MainNav li:hover,
+body.obc-theme #MainNav li a:hover,
+body.obc-theme #MainNav li:hover a {
+  filter: grayscale(1) !important;
+}
+
+body.obc-theme #SubNav {
+  filter: brightness(1.4) !important;
+}
+
+body.obc-theme #SubNav li a {
+  filter: brightness(0.714) !important;
+}
+
+body.obc-theme #MasterContainer {
+  background: transparent !important;
+}
+
+body.obc-theme #Container {
+  background: transparent !important;
+}
+
+body.obc-theme #page-profile {
+  background: transparent !important;
+}
+
+body.obc-theme .MyRobloxContainer {
+  color: #333 !important;
+}
+
+body.obc-theme .statsTable td {
+  color: #333 !important;
+}
+
+body.obc-theme .statsLabel {
+  color: #666 !important;
+}
+
+body.obc-theme .statsValue {
+  color: #333 !important;
+}
+
+body.obc-theme .StandardBox a,
+body.obc-theme .StandardBoxWhite a {
+  color: #00f !important;
+}
+
+body.obc-theme .BadgeLabel a {
+  color: #333 !important;
+}
+
+body.obc-theme .UserBlurb {
+  color: #333 !important;
+}
+
+body.obc-theme #ProfileHeader {
+  color: #fff !important;
+}
+
+body.obc-theme #UserProfileURL {
+  color: #06c !important;
+}
+
+body.obc-theme .UserOfflineMessage {
+  color: #666 !important;
+}
+
+body.obc-theme .UserOnlineMessage {
+  color: green !important;
+}
+
+body.obc-theme .AssetDetails {
+  color: #333 !important;
+}
+
+body.obc-theme .AssetCreator {
+  color: #666 !important;
+}
+
+body.obc-theme .PlaceItem .PlaceName a {
+  color: #00f !important;
+}
+
+body.obc-theme .PlaceItem .PlaceStats {
+  color: #666 !important;
+}
+
+body.obc-theme #NoPlaces,
+body.obc-theme #NoFriends,
+body.obc-theme #NoFavorites,
+body.obc-theme #NoGroups,
+body.obc-theme #NoBadges,
+body.obc-theme #NoRobloxBadges {
+  color: #666 !important;
+}
+
+body.obc-theme #FavoritesPageInfo {
+  color: #333 !important;
+}
+
+body.obc-theme #Footer {
+  background-color: #1a1a1a !important;
+  border-top-color: #333 !important;
+}
+
+body.obc-theme #Footer,
+body.obc-theme #Footer a {
+  color: #888 !important;
+}
+
+body.obc-theme #Footer a:hover {
+  color: #aaa !important;
+}

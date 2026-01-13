@@ -1,0 +1,13 @@
+{
+  "id": "bIMp2tdKjozOHVzeTxTr23B6f3VKWvhM",
+  "name": "2013 ROBLOX: Rovloo Edition",
+  "description": "Recreation/Port of the 2013 ROBLOX website",
+  "version": "1.0.0",
+  "author": "shpeelock",
+  "entry": "index.html",
+  "era": "2013",
+  "preview": "preview.png",
+  "supports": {
+    "seasonal": ["default", "halloween", "thanksgiving", "christmas"]
+  }
+}

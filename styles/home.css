@@ -1,0 +1,507 @@
+/**
+ * 2013 ROBLOX Home Page Styles
+ * 3-column layout matching the original 2013 design
+ */
+
+/* ============================================
+   HOME CONTAINER - Main wrapper
+   ============================================ */
+
+.home-container {
+    width: 970px;
+    margin: 0 auto;
+    padding: 10px 0;
+    background: #f2f2f2;
+    overflow: hidden;
+}
+
+/* Greeting */
+.home-container .home-greeting {
+    padding: 0 0 10px 0;
+}
+
+.home-container .home-greeting h1 {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* ============================================
+   LEFT COLUMN - Avatar, News, Friends
+   ============================================ */
+
+.home-container .left-column {
+    float: left;
+    width: 220px;
+    margin-right: 10px;
+    box-sizing: border-box;
+}
+
+.home-container .left-column-boxes {
+    background: #fff;
+    border: 1px solid #d4d4d4;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.home-container .left-column-boxes h3 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin: 0 0 10px 0;
+    padding: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+/* User Avatar Container */
+.home-container .user-avatar-container {
+    text-align: center;
+}
+
+.home-container .user-avatar-holder {
+    margin-bottom: 10px;
+}
+
+.home-container .user-avatar {
+    display: block;
+}
+
+.home-container .user-avatar-image {
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+}
+
+.home-container #UserInfo {
+    font-size: 12px;
+    text-align: center;
+}
+
+.home-container #UserInfo a.text-link {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.home-container #UserInfo a.text-link:hover {
+    text-decoration: underline;
+}
+
+/* News Feed */
+.home-container .news-container {
+    font-size: 12px;
+}
+
+.home-container .roblox-news-feed {
+    margin-bottom: 10px;
+}
+
+.home-container .roblox-news-feed-item {
+    background: url('../images/BulletPointArrow.png') no-repeat center left;
+    padding-left: 13px;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.home-container .roblox-news-feed-item a {
+    color: #0066cc;
+    text-decoration: none;
+    font-size: 11px;
+}
+
+.home-container .roblox-news-feed-item a:hover {
+    text-decoration: underline;
+}
+
+.home-container .SeeMore {
+    color: #0066cc;
+    text-decoration: none;
+    font-size: 11px;
+}
+
+.home-container .see-more-img {
+    display: none; /* Hide broken image */
+}
+
+/* CSS-based arrow for See More links */
+.home-container .SeeMore::after,
+.home-container #SeeMoreRecent a::after {
+    content: "►";
+    font-size: 8px;
+    margin-left: 3px;
+    vertical-align: middle;
+}
+
+/* Best Friends */
+.home-container .best-friends-title {
+    float: left;
+    margin: 0 !important;
+    border: none !important;
+    padding-bottom: 0 !important;
+}
+
+.home-container .edit-friends-button {
+    float: right;
+}
+
+.home-container .edit-friends-button .btn-small {
+    font-size: 10px;
+    padding: 2px 8px;
+    background: #e0e0e0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.home-container .edit-friends-button .btn-small:hover {
+    background: #d0d0d0;
+}
+
+.home-container .best-friends-container {
+    margin-top: 10px;
+}
+
+.home-container .best-friends .user {
+    display: flex;
+    align-items: flex-start;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.home-container .best-friends .user:last-child {
+    border-bottom: none;
+}
+
+.home-container .best-friends .user .roblox-avatar-image {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.home-container .best-friends .user .roblox-avatar-image img {
+    width: 48px;
+    height: 48px;
+    border: 1px solid #ccc;
+}
+
+.home-container .best-friends .user .info {
+    flex: 1;
+    min-width: 0;
+    font-size: 11px;
+}
+
+.home-container .best-friends .user .info .name {
+    color: #0066cc;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-container .best-friends .user .info .name:hover {
+    text-decoration: underline;
+}
+
+.home-container .best-friends .user .info .status {
+    color: #666;
+    font-style: italic;
+    font-size: 10px;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-container .best-friends .user .info img {
+    width: 10px;
+    height: 10px;
+    vertical-align: middle;
+    margin-right: 3px;
+}
+
+/* Stats Container */
+.home-container .stats-container {
+    font-size: 12px;
+}
+
+.home-container .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.home-container .stat-row:last-child {
+    border-bottom: none;
+}
+
+.home-container .stat-label {
+    color: #666;
+}
+
+.home-container .stat-value {
+    font-weight: bold;
+    color: #333;
+}
+
+/* ============================================
+   MIDDLE COLUMN - Status & Feed
+   ============================================ */
+
+.home-container .middle-column {
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.home-container .middle-column-box {
+    background: transparent;
+    margin-bottom: 10px;
+}
+
+/* Status Update Box */
+.home-container .status-update {
+    background: #e8f4fc;
+    border: 1px solid #b8d4e8;
+}
+
+.home-container .status-textbox {
+    width: calc(100% - 80px);
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 12px;
+    float: left;
+    box-sizing: border-box;
+}
+
+.home-container .share-button {
+    float: right;
+    padding: 8px 15px;
+    background: linear-gradient(to bottom, #5c9fd4, #3a7ab0);
+    border: 1px solid #2a6a9f;
+    border-radius: 3px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.home-container .share-button:hover {
+    background: linear-gradient(to bottom, #6cafdf, #4a8ac0);
+}
+
+.home-container .status-update-image {
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+/* Feed Container */
+.home-container .feed-container h2 {
+    font-size: 30px;
+    font-weight: normal;
+    color: black;
+    margin: 0 0 10px 0;
+    padding: 0 0 5px 0;
+}
+
+.home-container #FeedPanel {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Feed Items */
+.home-container .feed-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 0;
+    background: #e8e8e8;
+    border-bottom: 1px solid #eee;
+}
+
+.home-container .feed-item:last-child {
+    border-bottom: none;
+}
+
+.home-container .feed-image-container {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.home-container .feed-image-container img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border: 1px solid #ccc;
+}
+
+.home-container .feed-text-container {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+}
+
+.home-container .feed-text-container a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.home-container .feed-text-container a:hover {
+    text-decoration: underline;
+}
+
+.home-container .Feedtext {
+    font-style: italic;
+    color: #333;
+    margin: 3px 0;
+}
+
+/* ============================================
+   RIGHT COLUMN - Recent Games
+   ============================================ */
+
+.home-container .right-column {
+    float: right;
+    width: 230px;
+    box-sizing: border-box;
+}
+
+.home-container .right-column-box {
+    background: #fff;
+    border: 1px solid #d4d4d4;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+/* Recently Played & Recommended - transparent background like original */
+.home-container #RecentlyVisitedPlacesContainer,
+.home-container #RecommendedGamesContainer {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.home-container .right-column-box h3 {
+    font-size: 15px;
+    font-weight: bold;
+    color: #363636;
+    margin: 0;
+    padding: 0 0 6px 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+/* Recent Place Container */
+.home-container .recent-place-container {
+    display: flex;
+    align-items: flex-start;
+    border-bottom: 1px solid #eee;
+}
+
+.home-container .recent-place-container:last-child {
+    border-bottom: none;
+}
+
+.home-container .recent-place-thumb {
+    width: 80px;
+    height: 45px;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.home-container .recent-place-thumb img,
+.home-container .recent-place-thumb-img {
+    width: 80px;
+    height: 45px;
+    object-fit: cover;
+    border: 1px solid #ccc;
+}
+
+.home-container .recent-place-Info {
+    flex: 1;
+    min-width: 0;
+}
+
+.home-container .recent-place-name {
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-container .recent-place-name a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.home-container .recent-place-name a:hover {
+    text-decoration: underline;
+}
+
+.home-container .recent-place-players-online {
+    font-size: 10px;
+    color: #666;
+    margin-top: 3px;
+}
+
+.home-container .recent-place-playtime {
+    font-size: 10px;
+    color: #999;
+    margin-top: 2px;
+}
+
+#SeeMoreRecent {
+    margin-top: 10px;
+    text-align: right;
+}
+
+#SeeMoreRecent a {
+    color: #0066cc;
+    text-decoration: none;
+    font-size: 11px;
+}
+
+#SeeMoreRecent a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.home-container .clear {
+    clear: both;
+}
+
+.home-container .text {
+    font-size: 12px;
+    color: #333;
+}
+
+.home-container .text-link {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.home-container .text-link:hover {
+    text-decoration: underline;
+}
+
+/* Group shout feed items */
+.home-container .feed-item-shout {
+    background: #fffef0;
+}
+
+/* Rovloo notification feed items */
+.home-container .feed-item-rovloo {
+    background: #f0f8ff;
+}

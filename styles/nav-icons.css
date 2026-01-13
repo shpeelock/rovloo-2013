@@ -1,0 +1,77 @@
+/**
+ * 2013 Navigation Icon Overrides
+ * This file MUST load last to override the original CSS absolute paths
+ */
+
+/* Base icon styles */
+#navigation-container .icons,
+.site-header .icons,
+#AlertSpace .icons {
+    height: 20px !important;
+    width: 20px !important;
+    display: inline-block !important;
+    float: left !important;
+    margin: -3px 2px -15px 2px !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Message icon - position: top (0) */
+#navigation-container .message_icon,
+.site-header .message_icon,
+#AlertSpace .message_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 0 !important;
+    height: 20px !important;
+    width: 20px !important;
+    display: inline-block !important;
+}
+
+#navigation-container .MessageAlert:hover .message_icon,
+.site-header .MessageAlert:hover .message_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 -20px !important;
+}
+
+/* Friends icon - original uses 0 160px, try -40px */
+#navigation-container .friends_icon,
+.site-header .friends_icon,
+#AlertSpace .friends_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 -40px !important;
+    height: 20px !important;
+    width: 20px !important;
+    display: inline-block !important;
+}
+
+#navigation-container .FriendsAlert:hover .friends_icon,
+.site-header .FriendsAlert:hover .friends_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 -60px !important;
+}
+
+/* Robux icon - try -80px */
+#navigation-container .robux_icon,
+.site-header .robux_icon,
+#AlertSpace .robux_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 -80px !important;
+    height: 20px !important;
+    width: 20px !important;
+    display: inline-block !important;
+}
+
+#navigation-container .RobuxAlert:hover .robux_icon,
+.site-header .RobuxAlert:hover .robux_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 -100px !important;
+}
+
+/* Tickets icon - try -120px */
+#navigation-container .tickets_icon,
+.site-header .tickets_icon,
+#AlertSpace .tickets_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 -120px !important;
+    height: 20px !important;
+    width: 20px !important;
+    display: inline-block !important;
+    margin-left: 0 !important;
+}
+
+#navigation-container .TicketsAlert:hover .tickets_icon,
+.site-header .TicketsAlert:hover .tickets_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 -140px !important;
+}

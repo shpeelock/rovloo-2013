@@ -1,0 +1,61 @@
+{
+  "description": "2013 ROBLOX Theme Asset Mapping",
+  "generated": "2026-01-12T10:17:36.960Z",
+  "css": [
+    {
+      "original": "https://www.roblox.com/CSS/Base/CSS/FetchCSS?path=main___9f842fd9a1a7173bd52d5de5563566b8_m.css",
+      "local": "CSS/2013/main-2013.css"
+    },
+    {
+      "original": "https://www.roblox.com/CSS/Base/CSS/FetchCSS?path=page___bd540dc4bbc3cb88bfd00f03ec91d022_m.css",
+      "local": "CSS/2013/page-2013.css"
+    }
+  ],
+  "ui_assets": [
+    {
+      "original_hash": "8ed6b064a35786706f738c0858345c11.png",
+      "local": "images/2013/icon-13plus.png",
+      "description": "icon 13plus"
+    },
+    {
+      "original_hash": "efe86a4cae90d4c37a5d73480dea4cb1.png",
+      "local": "images/2013/icon-see-more.png",
+      "description": "icon see more"
+    },
+    {
+      "original_hash": "3a3aa21b169be06d20de7586e56e3739.png",
+      "local": "images/2013/icon-offline.png",
+      "description": "icon offline"
+    },
+    {
+      "original_hash": "4ec0c6c40a454f2f6537946d00f09b56.png",
+      "local": "images/2013/facebook-connect.png",
+      "description": "facebook connect"
+    },
+    {
+      "original_hash": "ec4e85b0c4396cf753a06fade0a8d8af.gif",
+      "local": "images/2013/loading-spinner.gif",
+      "description": "loading spinner"
+    },
+    {
+      "original_hash": "1ea8de3b0f71a67b032b67ddc1770c78.png",
+      "local": "images/2013/icon-report-abuse.png",
+      "description": "icon report abuse"
+    },
+    {
+      "original_hash": "164e80229d83c8b6e55b1eb671887e54.png",
+      "local": "images/2013/icon-online-chat.png",
+      "description": "icon online chat"
+    },
+    {
+      "original_hash": "8a762994af1e122de8ac427005ac3d9b.png",
+      "local": "images/2013/icon-close-chat.png",
+      "description": "icon close chat"
+    },
+    {
+      "original_hash": "e998fb4c03e8c2e30792f2f3436e9416.gif",
+      "local": "images/2013/progress-spinner.gif",
+      "description": "progress spinner"
+    }
+  ]
+}

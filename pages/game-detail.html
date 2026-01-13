@@ -1,0 +1,287 @@
+<!-- Game Detail Page - Authentic 2013 Theme -->
+<div id="BodyWrapper">
+    <div id="RepositionBody">
+        <div id="Body" style="width:970px; margin:0 auto;">
+            <div id="ItemContainer" class="PlaceItemContainer new-game-page" style="margin-left:15px; width:940px; position:relative;">
+                <div id="Item" class="place-item redesign body" style="display:flex; flex-wrap:wrap;">
+                    <!-- Header - Full Width -->
+                    <div class="item-header" style="width:100%;">
+                        <h2 id="GameTitle" class="notranslate" style="display:inline; font-size:18px; margin:0;">Loading...</h2>
+                    </div>
+
+                    <!-- Left Column (500px) -->
+                    <div class="left-col-2013" style="width:500px; margin-right:20px;">
+                        <!-- Thumbnail -->
+                        <div class="item-media" style="position:relative; margin-bottom:16px; width:500px;">
+                            <a id="GameThumbnailLink" title="" style="display:block;">
+                                <img id="GameThumbnail" src="images/spinners/spinner100x100.gif" alt="Game Thumbnail" style="width:500px; height:280px; border:1px solid #eee; display:block;"/>
+                            </a>
+                        </div>
+
+                        <!-- Actions: Favorite + Voting -->
+                        <div class="actions logged-out" style="position:relative; height:22px; margin-bottom:24px;">
+                            <div class="favorite" style="position:absolute; top:0; left:0;">
+                                <a id="FavoriteStar" class="AddRemoveFavorite" title="Add to favorites" style="display:block; width:21px; height:17px; cursor:pointer;"></a>
+                            </div>
+                            <div class="voting voting-panel" style="position:absolute; top:0; left:44px;">
+                                <div class="users-vote" style="float:left;">
+                                    <a id="VoteUpButton" class="upvote" title="Like this game" style="display:block; float:left; width:22px; height:21px; cursor:pointer;"></a>
+                                    <a id="VoteDownButton" class="downvote" title="Dislike this game" style="display:block; float:left; width:22px; height:21px; margin-left:5px; cursor:pointer;"></a>
+                                </div>
+                                <div class="vote-summary" style="float:left; margin-left:10px; font-size:11px; line-height:16px; white-space:nowrap;">
+                                    <span class="tiny-thumbs-up" style="display:inline-block; width:12px; height:10px; margin-right:3px; vertical-align:middle; background:url('images/Icons/thumbsup.png') no-repeat 0 -170px;"></span><span style="color:#666; vertical-align:middle;">Thumbs up: </span><span id="VoteUpCount" style="vertical-align:middle;">0</span>
+                                    <span style="margin:0 8px; color:#666;">|</span>
+                                    <span style="color:#666; vertical-align:middle;">Thumbs down: </span><span id="VoteDownCount" style="vertical-align:middle;">0</span><span class="tiny-thumbs-down" style="display:inline-block; width:12px; height:10px; margin-left:3px; vertical-align:middle; background:url('images/Icons/thumbsup.png') no-repeat 0 -182px;"></span>
+                                    <div class="visual-container" style="position:relative; width:100%; height:5px; margin-top:5px; clear:both;">
+                                        <div class="background" style="position:absolute; width:100%; height:5px; background:#CE645B;"></div>
+                                        <div id="VoteBarLikes" class="percent" style="position:absolute; width:0; height:5px; background:#52A846;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="description notranslate" style="margin:24px 0;">
+                            <pre id="GameDescription" style="margin:0; white-space:pre-wrap; word-wrap:break-word; font-family: Arial,Helvetica,sans-serif; font-size:14px; line-height:1.4em;">No description available.</pre>
+                        </div>
+
+                        <!-- Badges/Gamepasses Section -->
+                        <div class="facebook-like">
+                            <div id="BadgesGamepassesSection">
+                                <div style="display:flex; gap:2px; margin-bottom:-1px;">
+                                    <div id="BadgesTab" class="tab-2013 tab-2013-active" style="display:inline-block; padding:5px 10px; background:#fff; border:1px solid #ccc; border-bottom:1px solid #fff; font-size:11px; cursor:pointer; position:relative; z-index:1;">
+                                        <span>Badges</span>
+                                    </div>
+                                    <div id="GamepassesTab" class="tab-2013" style="display:inline-block; padding:5px 10px; background:#f0f0f0; border:1px solid #ccc; border-bottom:none; font-size:11px; cursor:pointer;">
+                                        <span>Gamepasses</span>
+                                    </div>
+                                </div>
+                                <div class="box-2013" style="background:#fff; border:1px solid #ccc; padding:8px; min-height:50px;">
+                                    <div id="BadgesContent">
+                                        <div id="BadgesLoading" style="text-align:center; padding:10px;">
+                                            <img src="images/spinners/spinner16x16.gif" alt="Loading..."/>
+                                        </div>
+                                        <div id="BadgesList" style="display:none;"></div>
+                                        <div id="NoBadges" style="display:none; text-align:center; color:#666; padding:10px;">
+                                            This game has no badges.
+                                        </div>
+                                    </div>
+                                    <div id="GamepassesContent" style="display:none;">
+                                        <div id="GamepassesFilter" style="display:none; padding:5px 10px; border-bottom:1px solid #eee; font-size:11px;">
+                                            <label style="cursor:pointer; margin-right:15px;">
+                                                <input type="checkbox" id="HideOffsaleGamepasses" checked style="vertical-align:middle;"/>
+                                                Hide off-sale
+                                            </label>
+                                            <span style="margin-right:5px;">Show:</span>
+                                            <select id="GamepassOwnershipFilter" style="font-size:11px; padding:2px;">
+                                                <option value="all">All</option>
+                                                <option value="owned">Owned</option>
+                                                <option value="notowned">Not Owned</option>
+                                            </select>
+                                        </div>
+                                        <div id="GamepassesLoading" style="text-align:center; padding:10px;">
+                                            <img src="images/spinners/spinner16x16.gif" alt="Loading..."/>
+                                        </div>
+                                        <div id="GamepassesList" style="display:none;"></div>
+                                        <div id="NoGamepasses" style="display:none; text-align:center; color:#666; padding:10px;">
+                                            This game has no gamepasses.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column (240px) -->
+                    <div class="right-col-2013" style="width:240px;">
+                        <!-- Builder Section -->
+                        <div class="builder divider-bottom" style="padding-bottom:8px; margin-bottom:16px; border-bottom:1px solid #e3e3e3; overflow:hidden;">
+                            <div class="builder-image" style="width:50px; height:50px; float:left;">
+                                <a id="CreatorAvatarLink" href="#">
+                                    <img id="CreatorAvatar" src="images/spinners/spinner100x100.gif" alt="Creator" style="width:50px; height:50px;"/>
+                                </a>
+                            </div>
+                            <div class="builder-name" style="float:left; margin-left:10px; width:165px; overflow:hidden;">
+                                <span style="display:block; font-size:12px; color:#666;">Builder:</span>
+                                <a id="CreatorLink" href="#" style="color: #095fb5; font-weight:bold; text-decoration:none;">Loading...</a>
+                            </div>
+                            <div style="clear:both;"></div>
+                        </div>
+
+                        <!-- Play Button - Authentic 2013 Style -->
+                        <div class="buttons" style="text-align:center; padding-bottom:16px;">
+                            <div class="VisitButtonsLeft Centered">
+                                <div id="VisitButton" class="VisitButton VisitButtonPlay" placeid="">
+                                    <a id="PlayButton" class="btn-medium btn-primary">
+                                        <span class="btn-text">Play</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="PlayStatus" style="margin-top:10px; color:#666; font-size:11px; text-align:center;"></div>
+
+                        <!-- Details/Statistics -->
+                        <div class="details" style="margin-bottom:14px;">
+                            <div class="statistics" style="margin-bottom:8px;">
+                                <div style="margin-bottom:4px; font-size:11px;">
+                                    <span class="stat-label" style="color:#000; font-weight:bold;">Created: </span>
+                                    <span id="CreatedDate" class="stat" style="color:#666;">Unknown</span>
+                                </div>
+                                <div style="margin-bottom:4px; font-size:11px;">
+                                    <span class="stat-label" style="color:#000; font-weight:bold;">Updated: </span>
+                                    <span id="UpdatedDate" class="stat" style="color:#666;">Unknown</span>
+                                </div>
+                                <div style="margin-bottom:4px; font-size:11px;">
+                                    <span class="stat-label" style="color:#000; font-weight:bold;">Favorited: </span>
+                                    <span id="FavoritesCount" class="stat" style="color:#666;">0</span>
+                                </div>
+                                <div style="margin-bottom:4px; font-size:11px;">
+                                    <span class="stat-label" style="color:#000; font-weight:bold;">Visited: </span>
+                                    <span id="VisitsCount" class="stat" style="color:#666;">0</span>
+                                </div>
+                                <div style="margin-bottom:4px; font-size:11px;">
+                                    <span class="stat-label" style="color:#000; font-weight:bold;">Avatar Type: </span>
+                                    <span id="AvatarType" class="stat" style="color:#666;">Unknown</span>
+                                </div>
+                                <div style="margin-bottom:4px; font-size:11px;">
+                                    <span class="stat-label" style="color:#000; font-weight:bold;">Max Players: </span>
+                                    <span id="MaxPlayers" class="stat" style="color:#666;">--</span>
+                                </div>
+                            </div>
+                            <div class="genres" style="margin-bottom:8px; font-size:11px;">
+                                <span class="stat-label" style="color:#000; font-weight:bold;">Genres: </span>
+                                <img id="GenreIcon" src="" alt="" class="GenreIcon" style="display:none; width:16px; height:16px; vertical-align:middle;"/>
+                                <a id="GenreLink" href="#" style="color:#00a2ff; text-decoration:none;"><span id="GenreName">All</span></a>
+                            </div>
+                            <div id="AllowedGear" class="allowed-gear"></div>
+                        </div>
+
+                        <!-- Rovloo Stats -->
+                        <div id="RovlooStatsSection" style="margin-top:15px; display:none;">
+                            <div style="font-weight:bold; margin-bottom:5px;">Reviews:</div>
+                            <div style="border:1px solid #ccc; padding:8px; background:#fff;">
+                                <div id="ReviewReception"></div>
+                                <div id="UserPlaytime" style="font-size:11px; color:#666;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Blacklist Section -->
+                        <div id="BlacklistSection"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabbed Section: Servers, Recommendations, Reviews -->
+            <div id="TabbedSection" style="margin-top:20px; margin-left:15px; width:940px; clear:both;">
+                <div style="display:flex; gap:2px; margin-bottom:-1px;">
+                    <div id="PublicServersTab" class="tab-2013-gray tab-2013-gray-active" style="display:inline-block; padding:6px 12px; background:#fff; border:1px solid #ccc; border-bottom:1px solid #fff; font-size:12px; cursor:pointer; position:relative; z-index:1;">
+                        <span>Public Servers</span>
+                    </div>
+                    <div id="PrivateServersTab" class="tab-2013-gray" style="display:inline-block; padding:6px 12px; background:#e3e3e3; border:1px solid #ccc; border-bottom:none; font-size:12px; cursor:pointer;">
+                        <span>Private Servers</span>
+                    </div>
+                    <div id="RecommendationsTab" class="tab-2013-gray" style="display:inline-block; padding:6px 12px; background:#e3e3e3; border:1px solid #ccc; border-bottom:none; font-size:12px; cursor:pointer;">
+                        <span>Recommendations</span>
+                    </div>
+                    <div id="GameDetailReviewsTab" class="tab-2013-gray" style="display:inline-block; padding:6px 12px; background:#e3e3e3; border:1px solid #ccc; border-bottom:none; font-size:12px; cursor:pointer;">
+                        <span>Reviews</span>
+                    </div>
+                </div>
+                <div class="box-2013-gray" style="background:#fff; border:1px solid #ccc; padding:10px; min-height:100px;">
+                    <!-- Public Servers -->
+                    <div id="PublicServersContent" class="tab-content">
+                        <div class="server-controls" style="display:none; margin-bottom:10px; padding:8px; background:#f5f5f5; border:1px solid #ccc;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+                                <div style="display:flex; gap:15px; align-items:center;">
+                                    <label style="display:flex; align-items:center; gap:5px;">
+                                        <input type="checkbox" id="ExcludeFullServers" checked/>
+                                        <span>Exclude Full Servers</span>
+                                    </label>
+                                    <label style="display:flex; align-items:center; gap:5px;">
+                                        <span>Sort:</span>
+                                        <select id="ServerSortOrder" style="font-size:11px; padding:2px;">
+                                            <option value="desc">Most Players</option>
+                                            <option value="asc">Least Players</option>
+                                            <option value="bestConnection">Best Connection</option>
+                                            <option value="newest">Newest Servers</option>
+                                            <option value="oldest">Oldest Servers</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <a href="javascript:void(0)" id="RefreshServers" style="color:#00F; text-decoration:none; cursor:pointer;">Refresh</a>
+                            </div>
+                        </div>
+                        <div id="PublicServersLoading" style="text-align:center; padding:20px;">
+                            <img src="images/spinners/spinner100x100.gif" alt="Loading servers..."/>
+                            <div id="ServerLoadingStatus" style="margin-top:10px; color:#666; font-size:11px;"></div>
+                        </div>
+                        <div id="PublicServersList" style="display:none;"></div>
+                        <div id="PublicServersPagination" style="display:none; text-align:center; padding:10px; font-size:11px;">
+                            <button id="PrevServersPage">Previous</button>
+                            <span id="ServersPageInfo" style="color:#666; margin:0 10px;">Page 1 of 1</span>
+                            <button id="NextServersPage">Next</button>
+                        </div>
+                        <div id="NoPublicServers" style="display:none; text-align:center; color:#666; padding:20px;">
+                            No public servers are currently running.
+                        </div>
+                    </div>
+
+                    <!-- Private Servers -->
+                    <div id="PrivateServersContent" class="tab-content" style="display:none;">
+                        <div id="PrivateServersLoading" style="text-align:center; padding:20px;">
+                            <img src="images/spinners/spinner100x100.gif" alt="Loading private servers..."/>
+                        </div>
+                        <div id="PrivateServersList" style="display:none;"></div>
+                        <div id="PrivateServersPagination" style="display:none; text-align:center; padding:10px; font-size:11px;">
+                            <button id="PrevPrivateServersPage">&lt; Previous</button>
+                            <span id="PrivateServersPageInfo" style="margin:0 10px;">Page 1 of 1</span>
+                            <button id="NextPrivateServersPage">Next &gt;</button>
+                        </div>
+                        <div id="NoPrivateServers" style="display:none; text-align:center; color:#666; padding:20px;">
+                            No private servers available.
+                        </div>
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div id="RecommendationsContent" class="tab-content" style="display:none;">
+                        <div style="font-size:11px; margin-bottom:10px; color:#666;">Here are some other games that we think you might like.</div>
+                        <div id="RecommendationsLoading" style="text-align:center; padding:20px;">
+                            <img src="images/spinners/spinner100x100.gif" alt="Loading..."/>
+                        </div>
+                        <div id="RecommendationsList" style="display:none;"></div>
+                    </div>
+
+                    <!-- Reviews -->
+                    <div id="GameDetailReviewsContent" class="tab-content" style="display:none;">
+                        <div id="ReviewsSection">
+                            <div style="text-align:center; padding:40px; color:#666;">
+                                <img src="images/spinners/spinner100x100.gif" alt="Loading..." style="width:50px; height:50px;">
+                                <p style="margin-top:10px;">Loading reviews...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gamepass Purchase Modal -->
+<div id="gamepass-purchase-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999;">
+    <div id="gamepass-purchase-modal-content" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; border:2px solid #333; padding:20px; min-width:350px; text-align:center;">
+        <a href="#" id="gamepass-modal-close" style="position:absolute; top:5px; right:10px; font-size:18px; color:#666; text-decoration:none;">&times;</a>
+        <div style="font-size:18px; font-weight:bold; margin-bottom:15px;">Confirm Purchase</div>
+        <div style="margin-bottom:10px;">
+            <img id="gamepass-modal-thumbnail" src="images/spinners/spinner100x100.gif" style="width:100px; height:100px; border:1px solid #ccc;">
+        </div>
+        <div id="gamepass-modal-name" style="font-weight:bold; margin-bottom:10px;">Gamepass Name</div>
+        <div id="gamepass-modal-price" style="color:green; font-size:16px; margin-bottom:15px;">R$ 0</div>
+        <div id="gamepass-modal-balance" style="font-size:12px; color:#666; margin-bottom:15px;">Your balance: R$ 0</div>
+        <div id="gamepass-modal-error" style="display:none; color:#cc0000; margin-bottom:10px;"></div>
+        <div id="gamepass-modal-success" style="display:none; color:#01a90f; margin-bottom:10px;"></div>
+        <div id="gamepass-modal-buttons">
+            <button id="gamepass-confirm-btn" style="background:#01a90f; color:#fff; border:none; padding:8px 20px; cursor:pointer; margin-right:10px;">Buy Now</button>
+            <button id="gamepass-cancel-btn" style="background:#cc0000; color:#fff; border:none; padding:8px 20px; cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+</div>

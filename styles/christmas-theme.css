@@ -1,0 +1,83 @@
+/**
+ * 2013 ROBLOX Christmas Theme
+ * 
+ * Features the animated Flash banner with Santa turning on the lights
+ */
+
+
+/* Site header adjustments for Flash banner */
+body.christmas-theme .site-header {
+    background: #082857 !important;
+    background-color: #082857 !important;
+    overflow: visible;
+}
+
+/* Container for the Ruffle Flash player */
+/* Transform is applied to the container, not the player */
+body.christmas-theme #christmas-banner-container {
+    position: fixed;
+    top: 30px;
+    left: 0;
+    width: 1840px;
+    height: 36px;
+    z-index: 1;
+    pointer-events: none;
+    overflow: visible;
+    transform-origin: left top;
+    /* Transform is applied via JS */
+}
+
+/* Ruffle player styling - no transform, that's on the container */
+body.christmas-theme #christmas-banner-container ruffle-player,
+body.christmas-theme #christmas-banner-container ruffle-embed {
+    width: 1840px !important;
+    height: 36px !important;
+    display: block !important;
+    background: transparent !important;
+}
+
+/* Make sure navigation elements are above the Flash */
+body.christmas-theme #navigation-container {
+    position: relative;
+    z-index: 10;
+}
+
+body.christmas-theme #navigation-menu {
+    position: relative;
+    z-index: 10;
+}
+
+body.christmas-theme #AlertSpace {
+    position: relative;
+    z-index: 10;
+}
+
+/* Hide the regular logo button background - Flash has its own logo */
+body.christmas-theme #navigation-container a.btn-logo {
+    background: transparent !important;
+    /* Keep the clickable area but make it invisible */
+    opacity: 0;
+    width: 116px;
+    height: 35px;
+}
+
+/* Fallback for when Flash doesn't load */
+body.christmas-theme.no-flash .site-header {
+    background: url('../images/cssthemes/christmas/bg-holiday_banner_no_flash.jpg') repeat-x center top !important;
+}
+
+/* Christmas-themed link colors */
+body.christmas-theme a {
+    color: #c41e3a; /* Christmas red for links */
+}
+
+body.christmas-theme a:hover {
+    color: #ff4444;
+}
+
+/* Keep navigation links white */
+body.christmas-theme #navigation-menu a,
+body.christmas-theme #AlertSpace a,
+body.christmas-theme .subMenu a {
+    color: #fff !important;
+}

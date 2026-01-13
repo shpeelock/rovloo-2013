@@ -1,0 +1,135 @@
+<!-- My ROBLOX Home Page - 2013 Layout -->
+<div id="page-myroblox" class="page">
+    <div id="HomeContainer" class="home-container">
+        <!-- Greeting -->
+        <div class="home-greeting">
+            <h1>Hello, <span id="myroblox-username" class="notranslate">User</span>!</h1>
+        </div>
+
+        <!-- Left Column -->
+        <div class="left-column">
+            <!-- User Avatar Box -->
+            <div class="left-column-boxes user-avatar-container">
+                <div id="UserAvatar" class="user-avatar-holder">
+                    <span class="user-avatar">
+                        <img id="myroblox-avatar-img" alt="Avatar" class="user-avatar-image" src="images/spinners/spinner100x100.gif"/>
+                    </span>
+                </div>
+                <div id="UserInfo" class="text">
+                    <div>
+                        <b><a id="myroblox-notifications-link" class="text-link" href="#inbox">
+                            <span id="myroblox-notifications-count">0</span> System Notification(s)
+                        </a></b>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Roblox News -->
+            <div class="left-column-boxes">
+                <h3>Roblox News</h3>
+                <div class="notranslate text news-container">
+                    <div id="RobloxNews">
+                        <div class="roblox-news-feed" id="myroblox-news">
+                            <div class="roblox-news-feed-item">
+                                <span style="color: #666;">Loading news...</span>
+                            </div>
+                        </div>
+                        <a href="https://blog.roblox.com/" class="SeeMore" target="_blank">See More</a>
+                        <img alt="See more!" src="images/Icons/efe86a4cae90d4c37a5d73480dea4cb1.png" class="see-more-img"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Best Friends -->
+            <div class="left-column-boxes">
+                <div>
+                    <h3 class="best-friends-title">My Best Friends</h3>
+                    <div class="edit-friends-button">
+                        <a href="#friends" class="btn-small btn-neutral">Edit</a>
+                    </div>
+                    <div class="clear"></div>
+                </div>
+                <div id="bestFriendsContainer" class="best-friends-container">
+                    <div id="myroblox-best-friends" class="best-friends">
+                        <div style="color: #666; font-size: 11px; padding: 5px;">Loading friends...</div>
+                    </div>
+                </div>
+                <div style="clear:both;"></div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="left-column-boxes text">
+                <h3>My Stats</h3>
+                <div class="stats-container">
+                    <div class="stat-row">
+                        <span class="stat-label">Friends:</span>
+                        <span id="myroblox-friends-count" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Robux:</span>
+                        <span id="myroblox-robux-count" class="stat-value" style="color: #0a0;">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Messages:</span>
+                        <span id="myroblox-messages-count" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Rovloo Score:</span>
+                        <span id="myroblox-rovloo-score" class="stat-value" style="color: #c90;">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Column -->
+        <div class="middle-column">
+            <!-- Status Update Box -->
+            <div id="statusUpdateBox" class="middle-column-box status-update">
+                <div>
+                    <input name="txtStatusMessage" type="text" id="txtStatusMessage" maxlength="254"
+                           class="translate text-box text-box-large status-textbox"
+                           placeholder="What are you up to?"/>
+                    <span class="btn-control btn-control-large share-button" id="shareButton">Share</span>
+                    <img id="loadingImage" class="status-update-image" style="display: none" alt="Sharing..." src="images/spinners/spinner16x16.gif"/>
+                    <div class="clear"></div>
+                </div>
+            </div>
+
+            <!-- My Feed -->
+            <div id="FeedContainer" class="middle-column-box feed-container">
+                <h2>My Feed</h2>
+                <div id="FeedPanel">
+                    <div id="myroblox-feed" class="text">
+                        <div class="text" style="color: #666; padding: 10px;">
+                            Please wait... Roblox is getting your Feed :)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+            <!-- Recently Played Games -->
+            <div id="RecentlyVisitedPlacesContainer" class="right-column-box">
+                <h3 style="padding-bottom: 6px;">Recently Played Games</h3>
+                <div id="myroblox-recently-played">
+                    <div style="color: #666; font-size: 11px; padding: 10px;">Loading...</div>
+                </div>
+                <div id="SeeMoreRecent">
+                    <a href="#games" class="text-link">See More <img alt="See more!" src="images/Icons/efe86a4cae90d4c37a5d73480dea4cb1.png" class="see-more-img"/></a>
+                </div>
+            </div>
+
+            <!-- Recommended Games -->
+            <div id="RecommendedGamesContainer" class="right-column-box">
+                <h3 style="padding-bottom: 6px;">Recommended For You</h3>
+                <div id="myroblox-recommended-games">
+                    <div style="color: #666; font-size: 11px; padding: 10px;">Loading recommendations...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="clear"></div>
+    </div>
+</div>

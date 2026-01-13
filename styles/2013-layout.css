@@ -1,0 +1,593 @@
+/**
+ * 2013 ROBLOX Theme - Layout Overrides
+ * 
+ * The original 2013 CSS (page-2013.css) uses absolute /images/ paths.
+ * This file overrides those with relative paths for local assets.
+ */
+
+/* ============================================
+   HIDE 2011 NAVIGATION (use 2013 instead)
+   ============================================ */
+
+body.theme-2013 .Navigation,
+body.theme-2013 #HeaderContainer,
+body.theme-2013 #Header,
+body.theme-2013 #Banner {
+    display: none !important;
+}
+
+/* ============================================
+   SITE HEADER - Full Width Navigation Bar
+   ============================================ */
+
+.site-header {
+    background: url('../images/RevisedHeader/bg-rbx_header.png') repeat-x !important;
+    background-color: #114081 !important;
+    height: 36px !important;
+    position: fixed !important;
+    width: 100% !important;
+    z-index: 10001 !important;
+    top: 30px !important; /* Account for Electron titlebar */
+    left: 0 !important;
+    display: block !important;
+}
+
+/* Navigation container */
+#navigation-container {
+    text-align: left;
+    position: relative;
+    height: 36px;
+    z-index: 200;
+    min-width: 970px;
+    display: table;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ROBLOX Logo Button */
+#navigation-container a.btn-logo,
+#navigation-container a.btn-logo:visited,
+#navigation-container a.btn-logo:hover {
+    background: url('../images/RevisedHeader/btn-rbx_logo.png') no-repeat top !important;
+    display: inline-block;
+    width: 116px;
+    height: 35px;
+    float: left;
+    margin-right: 4px;
+}
+
+#navigation-container a.btn-logo:hover {
+    background-position: bottom !important;
+}
+
+/* Navigation Menu */
+div#navigation-menu {
+    display: inline-block;
+    min-height: 36px;
+    z-index: 1000;
+    float: left;
+    color: #fff;
+    text-decoration: none;
+    height: 30px;
+    text-align: left;
+    line-height: 20px;
+}
+
+#navigation-menu ul {
+    margin: 0 auto;
+    padding: 0;
+}
+
+#navigation-menu li {
+    float: left;
+    list-style: none;
+    margin: 0;
+    padding: 7px 8px 0 8px;
+    height: 28px;
+    cursor: pointer;
+}
+
+#navigation-menu ul li a,
+#navigation-menu ul li a:visited {
+    border: 0 solid black;
+    padding: 0;
+    text-decoration: none;
+    outline: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+}
+
+#navigation-menu a {
+    display: inline-block;
+    color: #fff;
+}
+
+#navigation-container a:hover {
+    text-decoration: none;
+}
+
+/* Menu hover state */
+#navigation-menu li:hover,
+#navigation-container #AuthenticatedUserNameWrapper:hover,
+#AlertSpace #SettingsButtonContainer:hover,
+#navigation-container .AlertItem:hover {
+    background: url('../images/RevisedHeader/bg-main_menu_hover.png') repeat-x !important;
+}
+
+/* ============================================
+   ALERT SPACE (Right side icons)
+   ============================================ */
+
+#navigation-container #AlertSpace {
+    background: none;
+    display: inline-block;
+    float: right;
+    height: 20px;
+    margin-top: 10px;
+}
+
+#navigation-container .AlertItem {
+    float: right;
+    margin-top: -10px;
+    padding: 10px 5px 0 5px;
+    cursor: pointer;
+    min-height: 25px;
+}
+
+#navigation-container .AlertItem a {
+    color: white;
+}
+
+#navigation-container .AlertItem .friends_icon,
+#navigation-container .AlertItem .message_icon {
+    float: right;
+}
+
+/* Icon sprites */
+#navigation-container .icons,
+#AlertSpace .icons {
+    height: 20px !important;
+    width: 20px !important;
+    display: inline-block !important;
+    float: left !important;
+    margin: -3px 2px -15px 2px !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Message icon - top of sprite (0px) */
+#navigation-container .message_icon,
+#AlertSpace .message_icon,
+.icons.message_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 0 !important;
+    height: 20px !important;
+    width: 20px !important;
+    display: inline-block !important;
+}
+
+#navigation-container .MessageAlert:hover .message_icon,
+#AlertSpace .MessageAlert:hover .message_icon {
+    background-position: 0 -20px !important;
+}
+
+/* Friends icon */
+#navigation-container .friends_icon,
+#AlertSpace .friends_icon,
+.icons.friends_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 -160px !important;
+    height: 20px !important;
+    width: 20px !important;
+    display: inline-block !important;
+}
+
+#navigation-container .FriendsAlert:hover .friends_icon,
+#AlertSpace .FriendsAlert:hover .friends_icon {
+    background-position: 0 -140px !important;
+}
+
+/* Robux icon */
+#navigation-container .robux_icon,
+#AlertSpace .robux_icon,
+.icons.robux_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 -120px !important;
+    height: 20px !important;
+    width: 20px !important;
+    display: inline-block !important;
+}
+
+#navigation-container .RobuxAlert:hover .robux_icon,
+#AlertSpace .RobuxAlert:hover .robux_icon {
+    background-position: 0 -100px !important;
+}
+
+/* Tickets icon */
+#navigation-container .tickets_icon,
+#AlertSpace .tickets_icon,
+.icons.tickets_icon {
+    background: url('../images/RevisedHeader/bg-icon_sprites.png') no-repeat 0 -80px !important;
+    height: 20px !important;
+    width: 20px !important;
+    display: inline-block !important;
+    margin-left: 0 !important;
+}
+
+#navigation-container .TicketsAlert:hover .tickets_icon,
+#AlertSpace .TicketsAlert:hover .tickets_icon {
+    background-position: 0 -60px !important;
+}
+
+/* Alert bubbles */
+#navigation-container .AlertBox {
+    background: url('../images/RevisedHeader/bg-alerts-v2.png') no-repeat left !important;
+    float: left;
+    height: 11px;
+    font: bold 10px Arial, Helvetica, sans-serif;
+}
+
+#navigation-container .AlertBox.Left {
+    width: 3px;
+    height: 11px;
+    background-position: left;
+}
+
+.AlertItem .AlertTextWrapper {
+    margin-left: 17px;
+}
+
+#navigation-container .AlertText {
+    height: 7px;
+    margin-top: 2px;
+    color: black;
+    line-height: 7px;
+}
+
+#navigation-container .AlertCaption {
+    text-align: center;
+    float: left;
+    color: white;
+    font-weight: normal;
+    font-size: 11px;
+}
+
+/* Header divider */
+#navigation-container .HeaderDivider {
+    margin: -5px 5px 0 5px;
+    float: right;
+    height: 25px;
+    width: 0;
+    border-left: 1px solid #7394c1;
+}
+
+/* Username display */
+#navigation-container #AuthenticatedUserNameWrapper {
+    min-height: 30px;
+    width: auto;
+    cursor: pointer;
+    float: right;
+    padding: 5px 5px 0 5px;
+    margin-top: -10px;
+}
+
+#navigation-container #AuthenticatedUserName {
+    display: inline-block;
+    color: #fff;
+    font-size: 11px;
+    margin-top: 5px;
+    max-width: 145px;
+    overflow: hidden;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+#navigation-container #AuthenticatedUserName:hover {
+    text-decoration: underline;
+}
+
+#navigation-container span.login-span {
+    top: 0;
+    max-width: 110px;
+    white-space: nowrap;
+    font-size: 12px;
+}
+
+/* Logout button */
+#navigation-container .logoutButton {
+    display: inline-block;
+    font-size: 11px;
+    color: white;
+    float: right;
+    position: relative;
+    bottom: 2px;
+    cursor: pointer;
+}
+
+/* Login link */
+#LoginLink {
+    color: white !important;
+    font-size: 12px;
+}
+
+/* ============================================
+   SUB-NAVIGATION BAR
+   ============================================ */
+
+.subMenu {
+    background: #191919 !important;
+    border: none;
+    color: White;
+    height: 25px;
+    margin: 0 auto;
+    position: relative;
+    text-align: center;
+    width: 970px;
+    z-index: 200;
+}
+
+.subMenu ul {
+    list-style-type: none;
+    margin: 0 0 0 10px;
+    padding: 0;
+}
+
+.subMenu ul li {
+    float: left;
+    height: 30px;
+    margin: 0 2px;
+    position: relative;
+}
+
+.subMenu ul li:hover {
+    background: url('../images/RevisedHeader/bg-sub_menu_hover.png') repeat-x !important;
+    background-repeat: repeat no-repeat;
+    background-position: 0 30px;
+}
+
+.subMenu a,
+.subMenu a:visited {
+    border: none;
+    color: #FFF;
+    display: block;
+    padding: 5px;
+}
+
+.subMenu a:hover {
+    text-decoration: none;
+}
+
+.mySubmenuFixed.Redesign {
+    position: fixed !important;
+    top: 66px !important; /* 30px titlebar + 36px header */
+    background-color: #191919;
+    height: 25px;
+    width: 100%;
+    z-index: 10000;
+}
+
+/* Dropdown arrow for "More" menu */
+.more-list-item span#more-menu-toggle {
+    background: url('../images/Buttons/bg-drop_down_arrow.png') top no-repeat !important;
+    height: 5px;
+    width: 7px;
+    display: inline-block;
+    margin-left: 2px;
+    top: -1px;
+    position: relative;
+}
+
+.more-list-item.active span#more-menu-toggle {
+    background: url('../images/Buttons/bg-drop_down_arrow.png') bottom no-repeat !important;
+}
+
+/* ============================================
+   SPACING FOR FIXED HEADERS
+   ============================================ */
+
+.forceSpace {
+    height: 71px !important; /* Space for fixed header (36px) + subnav (25px) + padding */
+}
+
+.forceSpaceUnderSubmenu {
+    height: 25px;
+    display: block;
+}
+
+/* Subnav is always visible in 2013 theme */
+body.theme-2013 .mySubmenuFixed.Redesign {
+    display: block !important;
+}
+
+/* ============================================
+   HIDE OLD 2011 ELEMENTS
+   ============================================ */
+
+body.theme-2013 #HeaderContainer,
+body.theme-2013 #Header,
+body.theme-2013 #Banner,
+body.theme-2013 #SubNav:not(.subMenu) {
+    display: none !important;
+}
+
+/* ============================================
+   BODY CONTENT AREA
+   ============================================ */
+
+body.theme-2013 {
+    padding-top: 30px !important; /* Titlebar only - header is fixed */
+    margin: 0 !important;
+    background: #f2f2f2;
+}
+
+#Container {
+    width: 970px;
+    margin: 0 auto;
+    padding: 0 !important;
+    background-color: #fff;
+}
+
+#Body {
+    width: 970px;
+    margin: 0 auto;
+    padding: 0 !important;
+}
+
+/* Override the 2011 body width and remove padding/margins */
+body.theme-2013 #Body {
+    width: 970px !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    background: #f2f2f2;
+}
+
+body.theme-2013 #Container {
+    width: 970px !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+}
+
+/* Remove top margins from all pages so they touch the nav */
+body.theme-2013 .page {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+body.theme-2013 #page-home,
+body.theme-2013 #page-myroblox,
+body.theme-2013 #page-games,
+body.theme-2013 #page-catalog,
+body.theme-2013 #page-people,
+body.theme-2013 #page-profile,
+body.theme-2013 #page-character,
+body.theme-2013 #page-inbox,
+body.theme-2013 #page-friends,
+body.theme-2013 #page-groups,
+body.theme-2013 #page-stuff,
+body.theme-2013 #page-reviews,
+body.theme-2013 #page-game-detail,
+body.theme-2013 #page-catalog-item,
+body.theme-2013 #page-badge,
+body.theme-2013 #page-gamepass,
+body.theme-2013 #page-account {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Remove margins from content containers */
+body.theme-2013 .home-container,
+body.theme-2013 .MyRobloxContainer,
+body.theme-2013 #GamesContainer,
+body.theme-2013 #CatalogContainer,
+body.theme-2013 #BrowseContainer,
+body.theme-2013 #CharacterContainer,
+body.theme-2013 #UserContainer {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Ensure columns don't have extra top margin */
+body.theme-2013 .Column1c,
+body.theme-2013 .Column2c,
+body.theme-2013 .Column1d,
+body.theme-2013 .Column2d,
+body.theme-2013 .left-column,
+body.theme-2013 .middle-column,
+body.theme-2013 .right-column {
+    margin-top: 0 !important;
+}
+
+/* ============================================
+   MISC IMAGE PATH FIXES
+   ============================================ */
+
+/* Bullet point arrow for news items */
+.roblox-news-feed-item {
+    background: url('../images/BulletPointArrow.png') no-repeat center left !important;
+    padding-left: 13px;
+    margin-bottom: 10px;
+}
+
+
+/* ============================================
+   ADDITIONAL MARGIN/PADDING RESETS FOR 2013
+   Content should touch the navigation bars
+   ============================================ */
+
+/* Override MyRobloxContainer negative margin */
+body.theme-2013 .MyRobloxContainer {
+    margin-top: 0 !important;
+}
+
+/* Standard boxes should not have top margin on first element */
+body.theme-2013 .page.active > .StandardBox:first-child,
+body.theme-2013 .page.active > .StandardBoxHeader:first-child,
+body.theme-2013 .page.active > .ShadowedStandardBox:first-child,
+body.theme-2013 .page.active > div:first-child {
+    margin-top: 0 !important;
+}
+
+/* Home page specific - remove margin from first column */
+body.theme-2013 #page-home .Column1c {
+    margin-top: 0 !important;
+}
+
+body.theme-2013 #page-home .Column1c .ShadowedStandardBox:first-child {
+    margin-top: 0 !important;
+}
+
+/* Profile page columns */
+body.theme-2013 #page-profile .Column1d,
+body.theme-2013 #page-profile .Column2d {
+    margin-top: 0 !important;
+}
+
+/* Games page */
+body.theme-2013 #GamesContainer {
+    padding-top: 0 !important;
+}
+
+/* Catalog page */
+body.theme-2013 #CatalogContainer {
+    padding-top: 0 !important;
+}
+
+/* People/Browse page */
+body.theme-2013 #BrowseContainer {
+    padding-top: 0 !important;
+}
+
+/* User container (inventory, etc) */
+body.theme-2013 #UserContainer {
+    margin-top: 0 !important;
+}
+
+/* Character page */
+body.theme-2013 #CharacterContainer {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Inbox page */
+body.theme-2013 #page-inbox > div:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Account page */
+body.theme-2013 #page-account > div:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Reviews page */
+body.theme-2013 #page-reviews > div:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Announcement bar - if shown, it should be at the top */
+body.theme-2013 #Announcement {
+    margin-top: 0 !important;
+}
+
+body.theme-2013 #Footer {
+    padding: 3em 55px;
+}
