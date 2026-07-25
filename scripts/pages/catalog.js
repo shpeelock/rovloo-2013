@@ -20,6 +20,11 @@
 
     let cursorHistory = [''];
     let isLoadingPage = false;
+    let pendingReload = false;
+    let lastLoadedPage = 1;
+    let catalogLoadToken = 0;
+    let catalogRenderGen = 0;
+    let classicTotalItems = 0;
 
     let economyWorker = null;
     let workerTaskId = 0;
@@ -61,40 +66,49 @@
         });
     }
 
+    // Category/Subcategory coordinates from the API's OWN enum endpoints (catalog.roblox.com
+    // /v1/categories + /v1/subcategories). This is the v1 search request form — the only one that
+    // returns nextPageCursor (the old taxonomy-hash form never paginates). Group headers map to a
+    // bare Category (native umbrellas: Accessories=11, Body=18, Clothing=3).
     const categoryMap = {
-        'All': { categoryFilter: null },
-        'Hats': { categoryFilter: 8 },
-        'Hair': { categoryFilter: 41 },
-        'Face': { categoryFilter: 42 },
-        'Neck': { categoryFilter: 43 },
-        'Shoulder': { categoryFilter: 44 },
-        'Front': { categoryFilter: 45 },
-        'Back': { categoryFilter: 46 },
-        'Waist': { categoryFilter: 47 },
-        'Gear': { categoryFilter: 19 },
-        'Faces': { categoryFilter: 18 },
-        'Packages': { categoryFilter: null, subcategory: 'Bundles' }, 
-        'Heads': { categoryFilter: 17 },
-        'T-Shirts': { categoryFilter: 2 },
-        'Shirts': { categoryFilter: 11 },
-        'Pants': { categoryFilter: 12 },
-        'Emotes': { categoryFilter: 61 },
-        'Animations': { categoryFilter: null, taxonomy: 'whf6kUVBwk2xdwKUmRYN6G' },
-        
-        '3D T-Shirts': { categoryFilter: null, taxonomy: 'fLRqNzGqjX7MzcqeMro9hc' },
-        '3D Shirts': { categoryFilter: null, taxonomy: 'pJ71PxerdfEuarTNRtSZYs' },
-        'Sweaters': { categoryFilter: null, taxonomy: '31M6WgEMmyq9TTfk3pUUpZ' },
-        'Jackets': { categoryFilter: null, taxonomy: 'kPZpEVNdProGcqMbj1jDKJ' },
-        '3D Pants': { categoryFilter: null, taxonomy: '1MvRtnnsy2FJWmkErSBxBa' },
-        'Shorts': { categoryFilter: null, taxonomy: 'etAPg889P243JyjdbZCXhw' },
-        'Dresses & Skirts': { categoryFilter: null, taxonomy: 'oSSCBSqkQPZu6HataAUAxB' },
-        'Bodysuits': { categoryFilter: null, taxonomy: 'u5jaNLyf2ZhvR95GS37ui5' },
-        'Shoes': { categoryFilter: null, taxonomy: 'uLRgNoJ1awZkhpVw9WyvKo' }
+        'All': { catalogCategory: 1 },
+        'Accessories': { catalogCategory: 11 },
+        'Body': { catalogCategory: 18 },
+        'Clothing': { catalogCategory: 3 },
+        // no 3D-only union exists in the search API (Subcategory 52 is not searchable) — the group
+        // maps to the Clothing umbrella; its flyout leaves stay 3D-specific.
+        '3D Clothing': { catalogCategory: 3 },
+        'Hats': { catalogCategory: 11, catalogSubcategory: 54 },
+        'Hair': { catalogCategory: 18, catalogSubcategory: 20 },
+        'Face': { catalogCategory: 11, catalogSubcategory: 21 },
+        'Neck': { catalogCategory: 11, catalogSubcategory: 22 },
+        'Shoulder': { catalogCategory: 11, catalogSubcategory: 23 },
+        'Front': { catalogCategory: 11, catalogSubcategory: 24 },
+        'Back': { catalogCategory: 11, catalogSubcategory: 25 },
+        'Waist': { catalogCategory: 11, catalogSubcategory: 26 },
+        'Gear': { catalogCategory: 11, catalogSubcategory: 5 },
+        'Faces': { catalogCategory: 18, catalogSubcategory: 10 },
+        'Heads': { catalogCategory: 18, catalogSubcategory: 15 },
+        'Packages': { catalogCategory: 18, catalogSubcategory: 37 },
+        'T-Shirts': { catalogCategory: 3, catalogSubcategory: 55 },
+        'Shirts': { catalogCategory: 3, catalogSubcategory: 56 },
+        'Pants': { catalogCategory: 3, catalogSubcategory: 57 },
+        'Emotes': { catalogCategory: 12, catalogSubcategory: 39 },
+        'Animations': { catalogCategory: 12, catalogSubcategory: 38 },
+        '3D T-Shirts': { catalogCategory: 3, catalogSubcategory: 58 },
+        '3D Shirts': { catalogCategory: 3, catalogSubcategory: 59 },
+        '3D Pants': { catalogCategory: 3, catalogSubcategory: 60 },
+        'Jackets': { catalogCategory: 3, catalogSubcategory: 61 },
+        'Sweaters': { catalogCategory: 3, catalogSubcategory: 62 },
+        'Shorts': { catalogCategory: 3, catalogSubcategory: 63 },
+        'Dresses & Skirts': { catalogCategory: 3, catalogSubcategory: 65 },
+        'Shoes': { catalogCategory: 3, catalogSubcategory: 64 }
     };
 
     const sortTypeMap = {
-        'Classic': 0,       
-        'Featured': 0,      
+        'Relevance': 0,
+        'Classic': 0,
+        'Featured': 0,
         'TopFavorites': 1,  
         'BestSelling': 2,   
         'RecentlyUpdated': 3, 
@@ -282,6 +296,70 @@
         initCategoryHandlers();
         initPaginationHandlers();
         initFilterHandlers();
+        initLegendToggle();
+        initBrowseCategoryDropdown();
+        initDropdownToggleButton();
+
+        // Landing = splash state (authentic /catalog/): dropdown open, no Filters stack.
+        setCatalogNavState('splash');
+        syncFilterLinkSelection();
+
+        // Breadcrumb label (authentic .breadCrumbFilter data-filter="category"): clicking it keeps
+        // the category but clears everything below it (keyword, creator, prices) per Pages.Catalog's
+        // cascading-clear f({...}).
+        const breadcrumb = document.getElementById('ctl00_cphRoblox_rbxCatalog_AssetsDisplaySetLabel');
+        if (breadcrumb && breadcrumb.classList.contains('breadCrumbFilter') && !breadcrumb.dataset.wired) {
+            breadcrumb.dataset.wired = '1';
+            breadcrumb.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentKeyword = '';
+                filterCreator = '';
+                filterPriceMin = null;
+                filterPriceMax = null;
+                const si = document.getElementById('ctl00_cphRoblox_rbxCatalog_SearchTextBox');
+                const ci = document.getElementById('CatalogCreatorFilter');
+                const pmin = document.getElementById('CatalogPriceMin');
+                const pmax = document.getElementById('CatalogPriceMax');
+                if (si) si.value = '';
+                if (ci) ci.value = '';
+                if (pmin) pmin.value = '';
+                if (pmax) pmax.value = '';
+                currentPage = 1; currentCursor = ''; cursorHistory = [''];
+                syncFilterLinkSelection();
+                updateDisplayLabel();
+                loadCatalogItems();
+            });
+        }
+
+        // The h1 "Catalog" link returns to the landing (authentic: it linked to /catalog/).
+        const catalogLink = document.getElementById('CatalogLink');
+        if (catalogLink && !catalogLink.dataset.wired) {
+            catalogLink.dataset.wired = '1';
+            catalogLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentMode = 'Classic';
+                const sm = document.getElementById('SortMain');
+                if (sm) sm.value = 'Relevance';
+                currentCategory = 'All';
+                currentSalesType = 'All';
+                currentKeyword = '';
+                filterCreator = '';
+                filterPriceMin = null;
+                filterPriceMax = null;
+                currentPage = 1;
+                currentCursor = '';
+                cursorHistory = [''];
+                const si = document.getElementById('ctl00_cphRoblox_rbxCatalog_SearchTextBox');
+                if (si) si.value = '';
+                setCatalogNavState('splash');
+                syncCategorySelection();
+                syncFilterLinkSelection();
+                updateCategoryAvailability();
+                updateTimeFilterVisibility();
+                updateDisplayLabel();
+                loadCatalogItems();
+            });
+        }
 
         updateCategoryAvailability();
 
@@ -292,6 +370,262 @@
         console.log('Catalog page initialized with live API');
     }
 
+    // ===== Two-state left nav (authentic /catalog/ vs /catalog/browse.aspx) =====
+    // The real site had TWO server-rendered states: the LANDING (/catalog/) with the always-open
+    // #dropdown.splashdropdown, and the BROWSE state (/catalog/browse.aspx — where every category/
+    // search/filter/sort action navigated) where the dropdown collapses to a click-toggle popup
+    // (#dropdown.browsedropdown) and the left nav shows the Filters stack (#CatalogFilters) instead,
+    // with the legend gaining .divider-top. Rovloo swaps states client-side (no page reload).
+    function setCatalogNavState(state) {
+        const dropdown = document.getElementById('dropdown');
+        const filters = document.getElementById('CatalogFilters');
+        const legend = document.getElementById('legend');
+        const btn = document.getElementById('BrowseCategoriesButton');
+        if (!dropdown) return;
+        const browse = state === 'browse';
+        dropdown.classList.toggle('splashdropdown', !browse);
+        dropdown.classList.toggle('browsedropdown', browse);
+        dropdown.classList.remove('open');
+        if (filters) filters.style.display = browse ? '' : 'none';
+        if (legend) legend.classList.toggle('divider-top', browse);
+        // Splash button is permanently lit (archive: class="browseDropdownButton hover").
+        if (btn) btn.classList.toggle('hover', !browse);
+        catalogNavState = browse ? 'browse' : 'splash';
+    }
+    let catalogNavState = 'splash';
+    function enterBrowseState() { if (catalogNavState !== 'browse') setCatalogNavState('browse'); }
+
+    // Port of the real Widgets.HierarchicalDropdown InitializeDropdown (the click-toggle used by the
+    // browse-state .browsedropdown popup): button hover lights it, click toggles the dropdown (kept
+    // lit while open), any document click closes. In splash state the dropdown is display:block via
+    // CSS, so the toggle only affects the browse state's .open class.
+    function initDropdownToggleButton() {
+        const btn = document.getElementById('BrowseCategoriesButton');
+        const dropdown = document.getElementById('dropdown');
+        if (!btn || !dropdown || btn.dataset.toggleWired) return;
+        btn.dataset.toggleWired = '1';
+        let open = false;
+        let fadeTimer = null;
+
+        // jQuery fadeIn/fadeOut("fast") = 200ms opacity fade — the real InitializeDropdown used
+        // exactly that on the browse-state popup.
+        const FADE_MS = 200;
+        function fadeIn() {
+            clearTimeout(fadeTimer);
+            dropdown.classList.add('open');
+            dropdown.style.transition = 'none';
+            dropdown.style.opacity = '0';
+            void dropdown.offsetWidth;
+            dropdown.style.transition = `opacity ${FADE_MS}ms`;
+            dropdown.style.opacity = '1';
+        }
+        function fadeOut() {
+            clearTimeout(fadeTimer);
+            dropdown.style.transition = `opacity ${FADE_MS}ms`;
+            dropdown.style.opacity = '0';
+            fadeTimer = setTimeout(() => {
+                dropdown.classList.remove('open');
+                dropdown.style.transition = '';
+                dropdown.style.opacity = '';
+            }, FADE_MS);
+        }
+
+        btn.addEventListener('mouseover', () => btn.classList.add('hover'));
+        btn.addEventListener('mouseout', () => { if (!open && catalogNavState === 'browse') btn.classList.remove('hover'); });
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (catalogNavState !== 'browse') return;
+            if (open) {
+                fadeOut();
+                open = false;
+                btn.classList.remove('hover');
+            } else {
+                btn.classList.add('hover');
+                fadeIn();
+                open = true;
+            }
+        });
+        document.addEventListener('click', () => {
+            if (catalogNavState === 'browse' && open) {
+                fadeOut();
+                open = false;
+                btn.classList.remove('hover');
+            }
+        });
+    }
+
+    // Combined category+salestype selection (one reload) — used by the Browse dropdown (incl. the
+    // Collectibles slideOut, whose links carry data-salestype [+ data-category]) and the browse-state
+    // flat Category list. keepFilters = authentic data-keepfilters semantics (category switches keep
+    // creator/price filters; plain selections clear them, per Pages.Catalog's s() vs f({types,category})).
+    function applySelection(opts) {
+        // Section entries (Featured/Classic in Browse by Category) carry a mode; picking one resets
+        // the sort select to Relevance-equivalent browsing of that section. A PLAIN selection (no
+        // data-mode) must LEAVE a section — on the real page category links navigated to browse.aspx
+        // with just Category, dropping Featured; only sorts persisted. Without this the catalog never
+        // leaves Featured/Classic once entered.
+        if (opts.mode !== undefined) {
+            currentMode = opts.mode;
+        } else if (currentMode === 'Classic' || currentMode === 'Featured') {
+            currentMode = 'Relevance';
+        }
+        const sm = document.getElementById('SortMain');
+        if (sm) sm.value = [...sm.options].some(o => o.value === currentMode) ? currentMode : 'Relevance';
+        updateTimeFilterVisibility();
+        if (opts.salesType !== undefined) currentSalesType = opts.salesType;
+        if (opts.category !== undefined) currentCategory = opts.category;
+        if (!opts.keepFilters) {
+            // Authentic s() semantics: a plain selection clears the KEYWORD too — without this a
+            // previous search kept contaminating every category you switched into.
+            currentKeyword = '';
+            filterCreator = '';
+            filterPriceMin = null;
+            filterPriceMax = null;
+            const si = document.getElementById('ctl00_cphRoblox_rbxCatalog_SearchTextBox');
+            const ci = document.getElementById('CatalogCreatorFilter');
+            const pmin = document.getElementById('CatalogPriceMin');
+            const pmax = document.getElementById('CatalogPriceMax');
+            if (si) si.value = '';
+            if (ci) ci.value = '';
+            if (pmin) pmin.value = '';
+            if (pmax) pmax.value = '';
+            syncFilterLinkSelection();
+        }
+        currentPage = 1;
+        currentCursor = '';
+        cursorHistory = [''];
+        enterBrowseState();
+        syncCategorySelection();
+        updateCategoryAvailability();
+        updateDisplayLabel();
+        loadCatalogItems();
+    }
+
+    // Mark .selected on the dropdown + flat category lists to reflect the current section
+    // (mode Classic/Featured), Collectibles salestype, and category.
+    function syncCategorySelection() {
+        const isColl = currentSalesType === 'Collectible';
+        const isSection = currentMode === 'Classic' || currentMode === 'Featured';
+        document.querySelectorAll('#CategoryList li, #FlatCategoryList li').forEach(li => {
+            if (li.classList.contains('DropdownDivider')) return;
+            const link = li.querySelector(':scope > a[data-category], :scope > a[data-salestype], :scope > a[data-mode]') || li.querySelector('a[data-category]');
+            if (!link) { li.classList.remove('selected'); return; }
+            const linkColl = link.dataset.salestype === 'Collectible';
+            const linkMode = link.dataset.mode;
+            const linkCat = link.dataset.category;
+            let selected;
+            if (isColl) {
+                selected = linkColl && (linkCat === undefined || linkCat === currentCategory);
+            } else if (isSection) {
+                selected = linkMode === currentMode && (linkCat === undefined || linkCat === currentCategory || linkCat === 'All');
+            } else {
+                selected = !linkColl && linkMode === undefined && linkCat === currentCategory;
+            }
+            li.classList.toggle('selected', !!selected);
+        });
+    }
+
+    // Mark .selected on the creator/price filter link lists from the current filter state.
+    function syncFilterLinkSelection() {
+        document.querySelectorAll('#CatalogFilters .creatorFilter').forEach(a => {
+            a.classList.toggle('selected', (a.dataset.creator || '') === (filterCreator || ''));
+        });
+        const priceMode = (filterPriceMin === 0 && filterPriceMax === 0) ? 'free'
+            : (filterPriceMin !== null || filterPriceMax !== null) ? 'robux' : 'all';
+        document.querySelectorAll('#CatalogFilters .priceFilter').forEach(a => {
+            a.classList.toggle('selected', a.dataset.price === priceMode);
+        });
+        const priceInputs = document.getElementById('priceInputs');
+        if (priceInputs) priceInputs.style.display = (priceMode === 'robux') ? '' : 'none';
+    }
+
+    // Faithful vanilla-JS port of the real 2013 `Widgets.HierarchicalDropdown` module (recovered from
+    // jsak.roblox.com/e8b579b8…js — see reference/catalog-js/Widgets.HierarchicalDropdown.js). The real
+    // plugin drove the "Browse by Category" slideout flyouts with DIRECTION-AWARE hover intent: it
+    // tracks the mouse X direction over the dropdown, and when you hover a row it either shows that
+    // row's submenu immediately, or — if you're travelling RIGHT toward an already-considered submenu
+    // (or the row is data-delay="always") — waits 1000ms before committing, so diagonally crossing
+    // other rows on the way to a submenu doesn't hijack it. data-delay="never" = always immediate,
+    // "ignore" = do nothing. Submenus equalize their li widths and hide 100ms after leaving the box.
+    // Submenu vertical position came from server-rendered per-row `top:-Npx` offsets aligning each
+    // submenu to the box top; we compute the equivalent once so tall submenus stay in view.
+    function initBrowseCategoryDropdown() {
+        const dropdown = document.getElementById('dropdown');
+        const list = document.getElementById('CategoryList');
+        if (!dropdown || !list || dropdown.dataset.hdInit) return;
+        dropdown.dataset.hdInit = '1';
+
+        const topLis = Array.from(list.children);
+        const allSubs = () => Array.from(list.querySelectorAll(':scope > li > ul'));
+        let lastX = 0, dir = 0;          // dir: 1 = moving right (toward submenu), else -1 (as in the original)
+        let delayTimer = null;
+
+        // Pre-align each submenu to the box top (server did this via inline top:-Npx).
+        allSubs().forEach(ul => { ul.style.top = (-ul.parentElement.offsetTop) + 'px'; });
+
+        const hoveredSub = () => list.querySelector(':scope > li > ul[data-hover="true"]');
+        function hideAll() { allSubs().forEach(ul => { ul.style.display = 'none'; }); topLis.forEach(li => li.classList.remove('hover-open')); }
+        function equalizeWidths(ul) {
+            let w = ul.offsetWidth;
+            const lis = ul.querySelectorAll('li');
+            lis.forEach(li => { if (li.offsetWidth > w) w = li.offsetWidth; });
+            lis.forEach(li => { if (li.offsetWidth < w) li.style.width = w + 'px'; });
+        }
+        function show(li) {
+            const sub = li.querySelector(':scope > ul');
+            hideAll();
+            if (sub) { sub.style.display = 'block'; li.classList.add('hover-open'); equalizeWidths(sub); }
+        }
+
+        allSubs().forEach(ul => {
+            ul.addEventListener('mouseover', () => { ul.dataset.hover = 'true'; });
+            ul.addEventListener('mouseout', () => { ul.dataset.hover = 'false'; });
+        });
+
+        topLis.forEach(li => {
+            li.addEventListener('mouseover', () => {
+                const delay = li.dataset.delay;
+                if (delay === 'ignore' || hoveredSub()) return;
+                li.dataset.hover = 'true';
+                if (delay !== 'never' && (dir === 1 || delay === 'always')) {
+                    clearTimeout(delayTimer);
+                    delayTimer = setTimeout(() => {
+                        if (!hoveredSub()) {
+                            const hv = list.querySelector(':scope > li[data-hover="true"]');
+                            if (hv) show(hv); else hideAll();
+                        }
+                    }, 1000);
+                } else {
+                    show(li);
+                }
+            });
+            li.addEventListener('mouseout', () => { delete li.dataset.hover; });
+        });
+
+        dropdown.addEventListener('mouseleave', () => { setTimeout(hideAll, 100); lastX = 0; dir = 0; });
+        dropdown.addEventListener('mousemove', e => {
+            const prev = lastX; lastX = e.pageX;
+            dir = prev < lastX ? 1 : -1;   // matches the original: 1 when moving right, else -1
+        });
+
+        // Selecting a category closes the flyout; clicking outside closes it too.
+        list.addEventListener('click', e => { if (e.target.closest('a[data-category], a[data-salestype]')) hideAll(); });
+        document.addEventListener('click', e => { if (!dropdown.contains(e.target)) hideAll(); });
+    }
+
+    function initLegendToggle() {
+        const header = document.getElementById('legendheader');
+        const content = document.getElementById('legendcontent');
+        if (!header || !content || header.dataset.wired) return;
+        header.dataset.wired = '1';
+        header.addEventListener('click', function() {
+            const isOpen = content.style.display !== 'none';
+            content.style.display = isOpen ? 'none' : '';
+            header.classList.toggle('expanded', !isOpen);
+        });
+    }
+
     function initFilterHandlers() {
         const creatorInput = document.getElementById('CatalogCreatorFilter');
         const priceMinInput = document.getElementById('CatalogPriceMin');
@@ -299,20 +633,81 @@
         const applyBtn = document.getElementById('CatalogApplyFilters');
         const clearBtn = document.getElementById('CatalogClearFilters');
 
+        // Revisiting the catalog re-runs initCatalog on the SAME persistent DOM — without a guard
+        // every visit stacked another set of listeners (N visits = N loads per click/Enter).
+        if (applyBtn && applyBtn.dataset.wired) return;
+        if (applyBtn) applyBtn.dataset.wired = '1';
+
+        function applyFiltersFromInputs() {
+            filterCreator = creatorInput?.value.trim() || '';
+            filterPriceMin = priceMinInput?.value ? parseInt(priceMinInput.value, 10) : null;
+            filterPriceMax = priceMaxInput?.value ? parseInt(priceMaxInput.value, 10) : null;
+
+            currentPage = 1;
+            currentCursor = '';
+            cursorHistory = [''];
+
+            enterBrowseState();
+            syncFilterLinkSelection();
+            updateDisplayLabel();
+            loadCatalogItems();
+        }
+
         if (applyBtn) {
             applyBtn.addEventListener('click', function(e) {
                 e.preventDefault();
+                applyFiltersFromInputs();
+            });
+        }
 
-                filterCreator = creatorInput?.value.trim() || '';
-                filterPriceMin = priceMinInput?.value ? parseInt(priceMinInput.value, 10) : null;
-                filterPriceMax = priceMaxInput?.value ? parseInt(priceMaxInput.value, 10) : null;
+        // Price Go button (browse-state Currency/Price px inputs).
+        const priceGoBtn = document.getElementById('CatalogPriceGo');
+        if (priceGoBtn) {
+            priceGoBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                applyFiltersFromInputs();
+            });
+        }
 
-                currentPage = 1;
-                currentCursor = '';
-                cursorHistory = [''];
-                
-                updateDisplayLabel();
-                loadCatalogItems();
+        // Authentic browse-state filter LINK lists (recovered browse.aspx: .creatorFilter /
+        // .priceFilter). All Creators/ROBLOX set the creator; All Currency clears prices, Robux
+        // reveals the px inputs, Free = exactly 0.
+        const filtersBlock = document.getElementById('CatalogFilters');
+        if (filtersBlock && !filtersBlock.dataset.linksWired) {
+            filtersBlock.dataset.linksWired = '1';
+            filtersBlock.addEventListener('click', function(e) {
+                const creatorLink = e.target.closest('a.creatorFilter');
+                if (creatorLink) {
+                    e.preventDefault();
+                    filterCreator = creatorLink.dataset.creator || '';
+                    if (creatorInput) creatorInput.value = filterCreator;
+                    currentPage = 1; currentCursor = ''; cursorHistory = [''];
+                    syncFilterLinkSelection();
+                    updateDisplayLabel();
+                    loadCatalogItems();
+                    return;
+                }
+                const priceLink = e.target.closest('a.priceFilter');
+                if (priceLink) {
+                    e.preventDefault();
+                    const mode = priceLink.dataset.price;
+                    if (mode === 'all') { filterPriceMin = null; filterPriceMax = null; }
+                    else if (mode === 'free') { filterPriceMin = 0; filterPriceMax = 0; }
+                    else if (mode === 'robux') {
+                        // Reveal the px inputs; only reload once a range is applied via Go.
+                        filterPriceMin = filterPriceMin ?? null;
+                        document.querySelectorAll('#CatalogFilters .priceFilter').forEach(a => a.classList.toggle('selected', a === priceLink));
+                        const pi = document.getElementById('priceInputs');
+                        if (pi) pi.style.display = '';
+                        return;
+                    }
+                    if (priceMinInput) priceMinInput.value = filterPriceMin ?? '';
+                    if (priceMaxInput) priceMaxInput.value = filterPriceMax ?? '';
+                    currentPage = 1; currentCursor = ''; cursorHistory = [''];
+                    syncFilterLinkSelection();
+                    updateDisplayLabel();
+                    loadCatalogItems();
+                }
             });
         }
 
@@ -354,6 +749,10 @@
         const searchBtn = document.getElementById('ctl00_cphRoblox_rbxCatalog_SearchButton');
         const resetBtn = document.getElementById('ctl00_cphRoblox_rbxCatalog_ResetSearchButton');
 
+        // Same double-binding guard as initFilterHandlers (initCatalog re-runs on every revisit).
+        if (searchBtn && searchBtn.dataset.wired) return;
+        if (searchBtn) searchBtn.dataset.wired = '1';
+
         if (searchBtn) {
             searchBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -379,6 +778,14 @@
                 setMode('Relevance');
             });
         }
+
+        // Authentic: the search-bar category select re-runs the search on change (empty-search enabled).
+        const catSelect = document.getElementById('categoriesForKeyword');
+        if (catSelect) {
+            catSelect.addEventListener('change', function() {
+                searchCatalog(searchInput ? searchInput.value.trim() : '');
+            });
+        }
     }
 
     let browseModeHandlerAttached = false;
@@ -386,25 +793,34 @@
     let paginationHandlerAttached = false;
 
     function initBrowseModeHandlers() {
-        
+
         if (browseModeHandlerAttached) return;
 
+        // Authentic sort control (recovered Pages.Catalog): #SortMain = sort type, #SortAggregation =
+        // time aggregation, plus a Collectibles-only checkbox for Rovloo's salestype filter.
+        const sortMain = document.getElementById('SortMain');
+        const sortAgg = document.getElementById('SortAggregation');
+        const collCheck = document.getElementById('collectiblesOnlyCheckbox');
+        if (sortMain || sortAgg || collCheck) {
+            if (sortMain) sortMain.addEventListener('change', () => setMode(sortMain.value));
+            if (sortAgg) sortAgg.addEventListener('change', () => setTimeFilter(sortAgg.value));
+            if (collCheck) collCheck.addEventListener('change', () => setSalesType(collCheck.checked ? 'Collectible' : 'All'));
+            browseModeHandlerAttached = true;
+            return;
+        }
+
+        // Legacy fallback: the old #BrowseMode vertical list (a[href*='m=']).
         const browseMode = document.getElementById('BrowseMode');
         if (!browseMode) return;
 
         browseMode.addEventListener('click', function(e) {
-            
             const link = e.target.closest('a');
-
             if (link && browseMode.contains(link)) {
                 e.preventDefault();
                 e.stopPropagation();
-
                 const href = link.getAttribute('href') || '';
                 const modeMatch = href.match(/m=(\w+)/);
-                if (modeMatch) {
-                    setMode(modeMatch[1]);
-                }
+                if (modeMatch) setMode(modeMatch[1]);
             }
         });
 
@@ -413,11 +829,13 @@
 
     function initCategoryHandlers() {
         const browseMode = document.getElementById('BrowseMode');
-        if (!browseMode) return;
+        const browseUl = browseMode && browseMode.querySelector('ul');
 
-        const browseUl = browseMode.querySelector('ul');
-        if (!browseUl) return;
-
+        // Legacy list-injection path — only runs if a #BrowseMode <ul> is present. The sort UI now
+        // uses the authentic #SortMain/#SortAggregation selects (recovered Pages.Catalog), so
+        // #BrowseMode is gone and this block is skipped; the statically-provided #CategoryList
+        // (authentic dropdown) is used as-is. Handler binding below always runs.
+        if (browseMode && browseUl) {
         if (!document.getElementById('TimeFilterList')) {
             const timeFilterHtml = `
                 <div id="TimeFilterSection" style="display: none;">
@@ -506,6 +924,7 @@
                 sortByList.insertAdjacentHTML('afterend', categoryHtml);
             }
         }
+        } // end legacy injection (only when #BrowseMode present)
 
         const sortByList = document.getElementById('SortByList');
         if (sortByList && !sortByList.dataset.handlerAttached) {
@@ -538,7 +957,7 @@
         const categoryList = document.getElementById('CategoryList');
         if (categoryList) {
             categoryList.addEventListener('click', function(e) {
-                
+
                 const toggleLink = e.target.closest('a.category-toggle');
                 if (toggleLink) {
                     e.preventDefault();
@@ -547,20 +966,44 @@
                     if (subitems) {
                         const isHidden = subitems.style.display === 'none';
                         subitems.style.display = isHidden ? '' : 'none';
-                        
+
                         toggleLink.textContent = (isHidden ? '▼ ' : '▶ ') + toggleLink.textContent.substring(2);
                     }
                     return;
                 }
 
-                const link = e.target.closest('a[data-category]');
+                const link = e.target.closest('a[data-category], a[data-salestype], a[data-mode]');
                 if (link) {
                     e.preventDefault();
-                    const category = link.dataset.category;
-                    setCategory(category);
+                    // Section entries (Featured/Classic) carry data-mode; Collectibles entries carry
+                    // data-salestype (optionally + data-category, e.g. "Collectible Hats"); plain
+                    // entries carry only data-category (salestype resets, current sort kept).
+                    applySelection({
+                        mode: link.dataset.mode,
+                        category: link.dataset.category !== undefined ? link.dataset.category : 'All',
+                        salesType: link.dataset.salestype !== undefined ? link.dataset.salestype : 'All'
+                    });
                 }
             });
             categoryHandlerAttached = true;
+        }
+
+        // Browse-state flat Category list (authentic data-keepfilters: keep creator/price filters
+        // when switching category from the filter stack).
+        const flatList = document.getElementById('FlatCategoryList');
+        if (flatList && !flatList.dataset.handlerAttached) {
+            flatList.dataset.handlerAttached = '1';
+            flatList.addEventListener('click', function(e) {
+                const link = e.target.closest('a.assetTypeFilter');
+                if (!link) return;
+                e.preventDefault();
+                applySelection({
+                    mode: link.dataset.mode,
+                    category: link.dataset.category !== undefined ? link.dataset.category : 'All',
+                    salesType: link.dataset.salestype !== undefined ? link.dataset.salestype : 'All',
+                    keepFilters: link.dataset.keepfilters !== undefined
+                });
+            });
         }
     }
 
@@ -570,20 +1013,22 @@
 
         const catalogContainer = document.getElementById('catalog-content') || document.body;
         catalogContainer.addEventListener('click', function(e) {
-            
+
             const prevBtn = e.target.closest('.catalog-prev-btn');
             if (prevBtn) {
                 e.preventDefault();
-                if (isLoadingPage) return;
+                if (isLoadingPage) { console.warn('[Catalog pager] prev ignored: a load is still in flight'); return; }
 
                 if (currentPage > 1) {
                     currentPage--;
-                    
+
                     if (currentMode !== 'Classic' && cursorHistory.length > 1) {
-                        cursorHistory.pop(); 
+                        cursorHistory.pop();
                         currentCursor = cursorHistory[cursorHistory.length - 1] || '';
                     }
                     loadCatalogItems();
+                } else {
+                    console.log('[Catalog pager] prev ignored: already on page 1');
                 }
                 return;
             }
@@ -591,7 +1036,7 @@
             const nextBtn = e.target.closest('.catalog-next-btn');
             if (nextBtn) {
                 e.preventDefault();
-                if (isLoadingPage) return;
+                if (isLoadingPage) { console.warn('[Catalog pager] next ignored: a load is still in flight'); return; }
 
                 const canGoNext = currentMode === 'Classic'
                     ? currentPage < totalPages
@@ -599,7 +1044,10 @@
 
                 if (canGoNext) {
                     currentPage++;
+                    console.log(`[Catalog pager] next -> page ${currentPage} (mode=${currentMode}, cursor=${!!currentCursor})`);
                     loadCatalogItems();
+                } else {
+                    console.warn(`[Catalog pager] next ignored: no more pages known (page=${currentPage}, totalPages=${totalPages}, cursor=${JSON.stringify(currentCursor)})`);
                 }
             }
         });
@@ -615,17 +1063,24 @@
         currentMode = mode;
         currentPage = 1;
         currentCursor = '';
-        cursorHistory = ['']; 
+        cursorHistory = [''];
 
+        // Authentic: sort changes navigated to browse.aspx — enter the browse state.
+        enterBrowseState();
+
+        // Sync the authentic sort select (source of truth is currentMode). Section modes
+        // (Classic/Featured) have no sort option — the select shows Relevance for them.
+        const sortMain = document.getElementById('SortMain');
+        if (sortMain && sortMain.value !== mode) {
+            sortMain.value = [...sortMain.options].some(o => o.value === mode) ? mode : 'Relevance';
+        }
+
+        // Legacy #BrowseMode list marking (harmless if the list is absent).
         const modeItems = document.querySelectorAll('#BrowseMode ul li');
         modeItems.forEach(li => {
             const link = li.querySelector('a');
             const href = link?.getAttribute('href') || '';
-            if (href.includes('m=' + mode)) {
-                li.className = 'Selected';
-            } else {
-                li.className = '';
-            }
+            li.className = href.includes('m=' + mode) ? 'Selected' : '';
         });
 
         updateCategoryAvailability();
@@ -644,29 +1099,36 @@
         const isCollectibleMode = currentSalesType === 'Collectible';
         const allowedInClassic = ['All', 'Faces'];
         
-        const notAllowedInCollectible = ['T-Shirts', 'Shirts', 'Pants', 'Faces', 'Packages', 'Heads', 'Emotes', 'Animations',
-            '3D T-Shirts', '3D Shirts', 'Sweaters', 'Jackets', '3D Pants', 'Shorts', 'Dresses & Skirts', 'Bodysuits', 'Shoes'];
+        // The v1 search scopes collectibles natively (SalesTypeFilter=2 combines with any
+        // Category/Subcategory — verified live), so the old taxonomy-era category restrictions for
+        // collectibles mode are gone.
+        const notAllowedInCollectible = [];
 
-        categoryList.querySelectorAll('li').forEach(li => {
-            const link = li.querySelector('a[data-category]');
-            if (!link) return;
-
+        // Grey/disable LEAF links directly (dropdown slideOut leaves + browse-state flat list) —
+        // iterating li's grabbed a group row's first slideOut leaf and greyed the wrong element.
+        document.querySelectorAll('#CategoryList a[data-category], #FlatCategoryList a[data-category]').forEach(link => {
+            const li = link.closest('li');
             const category = link.dataset.category;
+            // Collectible entries (data-salestype) are governed by mode, not category lists.
+            const isCollectibleEntry = link.dataset.salestype !== undefined;
+            // Section entries (data-mode: Classic/Featured) SWITCH section, so mode restrictions
+            // never apply to them.
+            const isSectionEntry = link.dataset.mode !== undefined;
 
             let isAllowed = true;
-            if (isClassicMode && !allowedInClassic.includes(category)) {
+            if (isClassicMode && !isSectionEntry && (isCollectibleEntry || !allowedInClassic.includes(category))) {
                 isAllowed = false;
             }
-            if (isCollectibleMode && notAllowedInCollectible.includes(category)) {
+            if (isCollectibleMode && !isCollectibleEntry && !isSectionEntry && notAllowedInCollectible.includes(category)) {
                 isAllowed = false;
             }
 
             if (isAllowed) {
-                li.classList.remove('disabled');
+                if (li) li.classList.remove('disabled');
                 link.style.pointerEvents = '';
                 link.style.color = '';
             } else {
-                li.classList.add('disabled');
+                if (li) li.classList.add('disabled');
                 link.style.pointerEvents = 'none';
                 link.style.color = '#999';
             }
@@ -711,13 +1173,18 @@
                 currentSalesType = 'All';
                 sortByList.querySelectorAll('li').forEach(li => {
                     const link = li.querySelector('a[data-salestype]');
-                    if (link?.dataset.salestype === 'All') {
-                        li.className = 'selected';
-                    } else {
-                        li.className = '';
-                    }
+                    li.className = (link?.dataset.salestype === 'All') ? 'selected' : '';
                 });
             }
+        }
+
+        // Authentic Collectibles-only checkbox: disabled in Classic mode (no collectibles there),
+        // and force-unchecked if it was on.
+        const collCheck = document.getElementById('collectiblesOnlyCheckbox');
+        if (collCheck) {
+            collCheck.disabled = isClassicMode;
+            if (isClassicMode && currentSalesType === 'Collectible') { currentSalesType = 'All'; }
+            collCheck.checked = (currentSalesType === 'Collectible');
         }
     }
 
@@ -725,19 +1192,10 @@
         currentCategory = category;
         currentPage = 1;
         currentCursor = '';
-        cursorHistory = ['']; 
+        cursorHistory = [''];
 
-        document.querySelectorAll('#CategoryList li').forEach(li => {
-            
-            if (li.classList.contains('category-group')) return;
-            
-            const link = li.querySelector('a[data-category]');
-            if (link?.dataset.category === category) {
-                li.classList.add('selected');
-            } else {
-                li.classList.remove('selected');
-            }
-        });
+        enterBrowseState();
+        syncCategorySelection();
 
         updateDisplayLabel();
         loadCatalogItems();
@@ -747,15 +1205,15 @@
         currentSalesType = salesType;
         currentPage = 1;
         currentCursor = '';
-        cursorHistory = ['']; 
+        cursorHistory = [''];
 
+        enterBrowseState();
+        syncCategorySelection();
+
+        // Legacy list sync (harmless if absent).
         document.querySelectorAll('#SortByList li').forEach(li => {
             const link = li.querySelector('a');
-            if (link?.dataset.salestype === salesType) {
-                li.className = 'selected';
-            } else {
-                li.className = '';
-            }
+            li.className = (link?.dataset.salestype === salesType) ? 'selected' : '';
         });
 
         updateCategoryAvailability();
@@ -768,15 +1226,16 @@
         currentTimeFilter = timeFilter;
         currentPage = 1;
         currentCursor = '';
-        cursorHistory = ['']; 
+        cursorHistory = [''];
 
+        enterBrowseState();
+
+        // Sync authentic #SortAggregation select + legacy list (harmless if absent).
+        const sortAgg = document.getElementById('SortAggregation');
+        if (sortAgg && sortAgg.value !== timeFilter) sortAgg.value = timeFilter;
         document.querySelectorAll('#TimeFilterList li').forEach(li => {
             const link = li.querySelector('a');
-            if (link?.dataset.timefilter === timeFilter) {
-                li.className = 'selected';
-            } else {
-                li.className = '';
-            }
+            li.className = (link?.dataset.timefilter === timeFilter) ? 'selected' : '';
         });
 
         updateDisplayLabel();
@@ -784,17 +1243,19 @@
     }
 
     function updateTimeFilterVisibility() {
+        const sortAgg = document.getElementById('SortAggregation');
         const timeFilterSection = document.getElementById('TimeFilterSection');
         const timeFilterList = document.getElementById('TimeFilterList');
 
+        // Authentic: the time/aggregation select is only relevant for Top Favorites / Best Selling.
         const showTimeFilter = currentMode === 'TopFavorites' || currentMode === 'BestSelling';
-        
-        if (timeFilterSection) {
-            timeFilterSection.style.display = showTimeFilter ? '' : 'none';
-        }
+
+        if (sortAgg) sortAgg.style.display = showTimeFilter ? '' : 'none';
+        if (timeFilterSection) timeFilterSection.style.display = showTimeFilter ? '' : 'none';
 
         if (!showTimeFilter && currentTimeFilter !== 'AllTime') {
             currentTimeFilter = 'AllTime';
+            if (sortAgg) sortAgg.value = 'AllTime';
             if (timeFilterList) {
                 timeFilterList.querySelectorAll('li').forEach(li => {
                     const link = li.querySelector('a[data-timefilter]');
@@ -812,6 +1273,7 @@
         const displayLabel = document.getElementById('ctl00_cphRoblox_rbxCatalog_AssetsDisplaySetLabel');
         if (displayLabel) {
             const modeNames = {
+                'Relevance': 'All Items',
                 'Classic': 'Classic Items',
                 'Featured': 'Featured Items',
                 'TopFavorites': 'Top Favorites',
@@ -832,11 +1294,15 @@
                 label += ' ' + (timeNames[currentTimeFilter] || '');
             }
 
-            if (currentSalesType === 'Collectible') {
-                label = 'Collectible ' + label;
-            }
+            // Breadcrumb wording (authentic .breadCrumbFilter style): keyword > collectibles >
+            // plain browsing ("All Categories" / bare category name) > sort-mode with category suffix.
             if (currentKeyword) {
                 label = `Search Results: "${currentKeyword}"`;
+            } else if (currentSalesType === 'Collectible') {
+                const collLabel = currentCategory !== 'All' ? `Collectible ${currentCategory}` : 'Collectibles';
+                label = currentMode === 'Relevance' ? collLabel : `${label} - ${collLabel}`;
+            } else if (currentMode === 'Relevance') {
+                label = currentCategory !== 'All' ? currentCategory : 'All Categories';
             } else if (currentCategory !== 'All') {
                 label += ` - ${currentCategory}`;
             }
@@ -852,13 +1318,35 @@
             
             displayLabel.textContent = label;
         }
+
+        // Authentic "Showing X - Y of Z results" line (browse.aspx #secondRow). Only rendered when
+        // the totals are actually known (Classic mode); cursor-based API modes can't know Z.
+        const countEl = document.getElementById('CatalogResultsCount');
+        if (countEl) {
+            if (currentMode === 'Classic' && classicTotalItems > 0) {
+                const start = (currentPage - 1) * itemsPerPage + 1;
+                const end = Math.min(currentPage * itemsPerPage, classicTotalItems);
+                countEl.textContent = `Showing ${start.toLocaleString()} - ${end.toLocaleString()} of ${classicTotalItems.toLocaleString()} results`;
+            } else {
+                countEl.textContent = '';
+            }
+        }
     }
 
     function searchCatalog(query) {
         currentKeyword = query;
+
+        // Authentic: the search-bar category select scopes the keyword search by category.
+        const catSel = document.getElementById('categoriesForKeyword');
+        if (catSel && catSel.value) {
+            currentCategory = catSel.value;
+        }
+
         currentPage = 1;
         currentCursor = '';
-        cursorHistory = ['']; 
+        cursorHistory = [''];
+        enterBrowseState();
+        syncCategorySelection();
         updateDisplayLabel();
         loadCatalogItems();
     }
@@ -897,6 +1385,7 @@
         }
 
         totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+        classicTotalItems = filteredItems.length;
         const startIdx = (currentPage - 1) * itemsPerPage;
         const pageItems = filteredItems.slice(startIdx, startIdx + itemsPerPage);
 
@@ -1048,8 +1537,29 @@
     }
 
     async function loadCatalogItems() {
-        if (isLoadingPage) return;
+        // A selection made while a load is in flight must not be silently dropped (that left the UI
+        // showing the OLD category with the NEW selection highlighted, and desynced the pager) —
+        // queue one trailing reload that picks up the latest state instead.
+        if (isLoadingPage) { pendingReload = true; return; }
         isLoadingPage = true;
+
+        // Watchdog: if anything in this load hangs without resolving (a dead IPC call, a request
+        // that never settles), isLoadingPage would stay true forever and every pager/filter click
+        // would be silently ignored from then on — the exact "stuck on page 1" failure. Force-clear
+        // the flag after 20s and surface the timeout visibly.
+        const loadToken = ++catalogLoadToken;
+        setTimeout(() => {
+            if (isLoadingPage && loadToken === catalogLoadToken) {
+                console.error('[Catalog] Load watchdog fired: a catalog load hung for 20s — clearing the in-flight flag');
+                isLoadingPage = false;
+                const box = document.querySelector('#CatalogContainer .Assets .StandardBox');
+                if (box && !box.querySelector('.CatalogItemOuter')) {
+                    box.innerHTML = '<div class="catalog-no-results" style="text-align:center;padding:40px;color:#cc0000;">Catalog load timed out — check the console for the request that never finished, then try again.</div>';
+                }
+                const overlay = document.querySelector('#CatalogContainer .catalog-loading-overlay');
+                if (overlay) overlay.style.display = 'none';
+            }
+        }, 20000);
         
         const itemsContainer = document.querySelector('#CatalogContainer .Assets .StandardBox');
         if (!itemsContainer) {
@@ -1098,7 +1608,10 @@
             if (currentMode === 'Classic' && !hasFilters) {
                 const items = await loadClassicItems();
                 await renderCatalogItems(items);
+                lastLoadedPage = currentPage;
                 updatePagination();
+                // Refresh the "Showing X - Y of Z results" line now that classicTotalItems is known.
+                updateDisplayLabel();
 
                 fetchResalePricesForLimitedItems(items, true);
 
@@ -1106,27 +1619,27 @@
                 return;
             }
 
-            const catMapping = categoryMap[currentCategory] || { categoryFilter: null };
+            const catMapping = categoryMap[currentCategory] || { catalogCategory: 1 };
             const sortType = sortTypeMap[currentMode] ?? 0;
 
             let sortAggregation = null;
             if ((currentMode === 'TopFavorites' || currentMode === 'BestSelling') && currentTimeFilter !== 'AllTime') {
-                sortAggregation = currentTimeFilter === 'PastDay' ? 1 : 3; 
+                sortAggregation = currentTimeFilter === 'PastDay' ? 1 : 3;
             }
 
             const cursorToUse = cursorHistory[currentPage - 1] || '';
 
             const params = {
-                categoryFilter: catMapping.categoryFilter,
-                subcategory: catMapping.subcategory || '',
-                taxonomy: catMapping.taxonomy || '',
+                // v1 Category/Subcategory coordinates (the paginating request form)
+                catalogCategory: catMapping.catalogCategory ?? 1,
+                catalogSubcategory: catMapping.catalogSubcategory || null,
                 sortType: sortType,
                 sortAggregation: sortAggregation,
                 keyword: currentKeyword,
                 limit: itemsPerPage,
                 cursor: cursorToUse,
-                collectiblesOnly: currentSalesType === 'Collectible', 
-                
+                collectiblesOnly: currentSalesType === 'Collectible',
+
                 creatorName: filterCreator || '',
                 minPrice: filterPriceMin,
                 maxPrice: filterPriceMax
@@ -1166,6 +1679,7 @@
                     currentCursor = '';
                     totalPages = currentPage;
                 }
+                lastLoadedPage = currentPage;
                 updatePagination();
 
                 fetchResalePricesForLimitedItems(response.data);
@@ -1174,11 +1688,16 @@
             }
         } catch (error) {
             console.error('Failed to load catalog items:', error);
-            const table = itemsContainer.querySelector('table');
-            if (table) {
-                table.style.opacity = '1';
-                table.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #cc0000;">Failed to load items: ' + error.message + '</td></tr>';
-            }
+            // The old error path wrote into a <table> that no longer exists since the tile rewrite —
+            // failures (e.g. a rejected page-2 cursor) were completely invisible and the pager just
+            // silently stayed put. Show the error in the tiles container and roll the page counter
+            // back to what it was before this request so the pager stays consistent.
+            // Clamp, don't assign: a failed page-N navigation rolls back to the last good page, but a
+            // failed FRESH load (selection reset currentPage to 1) must stay at 1, not jump forward
+            // to a stale lastLoadedPage from the previous selection.
+            currentPage = Math.min(lastLoadedPage, currentPage);
+            itemsContainer.innerHTML = '<div class="catalog-no-results" style="text-align:center;padding:40px;color:#cc0000;">Failed to load items: ' + escapeHtml(error.message) + '</div>';
+            updatePagination();
         } finally {
             isLoadingPage = false;
 
@@ -1196,6 +1715,12 @@
                 btn.style.opacity = '';
                 btn.style.pointerEvents = '';
             });
+
+            // Run the reload queued by a selection made while this load was in flight.
+            if (pendingReload) {
+                pendingReload = false;
+                loadCatalogItems();
+            }
         }
     }
 
@@ -1215,86 +1740,72 @@
             }
         }
 
-        const loadingIndicator = itemsContainer.querySelector('.catalog-classic-loading');
-        if (loadingIndicator) {
-            loadingIndicator.remove();
-        }
+        // Clear any loading indicator/overlay left by loadCatalogItems.
+        itemsContainer.querySelectorAll('.catalog-classic-loading, .catalog-loading-overlay').forEach(el => el.remove());
 
-        let table = itemsContainer.querySelector('table');
-        if (!table) {
-            table = document.createElement('table');
-            table.id = 'ctl00_cphRoblox_rbxCatalog_AssetsDataList';
-            table.cellSpacing = '0';
-            table.align = 'Center';
-            table.border = '0';
-            table.style.borderCollapse = 'collapse';
-            itemsContainer.innerHTML = '';
-            itemsContainer.appendChild(table);
-        }
-
-        if (items.length === 0) {
-            table.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">No items found</td></tr>';
+        if (!items || items.length === 0) {
+            itemsContainer.innerHTML = '<div class="catalog-no-results" style="text-align:center;padding:40px;color:#666;">No items found</div>';
             return;
         }
 
-        const ITEMS_PER_ROW = 5;
-        const INITIAL_ROWS = 3; 
-        const rowCount = Math.ceil(items.length / ITEMS_PER_ROW);
-        const initialRowCount = Math.min(rowCount, INITIAL_ROWS);
+        // Bump the render generation so any deferred chunk from a SUPERSEDED render (e.g. the
+        // Classic load that fires right before a mode switch) bails instead of appending stale tiles.
+        const renderGen = ++catalogRenderGen;
 
+        // Authentic 2013 catalog: floated .CatalogItemOuter tiles (hover-expand), NOT a table.
+        // Big "featured hero" row is a LANDING-page device (the real /catalog/ featured landing) —
+        // category/All/sort/search browsing was all-Small tiles on the real browse.aspx. Restrict it
+        // to page 1 of the Featured/Classic sections so it doesn't leak into plain browsing.
+        const isSectionLanding = currentMode === 'Featured' || currentMode === 'Classic';
+        const bigCount = (currentPage === 1 && isSectionLanding && !currentKeyword) ? Math.min(4, items.length) : 0;
+        const INITIAL = 24; // render the first screenful synchronously, defer the rest
+
+        const firstChunk = Math.min(items.length, INITIAL);
         let html = '';
-        for (let row = 0; row < initialRowCount; row++) {
-            html += '<tr>';
-            for (let col = 0; col < ITEMS_PER_ROW; col++) {
-                const idx = row * ITEMS_PER_ROW + col;
-                if (idx < items.length) {
-                    html += renderCatalogItem(items[idx]);
-                } else {
-                    html += '<td></td>';
-                }
-            }
-            html += '</tr>';
+        for (let i = 0; i < firstChunk; i++) {
+            html += renderCatalogItem(items[i], i < bigCount);
+        }
+        itemsContainer.innerHTML = html;
+
+        // Force the Small grid onto a new line below the Big hero row.
+        if (bigCount > 0 && itemsContainer.children[bigCount]) {
+            const clr = document.createElement('div');
+            clr.style.clear = 'both';
+            itemsContainer.insertBefore(clr, itemsContainer.children[bigCount]);
         }
 
-        table.innerHTML = html;
-
-        if (rowCount > initialRowCount) {
-            
-            const loadMoreRows = () => {
-                const fragment = document.createDocumentFragment();
-                for (let row = initialRowCount; row < rowCount; row++) {
-                    const tr = document.createElement('tr');
-                    for (let col = 0; col < ITEMS_PER_ROW; col++) {
-                        const idx = row * ITEMS_PER_ROW + col;
-                        if (idx < items.length) {
-                            const td = document.createElement('td');
-                            td.innerHTML = renderCatalogItem(items[idx]);
-                            tr.appendChild(td.firstChild);
-                        } else {
-                            tr.appendChild(document.createElement('td'));
-                        }
-                    }
-                    fragment.appendChild(tr);
+        if (items.length > firstChunk) {
+            setTimeout(() => {
+                if (renderGen !== catalogRenderGen) return; // superseded — drop stale append
+                const tmp = document.createElement('div');
+                let more = '';
+                for (let i = firstChunk; i < items.length; i++) {
+                    more += renderCatalogItem(items[i], false);
                 }
-                table.appendChild(fragment);
-            };
-
-            setTimeout(loadMoreRows, 100);
+                tmp.innerHTML = more;
+                const frag = document.createDocumentFragment();
+                while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+                itemsContainer.appendChild(frag);
+                wireCatalogTileClicks(itemsContainer);
+            }, 100);
         }
 
-        table.querySelectorAll('.Asset').forEach(asset => {
-            asset.addEventListener('click', function(e) {
-                if (e.target.tagName !== 'A') {
-                    const itemId = this.dataset.itemId;
-                    const itemType = this.dataset.itemType || 'Asset';
-                    if (itemId) {
-                        navigateToItemDetail(itemId, itemType);
-                    }
-                }
+        wireCatalogTileClicks(itemsContainer);
+        fetchThumbnails(items);
+    }
+
+    function wireCatalogTileClicks(container) {
+        container.querySelectorAll('.CatalogItemOuter').forEach(tile => {
+            if (tile.dataset.clickWired) return;
+            tile.dataset.clickWired = '1';
+            tile.addEventListener('click', function(e) {
+                // Let the real name/image <a> links navigate on their own.
+                if (e.target.closest('a')) return;
+                const itemId = this.dataset.itemId;
+                const itemType = this.dataset.itemType || 'Asset';
+                if (itemId) navigateToItemDetail(itemId, itemType);
             });
         });
-
-        fetchThumbnails(items);
     }
 
     async function fetchThumbnails(items) {
@@ -1320,7 +1831,7 @@
                     if (thumbnailData?.data) {
                         thumbnailData.data.forEach(thumb => {
                             if (thumb.state === 'Completed' && thumb.imageUrl) {
-                                const img = document.querySelector(`.Asset[data-item-id="${thumb.targetId}"] img`);
+                                const img = document.querySelector(`[data-item-id="${thumb.targetId}"] .roblox-item-image img`);
                                 if (img) {
                                     img.src = thumb.imageUrl;
                                 }
@@ -1347,7 +1858,7 @@
                     if (thumbnailData?.data) {
                         thumbnailData.data.forEach(thumb => {
                             if (thumb.state === 'Completed' && thumb.imageUrl) {
-                                const img = document.querySelector(`.Asset[data-item-id="${thumb.targetId}"] img`);
+                                const img = document.querySelector(`[data-item-id="${thumb.targetId}"] .roblox-item-image img`);
                                 if (img) {
                                     img.src = thumb.imageUrl;
                                 }
@@ -1618,7 +2129,7 @@
     }
 
     function applyEconomyDataToDOM(itemId, data, isClassicMode) {
-        const assetEl = document.querySelector(`.Asset[data-item-id="${itemId}"]`);
+        const assetEl = document.querySelector(`[data-item-id="${itemId}"]`);
         if (!assetEl) {
             console.log('[Economy DOM] Element not found for item', itemId);
             return;
@@ -1627,20 +2138,20 @@
         const isLimited = data.isLimited || data.isLimitedUnique;
 
         if (isLimited) {
-            const thumbDiv = assetEl.querySelector('.AssetThumbnail');
+            const thumbDiv = assetEl.querySelector('.roblox-item-image');
             if (thumbDiv && !thumbDiv.querySelector('.limited-badge')) {
                 const badge = document.createElement('div');
                 badge.className = 'limited-badge';
                 badge.innerHTML = data.isLimitedUnique
-                    ? '<img src="images/assetIcons/limitedunique.png" alt="Limited U">'
-                    : '<img src="images/assetIcons/limited.png" alt="Limited">';
+                    ? '<img src="images/UI/catalog/legend-limitedu.png" alt="Limited U">'
+                    : '<img src="images/UI/catalog/legend-limited.png" alt="Limited">';
                 thumbDiv.appendChild(badge);
                 console.log('[Economy DOM] Added limited badge to item', itemId);
             }
         }
 
-        const priceEl = assetEl.querySelector('.AssetPrice .PriceInRobux');
-        const priceContainer = assetEl.querySelector('.AssetPrice');
+        const priceEl = assetEl.querySelector('.robux-price .robux');
+        const priceContainer = assetEl.querySelector('.robux-price');
         
         if (isLimited) {
             console.log('[Economy DOM] Item', itemId, 'is limited, lowestSellerPrice:', data.lowestSellerPrice);
@@ -1670,7 +2181,7 @@
         }
     }
 
-    function renderCatalogItem(item) {
+    function renderCatalogItem(item, big) {
         const id = item.id || item.assetId;
         const name = item.name || 'Unknown Item';
 
@@ -1741,58 +2252,60 @@
 
         let thumbUrl = item.thumbnailUrl || placeholderImg;
 
+        // Limited / BC badge overlaid on the thumbnail (JS also appends this post-load in
+        // applyEconomyDataToDOM, targeting .roblox-item-image — keep the class name in sync).
         let limitedBadge = '';
         if (isLimitedUnique) {
-            limitedBadge = '<div class="limited-badge"><img src="images/assetIcons/limitedunique.png" alt="Limited U"></div>';
+            limitedBadge = '<div class="limited-badge"><img src="images/UI/catalog/legend-limitedu.png" alt="Limited U"></div>';
         } else if (isLimited) {
-            limitedBadge = '<div class="limited-badge"><img src="images/assetIcons/limited.png" alt="Limited"></div>';
+            limitedBadge = '<div class="limited-badge"><img src="images/UI/catalog/legend-limited.png" alt="Limited"></div>';
         }
 
+        // Authentic price = .robux-price > .robux (economy DOM update hook queries .robux-price .robux).
         let priceHtml = '';
         if (priceText) {
             const isOffSale = priceText === 'Off Sale';
             const priceStyle = isOffSale ? ' style="color:#cc0000;"' : '';
-            priceHtml = `<div class="AssetPrice"><span class="PriceInRobux"${priceStyle}>${priceText}</span></div>`;
+            priceHtml = `<div class="robux-price"><span class="robux notranslate"${priceStyle}>${escapeHtml(priceText)}</span></div>`;
         } else if (priceInTickets) {
-            priceHtml = `<div class="AssetPrice"><span class="PriceInTickets">Tx: ${priceInTickets.toLocaleString()}</span></div>`;
+            priceHtml = `<div class="robux-price"><span class="robux notranslate">Tx: ${priceInTickets.toLocaleString()}</span></div>`;
         } else {
-            
-            priceHtml = `<div class="AssetPrice" style="display:none;"><span class="PriceInRobux"></span></div>`;
+            priceHtml = `<div class="robux-price" style="display:none;"><span class="robux notranslate"></span></div>`;
         }
 
-        let lowestPriceHtml = '';
-        if (isLimited || isLimitedUnique) {
-            lowestPriceHtml = `<div class="AssetFavorites"><span class="Detail"><i>Lowest Price</i></span></div>`;
-        }
-
+        // Extra hover-content rows (revealed on tile hover, authentic CatalogHoverContent).
         let remainingHtml = '';
         if (isLimitedUnique && remaining !== undefined) {
-            remainingHtml = `<div class="AssetsSold"><span class="Label" style="color:#cc0000;">Remaining:</span> <span class="Detail">${remaining.toLocaleString()}</span></div>`;
+            remainingHtml = `<div><span class="CatalogItemInfoLabel" style="color:#cc0000;">Remaining:</span> <span class="HoverInfo">${remaining.toLocaleString()}</span></div>`;
         }
 
+        const detailHref = `#catalog-item?id=${id}&type=${itemType}`;
+        const outerClass = big ? 'CatalogItemOuter BigOuter' : 'CatalogItemOuter SmallOuter';
+        const viewClass = big ? 'SmallCatalogItemView BigView' : 'SmallCatalogItemView SmallView';
+        const innerClass = big ? 'CatalogItemInner BigInner' : 'CatalogItemInner SmallInner';
+        const imageClass = big ? 'roblox-item-image image-large' : 'roblox-item-image image-small';
+        const imgSize = big ? 150 : 110;
+
         return `
-            <td valign="top">
-                <div class="Asset" style="margin-left:5px;margin-right:5px;" data-item-id="${id}" data-item-type="${itemType}">
-                    <div class="AssetThumbnail">
-                        <a href="#" onclick="return false;" title="${escapeHtml(name)}" style="display:inline-block;height:110px;width:110px;cursor:pointer;"><img src="${thumbUrl}" width="110" height="110" loading="lazy" border="0" alt="${escapeHtml(name)}"/></a>
-                        ${limitedBadge}
-                    </div>
-                    <div class="AssetDetails">
-                        <div class="AssetName"><a href="#catalog-item?id=${id}&type=${itemType}">${escapeHtml(name)}</a></div>
-                        <div class="AssetCreator">
-                            <span class="Label">Creator:</span>
-                            <span class="Detail"><a href="${creatorHref}">${escapeHtml(creatorName)}</a></span>
+            <div class="${outerClass}" data-item-id="${id}" data-item-type="${itemType}">
+                <div class="${viewClass}">
+                    <div class="${innerClass}">
+                        <div class="${imageClass}">
+                            <a href="${detailHref}" title="${escapeHtml(name)}"><img src="${thumbUrl}" width="${imgSize}" height="${imgSize}" loading="lazy" border="0" alt="${escapeHtml(name)}"/></a>
+                            ${limitedBadge}
                         </div>
-                        ${remainingHtml}
-                        <div class="AssetFavorites">
-                            <span class="Label">Favorited:</span>
-                            <span class="Detail">${favoriteCount.toLocaleString()} times</span>
+                        <div class="textDisplay">
+                            <div class="CatalogItemName notranslate"><a class="name notranslate" href="${detailHref}" title="${escapeHtml(name)}">${escapeHtml(name)}</a></div>
+                            ${priceHtml}
                         </div>
-                        ${priceHtml}
-                        ${lowestPriceHtml}
+                        <div class="CatalogHoverContent">
+                            <div><span class="CatalogItemInfoLabel">Creator:</span> <span class="HoverInfo notranslate"><a href="${creatorHref}">${escapeHtml(creatorName)}</a></span></div>
+                            <div><span class="CatalogItemInfoLabel">Favorited:</span> <span class="HoverInfo">${favoriteCount.toLocaleString()} times</span></div>
+                            ${remainingHtml}
+                        </div>
                     </div>
                 </div>
-            </td>
+            </div>
         `;
     }
 
@@ -1803,35 +2316,56 @@
     }
 
     function updatePagination() {
-        
+        // Authentic pager (recovered Pages.Catalog): #pagingprevious / #pagingnext anchors that get a
+        // .disabled class at the ends, plus a .Paging_Input page-number box (type + Enter to jump).
+        // Prev/next keep the .catalog-prev-btn / .catalog-next-btn classes so the delegated handler in
+        // initPaginationHandlers still routes clicks.
         const headerPager = document.getElementById('ctl00_cphRoblox_rbxCatalog_HeaderPagerPanel');
-        if (headerPager) {
-            headerPager.style.display = 'none';
-        }
+        if (headerPager) headerPager.style.display = 'none';
 
-        let pagerHtml = '';
-        if (currentPage > 1) {
-            pagerHtml += `<a href="#" class="catalog-prev-btn" id="footerPrevBtn"><span class="NavigationIndicators">&lt;&lt;</span> Previous</a> `;
-        }
-
-        if (currentMode === 'Classic' && totalPages > 0) {
-            pagerHtml += `<span id="ctl00_cphRoblox_rbxCatalog_FooterPagerLabel">Page ${currentPage} of ${totalPages}</span>`;
-        } else {
-            pagerHtml += `<span id="ctl00_cphRoblox_rbxCatalog_FooterPagerLabel">Page ${currentPage}</span>`;
-        }
-
-        const hasMorePages = currentMode === 'Classic' 
-            ? currentPage < totalPages 
+        const prevDisabled = currentPage <= 1;
+        const hasMorePages = currentMode === 'Classic'
+            ? currentPage < totalPages
             : (currentPage < totalPages || currentCursor);
-            
-        if (hasMorePages) {
-            pagerHtml += ` <a href="#" class="catalog-next-btn" id="footerNextBtn">Next <span class="NavigationIndicators">&gt;&gt;</span></a>`;
+        const nextDisabled = !hasMorePages;
+
+        // Authentic browse.aspx pager markup: span.pager.previous + span.page.text with the
+        // .Paging_Input page box ("Page [n] of N") + span.pager.next. The page-number input only
+        // makes sense when the total page count is known (Classic mode); cursor-based modes can't
+        // jump to an arbitrary page, so just show the current page.
+        let pageInfo;
+        if (currentMode === 'Classic' && totalPages > 0) {
+            pageInfo = `Page <input class="Paging_Input translate" type="text" value="${currentPage}"/> of <span id="ctl00_cphRoblox_rbxCatalog_FooterPagerLabel">${totalPages.toLocaleString()}</span><span class="paging_pagenums_container"></span>`;
+        } else {
+            pageInfo = `<span id="ctl00_cphRoblox_rbxCatalog_FooterPagerLabel">Page ${currentPage}</span>`;
         }
+
+        const pagerHtml = `
+            <div class="PagingContainerDivTop">
+                <span class="pager previous catalog-prev-btn${prevDisabled ? ' disabled' : ''}" id="pagingprevious"></span>
+                <span class="page text">${pageInfo}</span>
+                <span class="pager next catalog-next-btn${nextDisabled ? ' disabled' : ''}" id="pagingnext"></span>
+            </div>`;
 
         const footerPager = document.getElementById('ctl00_cphRoblox_rbxCatalog_FooterPagerPanel');
         if (footerPager) {
             footerPager.innerHTML = pagerHtml;
             footerPager.style.display = 'block';
+            const input = footerPager.querySelector('.Paging_Input');
+            if (input) {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' || e.which === 13) {
+                        e.preventDefault();
+                        if (isLoadingPage) return;
+                        let p = Math.round(parseInt(this.value, 10));
+                        if (!isNaN(p) && p >= 1) {
+                            if (p > totalPages) p = totalPages;
+                            currentPage = p;
+                            loadCatalogItems();
+                        }
+                    }
+                });
+            }
         }
 
         bindPaginationHandlers();
@@ -1875,10 +2409,16 @@
         categoryHandlerAttached = false;
         paginationHandlerAttached = false;
 
-        const container = document.getElementById('ctl00_cphRoblox_rbxCatalog_AssetsDataList');
-        if (container) {
-            container.innerHTML = '';
-        }
+        // Clear the rendered tiles (authentic port renders into .Assets .StandardBox, not the
+        // legacy AssetsDataList table — clear both in case an old table id is ever present).
+        const legacyTable = document.getElementById('ctl00_cphRoblox_rbxCatalog_AssetsDataList');
+        if (legacyTable) legacyTable.innerHTML = '';
+        const tilesBox = document.querySelector('#CatalogContainer .Assets .StandardBox');
+        if (tilesBox) tilesBox.innerHTML = '';
+
+        // Back to the splash/landing nav state for the next visit.
+        classicTotalItems = 0;
+        catalogNavState = 'splash';
     }
 
     window.CatalogPage = {

@@ -310,7 +310,7 @@ async function retryLoginWithCaptcha() {
 
                 setTimeout(() => {
                     hideLoginModal();
-                    loadHomePage();
+                    navigateTo('myroblox'); // just logged in — go straight to the dashboard, skip the landing page entirely
                 }, 1500);
             }
         } else {
@@ -402,7 +402,7 @@ async function doLogin() {
 
                 setTimeout(() => {
                     hideLoginModal();
-                    loadHomePage();
+                    navigateTo('myroblox'); // just logged in — go straight to the dashboard, skip the landing page entirely
                 }, 1500);
             }
         } else if (result.requiresCaptcha) {
@@ -471,7 +471,7 @@ async function verifyTwoStepCode() {
 
             setTimeout(() => {
                 hideLoginModal();
-                loadHomePage();
+                navigateTo('myroblox'); // just logged in — go straight to the dashboard, skip the landing page entirely
             }, 1500);
         } else {
             errorEl.textContent = result.error || 'Verification failed';
@@ -513,7 +513,7 @@ async function doBrowserLogin() {
 
                 setTimeout(() => {
                     hideLoginModal();
-                    loadHomePage();
+                    navigateTo('myroblox'); // just logged in — go straight to the dashboard, skip the landing page entirely
                 }, 1500);
             } else {
                 throw new Error('Failed to verify login');
@@ -572,7 +572,7 @@ async function doCookieLogin() {
 
             setTimeout(() => {
                 hideLoginModal();
-                loadHomePage();
+                navigateTo('myroblox'); // just logged in — go straight to the dashboard, skip the landing page entirely
             }, 1500);
         } else {
             throw new Error('Failed to verify login');
@@ -670,10 +670,13 @@ async function update2013AuthUI(user) {
         
         // Update friends count
         try {
-            const friendRequests = await window.roblox.getFriendRequests(user.id).catch(() => ({ data: [] }));
+            // getFriendRequests takes (limit, cursor) — passing user.id as the
+            // limit made the API reject every call ("Invalid count"). The
+            // dedicated count endpoint is exact and cheaper anyway.
+            const countResult = await window.roblox.getFriendRequestCount().catch(() => ({ count: 0 }));
             const friendsText = document.getElementById('FriendsAlertText');
             const friendsBubble = document.getElementById('FriendsBubble');
-            const requestCount = friendRequests.data?.length || 0;
+            const requestCount = countResult?.count || 0;
             if (friendsText) friendsText.textContent = requestCount;
             if (friendsBubble) friendsBubble.style.display = requestCount > 0 ? 'block' : 'none';
         } catch (e) {

@@ -1,3 +1,52 @@
+/* ===== Account/Settings page (inline #page-account in index.html) — 2013 ===== */
+#page-account #Body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000;
+    padding-top: 6px;
+}
+#page-account #Body .StandardBoxHeader {
+    background: none;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    text-align: left;
+    padding: 4px 2px 6px;
+    margin: 0 0 10px;
+    height: auto;
+    width: auto;
+}
+#page-account #Body .StandardBoxHeader span {
+    display: inline;
+    width: auto;
+    height: auto;
+    background: none;
+    padding: 0;
+    overflow: visible;
+    font-size: 22px;
+    font-weight: bold;
+    color: #363636;
+    letter-spacing: -1px;
+}
+#page-account #Body .StandardBox {
+    background: #fff;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+#page-account #Body fieldset legend {
+    color: #095fb5;
+}
+#page-account #Body .Button {
+    display: inline-block;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    color: #333;
+    font-weight: bold;
+    text-decoration: none;
+}
+#page-account #Body .Button:hover {
+    background: #e4e4e4;
+}
 
 
 .settings-page {

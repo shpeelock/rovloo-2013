@@ -3,46 +3,70 @@
     <div id="RepositionBody">
         <div id="Body" style="width:970px; margin:0 auto;">
             <div id="ItemContainer" class="PlaceItemContainer new-game-page" style="margin-left:15px; width:940px; position:relative;">
-                <div id="Item" class="place-item redesign body" style="display:flex; flex-wrap:wrap;">
+                <div id="Item" class="place-item redesign body">
                     <!-- Header - Full Width -->
                     <div class="item-header" style="width:100%;">
                         <h2 id="GameTitle" class="notranslate" style="display:inline; font-size:18px; margin:0;">Loading...</h2>
                     </div>
 
-                    <!-- Left Column (500px) -->
-                    <div class="left-col-2013" style="width:500px; margin-right:20px;">
+                    <!-- Left Column (500px) — authentic .left-column, sizing/float from GamePage.css -->
+                    <div class="left-column">
                         <!-- Thumbnail -->
-                        <div class="item-media" style="position:relative; margin-bottom:16px; width:500px;">
+                        <div class="item-media">
                             <a id="GameThumbnailLink" title="" style="display:block;">
-                                <img id="GameThumbnail" src="images/spinners/spinner100x100.gif" alt="Game Thumbnail" style="width:500px; height:280px; border:1px solid #eee; display:block;"/>
+                                <img id="GameThumbnail" src="images/spinners/spinner100x100.gif" alt="Game Thumbnail"/>
                             </a>
                         </div>
 
-                        <!-- Actions: Favorite + Voting -->
-                        <div class="actions logged-out" style="position:relative; height:22px; margin-bottom:24px;">
-                            <div class="favorite" style="position:absolute; top:0; left:0;">
-                                <a id="FavoriteStar" class="AddRemoveFavorite" title="Add to favorites" style="display:block; width:21px; height:17px; cursor:pointer;"></a>
+                        <!-- Actions: Favorite + Voting. Structure transcribed verbatim from
+                             reference/archive-game-detail-2013-loggedout.html's .voting-panel
+                             widget (the same one GamePage.css/VotingPanel.css already target —
+                             the previous markup used un-classed spans + hardcoded colors that
+                             bypassed that CSS entirely). "logged-in" reflects this client's
+                             actual state (the real page's class has no CSS effect either way —
+                             it's a pure JS state marker). -->
+                        <div class="actions logged-in">
+                            <div class="favorite">
+                                <a id="FavoriteStar" class="AddRemoveFavorite" title="Add to favorites"></a>
                             </div>
-                            <div class="voting voting-panel" style="position:absolute; top:0; left:44px;">
-                                <div class="users-vote" style="float:left;">
-                                    <a id="VoteUpButton" class="upvote" title="Like this game" style="display:block; float:left; width:22px; height:21px; cursor:pointer;"></a>
-                                    <a id="VoteDownButton" class="downvote" title="Dislike this game" style="display:block; float:left; width:22px; height:21px; margin-left:5px; cursor:pointer;"></a>
-                                </div>
-                                <div class="vote-summary" style="float:left; margin-left:10px; font-size:11px; line-height:16px; white-space:nowrap;">
-                                    <span class="tiny-thumbs-up" style="display:inline-block; width:12px; height:10px; margin-right:3px; vertical-align:middle; background:url('images/Icons/thumbsup.png') no-repeat 0 -170px;"></span><span style="color:#666; vertical-align:middle;">Thumbs up: </span><span id="VoteUpCount" style="vertical-align:middle;">0</span>
-                                    <span style="margin:0 8px; color:#666;">|</span>
-                                    <span style="color:#666; vertical-align:middle;">Thumbs down: </span><span id="VoteDownCount" style="vertical-align:middle;">0</span><span class="tiny-thumbs-down" style="display:inline-block; width:12px; height:10px; margin-left:3px; vertical-align:middle; background:url('images/Icons/thumbsup.png') no-repeat 0 -182px;"></span>
-                                    <div class="visual-container" style="position:relative; width:100%; height:5px; margin-top:5px; clear:both;">
-                                        <div class="background" style="position:absolute; width:100%; height:5px; background:#CE645B;"></div>
-                                        <div id="VoteBarLikes" class="percent" style="position:absolute; width:0; height:5px; background:#52A846;"></div>
+                            <div class="voting">
+                                <div class="voting-panel body">
+                                    <div class="users-vote">
+                                        <a id="VoteUpButton" class="upvote" title="Like this game"></a>
+                                        <a id="VoteDownButton" class="downvote" title="Dislike this game"></a>
+                                    </div>
+                                    <div class="vote-summary">
+                                        <div class="voting-details">
+                                            <!-- One span per box, matching the real archived markup exactly
+                                                 (<span>Thumbs up: 9</span><span class="tiny-thumbs-up">) — NOT
+                                                 a nested count span. CSS/2013/game-detail-2-2013.css (the
+                                                 theme's pre-existing verbatim VotingPanel.css port) floats
+                                                 ".total-upvotes span"/".total-downvotes span" via a plain
+                                                 descendant selector, same as the real bundle; nesting a
+                                                 separate id span for the count let that selector reach in and
+                                                 float the count out ahead of its own label text. JS now
+                                                 rewrites this span's whole textContent instead. -->
+                                            <div class="total-upvotes divider-right">
+                                                <span id="VoteUpCount">Thumbs up:&nbsp;0</span><span class="tiny-thumbs-up"></span>
+                                            </div>
+                                            <div class="total-downvotes">
+                                                <span id="VoteDownCount">Thumbs down:&nbsp;0</span><span class="tiny-thumbs-down"></span>
+                                            </div>
+                                            <div class="clear"></div>
+                                        </div>
+                                        <div class="visual-container">
+                                            <div class="background"></div>
+                                            <div id="VoteBarLikes" class="percent"></div>
+                                            <div class="clear"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Description -->
-                        <div class="description notranslate" style="margin:24px 0;">
-                            <pre id="GameDescription" style="margin:0; white-space:pre-wrap; word-wrap:break-word; font-family: Arial,Helvetica,sans-serif; font-size:14px; line-height:1.4em;">No description available.</pre>
+                        <div class="description notranslate">
+                            <pre id="GameDescription">No description available.</pre>
                         </div>
 
                         <!-- Badges/Gamepasses Section -->
@@ -92,18 +116,18 @@
                         </div>
                     </div>
 
-                    <!-- Right Column (240px) -->
-                    <div class="right-col-2013" style="width:240px;">
-                        <!-- Builder Section -->
-                        <div class="builder divider-bottom" style="padding-bottom:8px; margin-bottom:16px; border-bottom:1px solid #e3e3e3; overflow:hidden;">
-                            <div class="builder-image" style="width:50px; height:50px; float:left;">
+                    <!-- Right Column (240px) — authentic .right-column, sizing/float from GamePage.css -->
+                    <div class="right-column">
+                        <!-- Builder Section — structure verbatim from the archive (Builder:
+                             label span + notranslate-wrapped creator link) -->
+                        <div class="builder divider-bottom">
+                            <div class="builder-image">
                                 <a id="CreatorAvatarLink" href="#">
-                                    <img id="CreatorAvatar" src="images/spinners/spinner100x100.gif" alt="Creator" style="width:50px; height:50px;"/>
+                                    <img id="CreatorAvatar" src="images/spinners/spinner100x100.gif" alt="Creator"/>
                                 </a>
                             </div>
-                            <div class="builder-name" style="float:left; margin-left:10px; width:165px; overflow:hidden;">
-                                <span style="display:block; font-size:12px; color:#666;">Builder:</span>
-                                <a id="CreatorLink" href="#" style="color: #095fb5; font-weight:bold; text-decoration:none;">Loading...</a>
+                            <div class="builder-name">
+                                <span>Builder: </span><span class="notranslate"><a id="CreatorLink" href="#" class="tooltip">Loading...</a></span>
                             </div>
                             <div style="clear:both;"></div>
                         </div>

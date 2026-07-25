@@ -1,0 +1,154 @@
+/* Friends — faithful 2013 /My/EditFriends.aspx port.
+   Structure transcribed from reference/roblonium-editfriends.aspx (real ASP.NET markup, PHP
+   revival carrying it — same family as the Character/Messages/Account rips): tab-container
+   (Friends/Best Friends/Friend Requests), .friends-container grid of .friend-container tiles,
+   each with a hover-revealed gear .dropdown (Remove Friend / Accept-Decline Friend Request).
+   CSS values verbatim from reference/authentic-css/pages/friends.css (the real, unbundled
+   ~/CSS/Pages/Friends.css from RobloxLabs/web — NOT a guess, the genuine source file) plus the
+   sitewide .dropdown/.button.gear widget and a.text-link from main-bundle-2013.css.
+   "Best Friends" tab omitted — that concept doesn't exist in Roblox's current API at all (not
+   just unwired), so there's no way to back it with real data. Image paths re-pointed local.
+   Scoped #page-friends (2011 AllCSS leak protection). */
+
+#page-friends #friends-content {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000;
+    padding-top: 6px;
+}
+#page-friends .MyRobloxContainer { width: 970px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; }
+#page-friends .MyRobloxContainer h1 { display: block; }
+#page-friends h1 {
+    font-size: 40px;
+    font-weight: bold;
+    letter-spacing: -2px;
+    margin: 12px 0;
+    color: #363636;
+}
+
+/* Tabs (verbatim main-bundle-2013.css .tab-container/.tab widget — same one Character/Inbox/
+   Settings use) */
+#page-friends .tab-container { overflow: hidden; padding-left: 5px; }
+#page-friends .tab {
+    float: left;
+    background-color: #D6D6D6;
+    padding: 7px;
+    border: 1px solid #9e9e9e;
+    font: bold 15px Arial, Helvetica, sans-serif;
+    margin: 4px 2px 0 1px;
+    border-bottom-width: 0;
+    position: relative;
+    top: -1px;
+    cursor: pointer;
+}
+#page-friends .tab:hover { background-color: #e9e9e9; }
+#page-friends .tab.active {
+    background-color: #fff;
+    margin-top: 0;
+    padding: 9px 7px;
+    border-bottom: 0;
+    position: relative;
+    border-color: #ccc;
+    z-index: 1;
+    margin: 0 1px 0 0;
+    top: 1px;
+}
+#page-friends .tab-content {
+    display: none;
+    top: -1px;
+    position: relative;
+    background-color: #fff;
+    border-top: 1px solid #CCC;
+    padding: 15px 5px;
+}
+#page-friends .tab-content.active { display: block; }
+
+/* Friend tile grid — verbatim from the real ~/CSS/Pages/Friends.css */
+#page-friends .friends-container { display: inline-block; width: 850px; }
+#page-friends .friend-container { float: left; margin: 10px; width: 100px; height: 130px; position: relative; }
+#page-friends .friend-avatar { margin: 0 0 8px 0; width: 100px; height: 100px; z-index: 0; }
+#page-friends .friend-name { margin: 0 0 5px 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+#page-friends .friend-dropdown { position: absolute; right: 0; display: none; z-index: 1; }
+#page-friends .friend-container:hover .friend-dropdown { display: block; }
+#page-friends .friend-name img { vertical-align: middle; margin-right: 2px; border: 0; }
+#page-friends a.text-link { font-weight: normal; text-decoration: none; color: #095fb5; }
+#page-friends a.text-link:hover { text-decoration: underline; }
+
+/* Gear dropdown widget (verbatim main-bundle-2013.css) */
+#page-friends .dropdown { position: relative; }
+#page-friends .dropdown .button.gear {
+    background-image: url('../../images/BuildPage/btn-gear_sprite_27px.png');
+    height: 27px;
+    border: none;
+    bottom: 0;
+    width: 40px;
+    padding: 0;
+    cursor: pointer;
+}
+#page-friends .dropdown .button.gear:hover { background-position: 0 -27px; }
+#page-friends .dropdown.open .button.gear { background-position: 0 -54px; }
+#page-friends .dropdown .dropdown-list {
+    background-color: #efefef;
+    border: 1px solid #777;
+    position: absolute;
+    top: 26px;
+    z-index: 1;
+    font-size: 12px;
+    font-weight: normal;
+    display: none;
+    margin: 0;
+    padding-left: 0;
+    white-space: nowrap;
+}
+#page-friends .dropdown.open .dropdown-list { display: block; }
+#page-friends .dropdown .dropdown-list li { display: block; text-decoration: none; color: #000; padding: 2px 8px; margin: 4px 0; cursor: pointer; list-style: none; }
+#page-friends .dropdown .dropdown-list li:hover { background-color: #095fb5; color: #fff; }
+#page-friends .dropdown .dropdown-list li a { display: block; color: inherit; text-decoration: none; }
+
+/* Friend Requests tab (verbatim Friends.css) */
+#page-friends .requests-buttons { margin: 0 auto 15px; width: 175px; }
+#page-friends #AcceptAllButton { margin-right: 10px; }
+#page-friends .friends-pager { text-align: center; }
+
+/* btn-small/btn-neutral StyleGuide button (verbatim, same system as Character/Profile "See All")
+   for Accept All / Decline All */
+#page-friends .btn-small {
+    margin: 0; display: inline-block; zoom: 1; text-align: center; font-weight: bold;
+    text-decoration: none; letter-spacing: -1px; border-width: 1px; border-style: solid;
+    cursor: pointer; padding: 1px 7px 0 7px; height: 20px; min-width: 40px; font-size: 15px;
+    line-height: 18px; background-position: left -160px;
+}
+#page-friends .btn-small:hover { text-decoration: none; background-position: left -181px; }
+#page-friends .btn-text { display: block; margin: 0; position: relative; color: #fff; }
+#page-friends .btn-small .btn-text { bottom: 17px; }
+#page-friends .btn-neutral,
+#page-friends .btn-neutral:link,
+#page-friends .btn-neutral:active,
+#page-friends .btn-neutral:visited {
+    border-color: #0852b7;
+    background-color: #0852b7;
+    background-image: url('../../images/Buttons/StyleGuide/bg-btn-blue.png');
+    color: #00243d;
+}
+
+/* Silver 27px sprite pager (verbatim, same one Character/Inbox/Profile/Stuff use) — the real
+   page's pager markup is injected by a jQuery plugin we don't have the source for; this reuses
+   the theme's own established pager rather than guessing at that plugin's exact DOM. */
+#page-friends .pager.previous,
+#page-friends .pager.next {
+    display: inline-block; width: 27px; height: 27px; vertical-align: middle;
+    background-repeat: no-repeat; background-position: top left; cursor: pointer;
+}
+#page-friends .pager.previous { background-image: url('../../images/Buttons/Arrows/btn-silver-left-27.png'); }
+#page-friends .pager.next { background-image: url('../../images/Buttons/Arrows/btn-silver-right-27.png'); }
+#page-friends .pager.previous:hover,
+#page-friends .pager.next:hover { background-position: bottom left; }
+#page-friends .pager.disabled,
+#page-friends .pager.disabled:hover { background-position: 0 -27px; cursor: default; }
+#page-friends .friends-pager .pageInfo { vertical-align: middle; margin: 0 8px; font-size: 12px; }
+
+#page-friends .no-content-message { text-align: center; color: #666; padding: 20px; }
+
+/* Loading skeleton (Rovloo addition — no authentic basis, purely a perceived-performance aid) */
+#page-friends .skeleton-friend .friend-avatar { background: #e0e0e0; animation: friends-skeleton-pulse 1.5s ease-in-out infinite; }
+@keyframes friends-skeleton-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }

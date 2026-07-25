@@ -66,7 +66,35 @@
         showLoading();
 
         try {
-            
+            // One aggregated IPC call — the main process fans out (with its
+            // caches and keep-alive connections) instead of the page awaiting
+            // a dozen round-trips in sequence.
+            if (typeof window.roblox.getProfileBundle === 'function') {
+                const bundle = await window.roblox.getProfileBundle(userId);
+                if (!bundle || !bundle.user) {
+                    throw new Error('User not found');
+                }
+
+                document.title = `${bundle.user.displayName || bundle.user.name} - ROBLOX`;
+
+                await renderProfile(bundle.user, {
+                    friendsCount: bundle.friendsCount,
+                    followersCount: bundle.followersCount,
+                    followingCount: bundle.followingCount,
+                    presence: bundle.presence,
+                    friends: bundle.friends,
+                    games: bundle.games,
+                    avatarUrl: bundle.avatarUrl,
+                    friendThumbnails: bundle.friendThumbnails,
+                    gameThumbnails: bundle.gameThumbnails,
+                    hasPremium: bundle.hasPremium
+                });
+
+                showContent();
+                return;
+            }
+
+            // Legacy path for older app builds without the bundle channel
             const userInfo = await window.roblox.getUserInfo(userId);
             if (!userInfo) {
                 throw new Error('User not found');
@@ -116,7 +144,7 @@
             const isOnline = data.presence.userPresenceType > 0;
             statusEl.textContent = isOnline ? '[ Online ]' : '[ Offline ]';
             statusEl.className = isOnline ? 'UserOnlineMessage' : 'UserOfflineMessage';
-            statusEl.style.color = isOnline ? 'green' : '#666';
+            // color comes from the authentic .UserOnlineMessage/.UserOfflineMessage classes
         }
 
         const urlEl = document.getElementById('UserProfileURL');
@@ -125,52 +153,50 @@
             urlEl.href = `https://www.roblox.com/users/${user.id}/profile`;
         }
 
-        try {
-            const thumbResult = await window.roblox.getUserThumbnails([user.id], '150x200', 'AvatarBust');
-            const avatarEl = document.getElementById('AvatarImage');
-            if (avatarEl && thumbResult?.data?.[0]?.imageUrl) {
-                avatarEl.src = thumbResult.data[0].imageUrl;
+        const avatarEl = document.getElementById('AvatarImage');
+        if (data.avatarUrl !== undefined) {
+            // Bundle path: avatar URL is already fetched
+            if (avatarEl && data.avatarUrl) {
+                avatarEl.src = data.avatarUrl;
             }
-        } catch (e) {
-            console.warn('Failed to load avatar:', e);
+        } else {
+            try {
+                const thumbResult = await window.roblox.getUserThumbnails([user.id], '150x200', 'AvatarBust');
+                if (avatarEl && thumbResult?.data?.[0]?.imageUrl) {
+                    avatarEl.src = thumbResult.data[0].imageUrl;
+                }
+            } catch (e) {
+                console.warn('Failed to load avatar:', e);
+            }
         }
 
         const avatarContainer = document.getElementById('AvatarImageLink');
-        if (avatarContainer && window.RobloxClient && window.RobloxClient.auth) {
-            
+        if (avatarContainer) {
             const existingOverlay = avatarContainer.querySelector('.obc-overlay');
             if (existingOverlay) {
                 existingOverlay.remove();
             }
 
-            const isLoggedIn = await window.RobloxClient.auth.isLoggedIn();
-
-            if (isLoggedIn) {
-                
-                try {
-                    const hasPremium = await window.roblox.validatePremiumMembership(user.id);
-
-                    if (hasPremium === true) {
-                        console.log('Premium user detected:', user.name);
-                        
-                        const bcType = window.isRandomizeBCEnabled && window.isRandomizeBCEnabled() 
-                            ? window.getBCTypeForUser(user.id) 
-                            : 'OBC';
-                        const overlayImage = window.getBCOverlayImage 
-                            ? window.getBCOverlayImage(bcType) 
-                            : 'images/icons/overlay_obcOnly.png';
-
-                        const overlay = document.createElement('img');
-                        overlay.src = overlayImage;
-                        overlay.alt = bcType;
-                        overlay.className = 'obc-overlay';
-                        overlay.style.cssText = 'position: absolute; bottom: 0; left: 0; height: auto; pointer-events: none;';
-                        avatarContainer.appendChild(overlay);
-                    }
-                } catch (e) {
-                    
-                    console.debug('Could not verify premium status (requires login)');
+            if (data.hasPremium !== undefined) {
+                // Bundle path: premium status came with the bundle
+                if (data.hasPremium === true) {
+                    applyPremiumOverlay(avatarContainer, user);
                 }
+            } else if (window.RobloxClient && window.RobloxClient.auth) {
+                // Legacy path — cosmetic, so it must never block content:
+                // resolve the overlay after the page is already showing.
+                (async () => {
+                    try {
+                        const isLoggedIn = await window.RobloxClient.auth.isLoggedIn();
+                        if (!isLoggedIn) return;
+                        const hasPremium = await window.roblox.validatePremiumMembership(user.id);
+                        if (hasPremium === true) {
+                            applyPremiumOverlay(avatarContainer, user);
+                        }
+                    } catch (e) {
+                        console.debug('Could not verify premium status (requires login)');
+                    }
+                })();
             }
         }
 
@@ -205,12 +231,31 @@
             });
         }
 
-        await renderFriends(data.friends.slice(0, 6));
-
-        await renderGames(data.games.slice(0, 6));
+        await Promise.all([
+            renderFriends(data.friends.slice(0, 6), data.friendThumbnails),
+            renderGames(data.games.slice(0, 6), data.gameThumbnails)
+        ]);
     }
 
-    async function renderFriends(friends) {
+    function applyPremiumOverlay(avatarContainer, user) {
+        console.log('Premium user detected:', user.name);
+
+        const bcType = window.isRandomizeBCEnabled && window.isRandomizeBCEnabled()
+            ? window.getBCTypeForUser(user.id)
+            : 'OBC';
+        const overlayImage = window.getBCOverlayImage
+            ? window.getBCOverlayImage(bcType)
+            : 'images/icons/overlay_obcOnly.png';
+
+        const overlay = document.createElement('img');
+        overlay.src = overlayImage;
+        overlay.alt = bcType;
+        overlay.className = 'obc-overlay';
+        overlay.style.cssText = 'position: absolute; bottom: 0; left: 0; height: auto; pointer-events: none;';
+        avatarContainer.appendChild(overlay);
+    }
+
+    async function renderFriends(friends, prefetchedThumbs) {
         const container = document.getElementById('FriendsList');
         const noFriendsEl = document.getElementById('NoFriends');
 
@@ -224,17 +269,23 @@
         if (noFriendsEl) noFriendsEl.style.display = 'none';
         container.innerHTML = '';
 
-        const friendIds = friends.map(f => f.id);
         let thumbnails = {};
-        try {
-            const thumbResult = await window.roblox.getUserThumbnails(friendIds, '75x75', 'Headshot');
-            if (thumbResult?.data) {
-                thumbResult.data.forEach(t => {
-                    thumbnails[t.targetId] = t.imageUrl;
-                });
+        if (prefetchedThumbs) {
+            prefetchedThumbs.forEach(t => {
+                thumbnails[t.targetId] = t.imageUrl;
+            });
+        } else {
+            const friendIds = friends.map(f => f.id);
+            try {
+                const thumbResult = await window.roblox.getUserThumbnails(friendIds, '75x75', 'Headshot');
+                if (thumbResult?.data) {
+                    thumbResult.data.forEach(t => {
+                        thumbnails[t.targetId] = t.imageUrl;
+                    });
+                }
+            } catch (e) {
+                console.warn('Failed to load friend thumbnails:', e);
             }
-        } catch (e) {
-            console.warn('Failed to load friend thumbnails:', e);
         }
 
         friends.forEach(friend => {
@@ -257,7 +308,7 @@
         });
     }
 
-    async function renderGames(games) {
+    async function renderGames(games, prefetchedThumbs) {
         const container = document.getElementById('PlacesList');
         const noPlacesEl = document.getElementById('NoPlaces');
 
@@ -271,17 +322,24 @@
         if (noPlacesEl) noPlacesEl.style.display = 'none';
         container.innerHTML = '';
 
-        const gameIds = games.map(g => g.id);
         let thumbnails = {};
-        try {
-            const thumbResult = await window.roblox.getGameThumbnails(gameIds, '420x230');
-            if (thumbResult?.data) {
-                thumbResult.data.forEach(t => {
-                    thumbnails[t.targetId] = t.imageUrl;
-                });
+        if (prefetchedThumbs) {
+            prefetchedThumbs.forEach(t => {
+                thumbnails[t.targetId] = t.imageUrl;
+            });
+        } else {
+            const gameIds = games.map(g => g.id);
+            try {
+                // 480x270 — the thumbnails API rejects 420x230 as invalid
+                const thumbResult = await window.roblox.getGameThumbnails(gameIds, '480x270');
+                if (thumbResult?.data) {
+                    thumbResult.data.forEach(t => {
+                        thumbnails[t.targetId] = t.imageUrl;
+                    });
+                }
+            } catch (e) {
+                console.warn('Failed to load game thumbnails:', e);
             }
-        } catch (e) {
-            console.warn('Failed to load game thumbnails:', e);
         }
 
         games.forEach(game => {

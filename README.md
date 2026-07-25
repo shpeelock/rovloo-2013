@@ -20,11 +20,34 @@ Recreation of the 2013 ROBLOX website interface.
 - [x] Created 2013-nav.js for dropdown and login state handling
 - [x] Updated manifest.json
 
+### Page conversion (2011 → 2013)
+All content pages have been converted from the inherited 2011 look to the 2013
+design system (flat white boxes with `#ccc` borders, dark `#363636` section
+titles instead of the blue `#6e99c9` gradient `StandardBoxHeader`, `#095fb5`
+links, green `bg-btn-green` buttons, Arial 12px, 970px content width):
+
+- [x] Badge / Game Pass / Catalog Item detail pages
+- [x] Character / Avatar page
+- [x] Builders Club upgrade page
+- [x] Reviews (Rovloo community) page
+- [x] Profile, Friends, People, Stuff (rendered from `scripts/main.js` templates — converted via CSS only, no JS changes)
+- [x] Inbox, Groups, Account/Settings (inline `#page-*` sections of `index.html`)
+- [x] Catalog browse page
+
+Implementation notes:
+- Conversion was **CSS-only** — no page scripts were modified, so every element
+  id/class the JS reads is preserved. Per-page styling lives in `styles/pages/*.css`;
+  a few pages whose styling already lived in `styles/overrides.css`
+  (badge, gamepass, character, profile, and the shared `#UserAssetsPane`
+  asset grid) were modernized in place there.
+- The dead 2011 `<head>`/chrome inside the full-document `pages/*.html` files
+  (catalog, profile, friends, people) is not rendered — the SPA extracts only the
+  content container — so it was left as-is.
+
 ### TODO
 - [ ] Test with actual login flow
 - [ ] Fine-tune CSS colors to match archived page exactly
-- [ ] Add remaining page-specific styles
-- [ ] Create preview.png screenshot
+- [ ] Refresh preview.png screenshot
 
 ## Downloaded Assets
 

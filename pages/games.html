@@ -119,7 +119,7 @@
                             <li><a href="#home">My ROBLOX</a></li>
                             <li class="gamesLink"><a id="hlGames" href="#games" style="font-weight: bold" title="Games"><h1>Games</h1></a> <a id="gamesMenuToggle" onclick="toggleDropDownNav();" style="padding:0 2px;cursor:pointer;border:none;background:url(../images/topNav_arrow_white.png) no-repeat;height:6px;width:10px;display:inline-block;"></a></li>
                             <li><a href="#catalog" title="Catalog">Catalog</a></li>
-                            <li><a href="#people" title="People">People</a></li>
+                            <li><a href="#people" title="Search">Search</a></li>
                             <li><a href="#bc" title="Builders Club">Builders Club</a></li>
                             <li><a href="#forum" title="Forum">Forum</a></li>
                             <li><a href="#help" title="Help">Help</a></li>
@@ -345,30 +345,51 @@
                 </div>
 
                 <div class="Column2e">
-                    <div class="StandardBoxHeader">
-                        <span id="GamesDisplayLabel">Most Popular Games</span>
-                        <input type="text" id="GamesSearchBox" placeholder="Search"/>
-                    </div>
-                    <div class="StandardBox" id="GamesContent" style="min-height: 400px;">
-                        <div id="GamesLoading" style="text-align: center; padding: 40px;">
-                            <img src="../images/spinners/spinner100x100.gif" alt="Loading..." style="width:32px;height:32px;"/>
-                            <p>Loading games...</p>
-                        </div>
-                        <div id="GamesList" style="display: none;">
-                            <!-- Games will be rendered here -->
-                        </div>
-                        <div id="GamesError" style="display: none; text-align: center; padding: 40px; color: #990000;">
-                            Failed to load games. Please try again.
+                    <!-- Authentic 2013: tab bar + float-right search + divider-top tab-content wrapper.
+                         The active tab hosts #GamesDisplayLabel (category name), keeping the JS contract. -->
+                    <div id="PlayTabs" class="tab-container" style="float: left;">
+                        <div id="PlayGamesTab" class="tab active GamesType" type="Play">
+                            <span><a href="#games"><div><span id="GamesDisplayLabel">Games</span></div></a></span>
                         </div>
                     </div>
-                    <div id="GamesPagination" style="text-align: center; padding: 10px;">
-                        <a id="GamesPrevPage" href="#" style="margin-right: 20px;">
-                            <img src="images/arrow_36px_left.png" alt="Previous" style="vertical-align: middle;" />
-                        </a>
-                        <span id="GamesPageInfo">Page 1</span>
-                        <a id="GamesNextPage" href="#" style="margin-left: 20px;">
-                            <img src="images/arrow_36px_right.png" alt="Next" style="vertical-align: middle;" />
-                        </a>
+                    <div id="GamesSearchWrap" style="position: relative; float: right;">
+                        <input id="GamesSearchBox" class="translate" type="text" name="search" placeholder="Search" style="color: #888; height: 20px;" />
+                        <div class="SearchIconButton" id="GamesSearchButton"></div>
+                    </div>
+                    <div class="divider-top tab-content" style="float: left; width: 790px; padding: 20px 0px 5px 0px; margin-bottom: 10px; display: block">
+                        <div id="Games">
+                            <!-- Authentic #BCOnlyPlaces block, repurposed: "Builders Club Games" -> "Rovloo Reviewed"
+                                 (BC is obsolete; the helmet swaps to the Rovloo icon via inline background). -->
+                            <div id="BCOnlyPlaces" style="display: none;">
+                                <span class="header">
+                                    <div class="BCHat" style="position: relative; vertical-align: middle; background: url('../images/rovloo/rovloo-ico64.png') no-repeat center; background-size: 28px 28px;"></div>
+                                    <div id="BCOnlyPlacesTitle">Rovloo Reviewed</div>
+                                </span>
+                                <div class="content">
+                                    <div id="BCOnlyGamesContentPrevNavButton" class="arrow left disabled"></div>
+                                    <div id="BCOnlyGamesContent"></div>
+                                    <div id="BCOnlyGamesContentNextNavButton" class="arrow right disabled"></div>
+                                </div>
+                            </div>
+                            <div roblox-bc-games-clear class="clear"></div>
+                            <div id="ShowBCOnlyGamesAlignmentDiv" style="margin-top: 10px">
+                                <div id="GamesContent" style="width: 680px; display: inline; left: 55px; position: relative">
+                                    <div id="GamesLoading" style="text-align: center; padding: 40px;">
+                                        <img src="../images/spinners/spinner100x100.gif" alt="Loading..." style="width:32px;height:32px;"/>
+                                        <p>Loading games...</p>
+                                    </div>
+                                    <div id="GamesList" style="display: none;">
+                                        <!-- Games will be rendered here -->
+                                    </div>
+                                    <div id="GamesError" style="display: none; text-align: center; padding: 40px; color: #990000;">
+                                        Failed to load games. Please try again.
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="GamesPagination" style="text-align: center; padding-bottom: 20px; padding-top: 10px; color: #888; font-size: 14px; clear: both">
+                                <a id="GamesPrevPage" href="#"><span class="pager previous" style="position: relative; top: 9px;"></span></a><span style="margin: 0 5px;"><span id="GamesPageInfo">Page 1</span></span><a id="GamesNextPage" href="#"><span class="pager next" style="position: relative; top: 9px;"></span></a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

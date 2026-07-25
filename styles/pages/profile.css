@@ -1,0 +1,348 @@
+/* User Profile — faithful 2013 User.aspx port.
+   Structure transcribed from reference/archive-profile-roblox-2013.html; CSS values
+   lifted from reference/authentic-css/main-bundle-2013.css (the theme's own
+   CSS/2013/main-2013.css is a trimmed snapshot). Scoped under #page-profile, image
+   paths re-pointed local. Renderers emit the authentic per-item class names
+   (.Badge, .TileBadges, .Friend, .Asset, .groupEmblemThumbnail, #accordion, .verticaltab). */
+
+#page-profile #profile-content {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000;
+    padding-top: 6px;
+}
+/* #ProfileContent carries the legacy .MyRobloxContainer class, and AllCSS sets that to
+   Verdana (2011). The 2013 page rendered Arial (body default), so restore it here. */
+#page-profile .MyRobloxContainer { width: 970px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; }
+#page-profile .clear { clear: both; }
+
+/* Authentic base h2 = 16px bold #000 UPPERCASE; .title adds margins */
+#page-profile h2,
+#page-profile h2.title {
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+    color: #000;
+    text-transform: uppercase;
+    margin: 0;
+    padding: 0;
+    letter-spacing: 0;
+}
+#page-profile h2.title { display: block; margin: 20px 0; }
+#page-profile .divider-right > h2.title:first-child,
+#page-profile .divider-left > .divider-bottom:first-child h2.title { margin-top: 0; }
+#page-profile h2 span, #page-profile h2.title span { font: inherit; color: inherit; text-transform: inherit; background: none; padding: 0; }
+/* Authentic base h3 (verbatim): 15px bold #363636, NOT uppercase */
+#page-profile h3, #page-profile h3 a { font-size: 15px; font-weight: bold; color: #363636; }
+
+/* Columns + section dividers (authentic) */
+#page-profile .divider-right { border-right: 1px solid #ccc; }
+#page-profile .divider-left { border-left: 1px solid #ccc; }
+#page-profile .divider-bottom { border-bottom: 1px solid #ccc; }
+
+/* Profile card */
+#page-profile .UserBlurb {
+    width: 348px;
+    margin: 10px auto;
+    padding: 5px;
+    line-height: 20px;
+    background: #fff;
+    overflow-y: auto;
+    max-height: 450px;
+    text-align: left;
+}
+/* Authentic status classes (verbatim): Verdana 8pt, online Red / offline Gray */
+#page-profile .UserOnlineMessage { font-family: Verdana, Helvetica, sans-serif; font-size: 8pt; color: Red; }
+#page-profile .UserOfflineMessage { font-family: Verdana, Helvetica, sans-serif; font-size: 8pt; color: Gray; }
+#page-profile #UserProfileURL { color: #095fb5; text-decoration: none; }
+#page-profile #UserProfileURL:hover { text-decoration: underline; }
+#page-profile #AvatarImageLink { display: inline-block; position: relative; }
+#page-profile #AvatarImage { width: 150px; height: 200px; display: inline-block; }
+
+/* Profile buttons — authentic .GrayButton (real sprite fetched local) */
+#page-profile #ProfileButtons { display: inline-block; }
+#page-profile .SendMessageProfileBtnDiv { position: relative; display: inline-block; float: left; }
+#page-profile .GrayButton,
+#page-profile .GrayButton:link,
+#page-profile .GrayButton:visited,
+#page-profile .GrayButton:active {
+    background: url('../../images/buttons/bg-form_btn_lg-tile.png') repeat-x top left;
+    border: 1px solid #777;
+    padding: 4px 8px 0;
+    height: 21px;
+    font: 13px Arial, Helvetica, sans-serif;
+    color: #000;
+    text-align: center;
+    display: block;
+    float: left;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+#page-profile .GrayButton:hover { background-position: bottom left; border-color: #888; text-decoration: none; }
+#page-profile .GrayButton.Disabled { border: 1px solid #ccc; color: #a7a7a7; cursor: default; }
+
+/* Statistics */
+/* Statistics — verbatim from the page's inline <style> block */
+#page-profile .statsTable { width: 400px; }
+#page-profile .statsTable .statsLabel { font-weight: bold; width: 200px; text-align: right; padding-right: 10px; }
+#page-profile .statsTable .statsValue { font-weight: normal; width: 200px; text-align: left; }
+
+/* ROBLOX badges (.Badge, 5/row table) */
+/* Contain the align="Left" (floated) badge table so the wrapping .divider-bottom keeps its full
+   height and its 1px #ccc border renders BELOW the grid (not across the icons). Mirrors
+   .PlayerBadgeContainer below. */
+#page-profile .RobloxBadgeContainer { overflow: hidden; }
+#page-profile .RobloxBadgeContainer table { border-collapse: collapse; }
+#page-profile .RobloxBadgeContainer td { vertical-align: top; }
+#page-profile .Badge { margin: 10px; text-align: center; }
+#page-profile .Badge .BadgeImage img { height: 75px; width: 75px; border: 0; }
+#page-profile .Badge .BadgeLabel { font-size: 11px; line-height: 1.3; margin-top: 2px; }
+#page-profile .Badge .BadgeLabel a { color: #095fb5; text-decoration: none; }
+#page-profile .Badge .BadgeLabel a:hover { text-decoration: underline; }
+
+/* Player badges (.TileBadges) */
+#page-profile #BadgesDisplayPane { clear: both; }
+#page-profile .PlayerBadgeContainer { overflow: hidden; }
+#page-profile .TileBadges { float: left; margin: 10px 10px; text-align: center; }
+#page-profile .TileBadges a img { width: 75px; height: 75px; }
+#page-profile .badge-pager,
+#page-profile .group-pager { clear: both; text-align: center; padding: 5px; }
+/* Authentic silver 27px sprite pager (.pager.previous/.next) — shared by Badges, Groups, Inventory,
+   Favorites. Verbatim from main-bundle: 27x81 3-state sprite (normal top / disabled 0 -27px /
+   hover bottom). Path re-pointed local per the ../../images rule. */
+#page-profile .pager.previous,
+#page-profile .pager.next {
+    display: inline-block; width: 27px; height: 27px; vertical-align: middle;
+    background-repeat: no-repeat; background-position: top left;
+}
+#page-profile .pager.previous { background-image: url('../../images/Buttons/Arrows/btn-silver-left-27.png'); }
+#page-profile .pager.next { background-image: url('../../images/Buttons/Arrows/btn-silver-right-27.png'); }
+#page-profile .pager.previous:hover,
+#page-profile .pager.next:hover { background-position: bottom left; cursor: pointer; }
+#page-profile .pager.disabled,
+#page-profile .pager.disabled:hover { background-position: 0 -27px; cursor: default; }
+#page-profile .FooterPager .pager,
+#page-profile .badge-pager .pager,
+#page-profile .group-pager .pager { margin: 0 12px; }
+#page-profile .badge-pager span,
+#page-profile .group-pager span,
+#page-profile .FooterPager > span { vertical-align: middle; font: 12px Arial, Helvetica, sans-serif; }
+
+/* Groups (floated .groupEmblemThumbnail) — verbatim class rules; width/margin come from
+   the renderer's inline styles (width:70px;margin:15px) matching the archive. */
+#page-profile .GroupsGrid { overflow: hidden; }
+#page-profile .groupEmblemThumbnail { position: relative; top: -4px; cursor: pointer; text-align: center; }
+#page-profile .groupEmblemImage a img { width: 60px; height: 62px; }
+
+/* Active Places — real jQuery-UI accordion. CSS lifted VERBATIM from the page-bundle
+   (.ui-accordion / .ui-state-* / .ui-icon / .ui-corner-* / .ui-helper-reset / .ui-widget);
+   the flat-color ui-bg_flat textures are solid colours so we set them as background-color.
+   The triangle is the real ui-icons_363636 sprite. Scoped to #page-profile #UserPlaces. */
+#page-profile #UserPlacesPane { background: #fff; }
+#page-profile #UserPlaces .ui-widget { font-family: Arial, Helvetica, sans-serif; font-size: 15px; }
+#page-profile #UserPlaces .ui-helper-reset { margin: 0; padding: 0; border: 0; outline: 0; line-height: 1.3; text-decoration: none; font-size: 100%; list-style: none; }
+#page-profile #UserPlaces .ui-accordion .ui-accordion-header { display: block; cursor: pointer; position: relative; margin-top: 2px; padding: .5em .5em .5em .7em; zoom: 1; }
+#page-profile #UserPlaces .ui-accordion .ui-accordion-icons { padding-left: 2.2em; }
+#page-profile #UserPlaces .ui-accordion .ui-accordion-header .ui-accordion-header-icon { position: absolute; left: 3px; top: 50%; margin-top: -9px; }
+/* content padding matches the archive's inline override (padding:0 20px) + a little bottom */
+#page-profile #UserPlaces .ui-accordion .ui-accordion-content { padding: 0 20px 15px; border-top: 0; overflow: auto; zoom: 1; }
+/* State backgrounds (flat textures = solid colour) */
+#page-profile #UserPlaces .ui-widget-content { border: 1px solid #fff; background: #fff url('../../images/RobloxUI/ui-bg_flat_100_ffffff_40x100.png') 50% 50% repeat-x; color: #333; }
+#page-profile #UserPlaces .ui-state-default { border: 1px solid #9e9e9e; background: #d6d6d6 url('../../images/RobloxUI/ui-bg_flat_100_d6d6d6_40x100.png') 50% 50% repeat-x; font-weight: bold; color: #363636; }
+#page-profile #UserPlaces .ui-state-active { border: 1px solid #ccc; background: #fff url('../../images/RobloxUI/ui-bg_flat_100_ffffff_40x100.png') 50% 50% repeat-x; font-weight: bold; color: #363636; }
+#page-profile #UserPlaces .ui-state-default a, #page-profile #UserPlaces .ui-state-active a { color: #363636; }
+/* Corners are all radius 0 in Roblox's jQuery-UI theme */
+#page-profile #UserPlaces .ui-corner-all, #page-profile #UserPlaces .ui-corner-top, #page-profile #UserPlaces .ui-corner-bottom { border-radius: 0; }
+/* Icon sprite (verbatim: 16x16, ui-icons sprite; triangle-1-e collapsed / triangle-1-s open) */
+#page-profile #UserPlaces .ui-icon { display: block; text-indent: -99999px; overflow: hidden; background-repeat: no-repeat; width: 16px; height: 16px; background-image: url('../../images/RobloxUI/ui-icons_222222_256x240.png'); }
+#page-profile #UserPlaces .ui-state-default .ui-icon,
+#page-profile #UserPlaces .ui-state-active .ui-icon { background-image: url('../../images/RobloxUI/ui-icons_363636_256x240.png'); }
+#page-profile #UserPlaces .ui-icon-triangle-1-e { background-position: -32px -16px; }
+#page-profile #UserPlaces .ui-icon-triangle-1-s { background-position: -64px -16px; }
+/* div.accordion-specific overrides (verbatim from page-bundle): collapsed headers use the
+   bg-silver_bar.png sprite (thin 22px, hover swaps to bottom of the 2-state sprite); the active
+   header drops its bg-image + bottom border, and the active content is a #ccc box that connects
+   to the active header (border-top:none). THIS is the real Active Places look. */
+#page-profile #UserPlaces div.accordion .ui-state-default {
+    background: url('../../images/RobloxUI/bg-silver_bar.png') repeat-x top;
+    height: 22px;
+    padding-top: 3px;
+    padding-bottom: 0;
+    padding-left: 23px;
+}
+#page-profile #UserPlaces div.accordion .ui-state-default:hover { background-position: bottom; }
+#page-profile #UserPlaces div.accordion .ui-accordion-header-active { border-bottom: none; background-image: none; }
+#page-profile #UserPlaces div.accordion .ui-accordion-content-active { border: 1px solid #ccc; border-top: none; }
+#page-profile #UserPlaces .Place .PlayStatus { margin: 5px 0 0; display: inline; }
+/* Statistics: authentic per the real archive DevTools — bundle line 126 wins with DASHED borders
+   (top/left/right 1px #555, open bottom so it connects to the Thumbnail's solid border below); the
+   element's own inline style (arial/#666/12px/letter-spacing:normal) wins the font, margin:0 +
+   line-height:1.7em + padding:0 remain. (My fetched bundle carried a stray line-146 `border:none`
+   that does NOT exist in the served archive CSS — the DevTools cascade shows dashed active.) */
+#page-profile #UserPlaces .Place .Statistics {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #666;
+    font-size: 12px;
+    border-bottom: none;
+    margin: 0;
+    padding: 0;
+    line-height: 1.7em;
+}
+/* Thumbnail: bundle `border:solid 1px #555; margin:0`; width:414px/overflow:hidden from the element's
+   inline style. The <img> is a true 420x230 (NO max-width — that shrank it to 412.4); the 414px
+   overflow:hidden container clips the right ~6px, the authentic look. */
+#page-profile #UserPlaces .Place .Thumbnail {
+    border: solid 1px #555;
+    width: 414px;
+    overflow: hidden;
+    position: relative;
+    margin: 0;
+}
+#page-profile #UserPlaces .Place .Thumbnail img { display: block; width: 420px; height: 230px; }
+/* Description: element inline sets border:none + font; bundle line 126 keeps max-height:75px (scrolls),
+   overflow:auto, padding:5px 0, margin-top:5px, text-align:left. */
+#page-profile #UserPlaces .Place .Description {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #666;
+    font-size: 12px;
+    border: none;
+    max-height: 75px;
+    overflow: auto;
+    padding: 5px 0;
+    margin: 5px 0 0 0;
+    text-align: left;
+}
+#page-profile #UserPlaces .Place .PlayOptions { margin: 10px 0 0; display: block; min-height: 48px; }
+/* Verbatim: .Centered only centers a sized block via auto margins (no-op here → button stays left);
+   .VisitButton is inline width:10px so the btn-large flows to the left. NO text-align:center. */
+#page-profile #UserPlaces .Centered { margin-left: auto; margin-right: auto; }
+#page-profile #UserPlaces .VisitButton,
+#page-profile #UserPlaces .VisitButtonDisabled { display: inline; width: 10px; }
+/* Green Play button — authentic rules lifted VERBATIM from the bundle (.btn-large +
+   .btn-large-green-play + .btn-text), image path re-pointed local. */
+#page-profile .Place .btn-large {
+    margin: 0; display: inline-block; text-align: center; font-weight: bold; text-decoration: none;
+    letter-spacing: -1px; border-width: 1px; border-style: solid; cursor: pointer;
+    padding: 9px 13px 0 13px; height: 39px; min-width: 70px; font-size: 23px; line-height: 27px;
+    background-position: left 0;
+}
+#page-profile .Place .btn-large:hover { text-decoration: none; }
+#page-profile .Place .btn-large-green-play,
+#page-profile .Place .btn-large-green-play:active,
+#page-profile .Place .btn-large-green-play:visited,
+#page-profile .Place .btn-large-green-play:link {
+    padding-left: 60px; border-color: #007001;
+    background: url('../../images/Buttons/StyleGuide/bg-lg-green-play.png') no-repeat left top;
+    color: #013401; min-width: 26px;
+}
+#page-profile .Place .btn-text { display: block; margin: 0; position: relative; color: #fff; }
+#page-profile .Place .btn-large .btn-text { bottom: 26px; }
+
+/* Friends — authentic profile preview: a centered <table> (align="Center", cellspacing 0, no td
+   padding) of `.Friend notranslate` cells in one row. NOT the .FriendContainer float layout (that's the
+   full Friends.aspx page). Lives full-width below the two columns. */
+/* width:auto (shrink-to-fit) beats the legacy overrides.css `#FriendsList{width:100%}` — without this
+   the table stretches full-width and the 125px .Friend cells spread apart (~58px gaps). Shrink-to-fit +
+   align="Center" packs them at the authentic ~25px gap and centers the row. */
+#page-profile .FriendsGrid { border-collapse: collapse; width: auto; }
+#page-profile .FriendsGrid td { padding: 0; vertical-align: top; }
+#page-profile .Friend { width: 125px; height: 180px; overflow: hidden; }
+#page-profile .Friend .Avatar { text-align: center; }
+#page-profile .Friend .Summary,
+#page-profile .Friend .Options { margin-top: 5px; text-align: center; font-size: 11px; }
+#page-profile .Friend .Summary .OnlineStatus { margin-right: 2px; }
+#page-profile .Friend .Summary .Name a { color: #095fb5; text-decoration: none; }
+#page-profile .Friend .Summary .Name a:hover { text-decoration: underline; }
+
+/* Favorites — like every other .Asset context in the bundle (#Catalog/#UserContainer/Customize), the
+   thumbnail + details need an explicit 110px width. Without it the shrink-to-fit table cell collapses
+   to the narrow creator text (~75px), the 110px thumbnail overflows, and "Creator: <name>" wraps/cramps
+   ("AssetCreator too short"). 110px matches the thumbnail and the archive's per-cell width. */
+#page-profile .PanelFooter { background: #fff; color: #333; font-family: Verdana, Helvetica, sans-serif; margin: 0; padding: 3px; }
+#page-profile #FavoritesContent table { border-collapse: collapse; }
+#page-profile #FavoritesContent .Asset { vertical-align: top; }
+#page-profile #FavoritesContent .Asset .AssetThumbnail { width: 110px; height: 110px; }
+#page-profile #FavoritesContent .Asset .AssetDetails { width: 110px; }
+#page-profile #FavoritesContent a { color: #095fb5; text-decoration: none; }
+#page-profile #FavoritesContent a:hover { text-decoration: underline; }
+#page-profile .Label { font-weight: bold; }
+/* Favorites/asset pager centered (authentic) */
+#page-profile .divider-left .FooterPager { text-align: center; padding: 4px 0; font-size: 12px; }
+#page-profile .FooterPager a { color: #095fb5; text-decoration: none; }
+
+/* "See All" btn-small btn-neutral — VERBATIM from the bundle. The blue sprite (5x250) is a stacked
+   state strip: btn-small normal at left -160px, hover at left -181px (the "lit up" state). 15px font,
+   content-box (no box-sizing override — that shrank it). White label = the duplicated
+   <span class="btn-text"> overlaying the dark fallback text, pulled up 17px. */
+#page-profile .btn-small {
+    margin: 0; display: inline-block; zoom: 1; text-align: center; font-weight: bold;
+    text-decoration: none; letter-spacing: -1px; border-width: 1px; border-style: solid;
+    cursor: pointer; padding: 1px 7px 0 7px; height: 20px; min-width: 40px; font-size: 15px;
+    line-height: 18px; background-position: left -160px; text-transform: none;
+}
+#page-profile .btn-small:hover { text-decoration: none; background-position: left -181px; }
+#page-profile .btn-text { display: block; margin: 0; position: relative; color: #fff; }
+#page-profile .btn-small .btn-text { bottom: 17px; }
+#page-profile .btn-neutral,
+#page-profile .btn-neutral:link,
+#page-profile .btn-neutral:active,
+#page-profile .btn-neutral:visited {
+    border-color: #0852b7;
+    background-color: #0852b7;
+    background-image: url('../../images/Buttons/StyleGuide/bg-btn-blue.png');
+    color: #00243d;
+}
+
+/* Inventory (full width) — authentic .verticaltab rail + asset content */
+/* Authentic #UserAssetsPane has NO text-align (archive + bundle) — the section h2.title and the
+   vertical-tab menu are LEFT-aligned. overrides.css sets a non-authentic `text-align:center` on the
+   global #UserAssetsPane; override it profile-scoped (2 ids > 1) without touching the Stuff page. */
+#page-profile #UserAssetsPane { text-align: left; }
+#page-profile #UserContainer { clear: both; font-family: Arial, Helvetica, sans-serif; }
+#page-profile #UserAssets { overflow: hidden; }
+#page-profile #UserContainer #AssetsMenu { float: left; width: 158px; }
+#page-profile .verticaltab { text-decoration: none; }
+#page-profile .verticaltab:hover { background: #efefef; }
+#page-profile .verticaltab.selected { background: #efefef; border: 1px solid #ccc; font-weight: bold; border-right: none; text-align: left; }
+#page-profile .verticaltab a {
+    font-size: 14px; color: #363636; display: block; height: 35px; line-height: 35px;
+    text-decoration: none; padding-left: 15px; text-align: left;
+}
+#page-profile .verticaltab a:hover { text-decoration: none; }
+#page-profile #UserContainer #AssetsContent { float: left; width: 685px; margin: 0 28px; min-width: 0; position: relative; text-align: left; font-family: Verdana, Sans-Serif; }
+#page-profile #UserContainer #AssetsList { clear: both; }
+/* 2011 AllCSS's #UserContainer .Asset .AssetThumbnail (same 2-id+2-class specificity, loads
+   after) sets a BLACK border; the authentic bundle value is #CCC — re-assert it. */
+#page-profile #UserContainer .Asset .AssetThumbnail { border: solid 1px #ccc; }
+/* Recommendations header — verbatim (base h3 supplies 15px bold #363636) */
+#page-profile h3.RecommendationHeader2 { display: block; padding-left: 5px; padding-top: 5px; width: 100%; }
+/* See All inherits the h3 (15px bold) per the archive — only the color/margin differ. */
+#page-profile h3.RecommendationHeader2 a { margin-left: 13px; color: #095fb5; text-decoration: none; }
+#page-profile h3.RecommendationHeader2 a:hover { text-decoration: underline; }
+/* Recommended Hats grid — VERBATIM from the bundle: container centers everything, td padding 0 7px,
+   tr as block. PortraitDiv geometry (140x165) is on the element inline. The recommendation "Creator:"
+   uses stat-label (grey #888) + Detail stat (name link), NOT the favorites .Label — authentic. */
+#page-profile .AssetRecommenderContainer { text-align: center; padding: 5px 0; }
+#page-profile .AssetRecommenderContainer td { padding: 0 7px; vertical-align: top; }
+#page-profile .AssetRecommenderContainer tr { display: block; }
+#page-profile #AssetRecommendations table { border-collapse: collapse; margin: 0 auto; }
+#page-profile .PortraitDiv .AssetThumbnail a { display: inline-block; height: 110px; width: 110px; cursor: pointer; }
+#page-profile .PortraitDiv .AssetThumbnail img { max-width: 110px; max-height: 110px; }
+/* Authentic recommendation text sizes (measured vs the real bundle): item name 14.4px bold, creator
+   name link 12.8px, "Creator:" label 11px. Names wrap (the 140x165 PortraitDiv clips overflow) — NOT
+   nowrap/ellipsis. My earlier 12px made everything but "Creator:" too small. */
+#page-profile .PortraitDiv .AssetName { margin-top: 3px; }
+#page-profile .PortraitDiv .AssetName a { font-size: 14.4px; font-weight: bold; color: #095fb5; text-decoration: none; }
+#page-profile .PortraitDiv .Detail a { font-size: 12.8px; color: #095fb5; text-decoration: none; }
+#page-profile .PortraitDiv .AssetName a:hover, #page-profile .PortraitDiv .Detail a:hover { text-decoration: underline; }
+
+/* "Creator:" label = authentic bold BLACK. A direct rule on .Label beats the grey it would otherwise
+   inherit from rovloo-theme's `.AssetCreator{color:#666!important}` / `.AssetDetails{color:#333!important}`
+   (inheritance never wins over an element's own declaration, !important or not). The sibling
+   .Detail>a creator link keeps its own blue. */
+#page-profile .Label { color: #000; }
+
+/* Empty-section note */
+#page-profile .profile-empty { color: #999; padding: 12px; font-style: italic; }
+#page-profile .stat-label { font-size: 11px; color: #888; line-height: 1.5em; }
+#page-profile .stat { font-size: 11px; color: #000; }

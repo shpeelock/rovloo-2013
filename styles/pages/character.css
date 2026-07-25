@@ -1,0 +1,218 @@
+/* Character Customizer — faithful 2013/2014 /My/Character.aspx port.
+   Sources (all verbatim, image paths re-pointed local):
+   - reference/authentic-css/pages/character-page-bundle.css — the page's OWN archived bundle
+     (~/CSS/Pages/Character/Character.css + Outfits.css sections)
+   - reference/authentic-css/main-bundle-2014-character.css — the main bundle the rip loaded
+     (tabs, thumbnail-holder, modal/unifiedModal, closeBtnCircle_20h, btn-control-small)
+   Scoped #page-character (2011 AllCSS leak protection).
+   Documented deviations marked ROVLOO. */
+
+/* AllCSS sets .MyRobloxContainer to 890px/Verdana; the 2014 bundle says 970px (Column1f 375 +
+   Column2f 570 = 945 must fit). Same re-assertion pattern as the profile port. */
+#page-character .MyRobloxContainer { width: 970px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #000; }
+/* h1 cascade from main-bundle-2014 (h1{margin:0;color:#363636;float:left;width:100%} +
+   h1{font-size:40px;font-weight:bold;letter-spacing:-2px;margin-bottom:10px;display:block}) */
+#page-character .MyRobloxContainer h1 {
+    display: block;
+    margin: 0 0 10px 0;
+    padding: 0;
+    color: #363636;
+    float: left;
+    width: 100%;
+    font-size: 40px;
+    font-weight: bold;
+    letter-spacing: -2px;
+    cursor: pointer;
+}
+
+/* Authentic base h2 (same values as the profile port's uppercase section headers) */
+#page-character h2 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #000;
+    text-transform: uppercase;
+    margin: 0;
+    padding: 0;
+}
+#page-character h2 span { font: inherit; color: inherit; text-transform: inherit; background: none; padding: 0; }
+
+/* ---------- columns (Character.css verbatim) ---------- */
+#page-character .Column1f { margin-top: 10px; width: 375px; float: left; }
+#page-character .Column2f { margin-top: 10px; width: 570px; float: left; }
+#page-character .divider-top { border-top: 1px solid #ccc; }
+
+/* ---------- avatar thumbnail widget (main-bundle-2014 verbatim) ---------- */
+#page-character .thumbnail-holder { margin: 0 auto; position: relative; width: inherit; height: inherit; }
+#page-character .thumbnail-span { display: inline-block; width: 100%; height: 100%; }
+#page-character .thumbnail-span > img { width: 100%; height: 100%; }
+#page-character .ReDrawAvatar { margin-top: 5px; width: 250px; margin-left: 70px; }
+
+/* ROVLOO: R6/R15 row (btn-control-small values verbatim from main-bundle-2014) */
+#page-character .AvatarTypeRow { margin: 8px 0 0 70px; }
+#page-character .btn-control,
+#page-character .btn-control:active,
+#page-character .btn-control:hover {
+    border: 1px solid #777;
+    padding: 0 6px;
+    color: #000;
+    text-decoration: none;
+    background-color: #ccc;
+    text-align: center;
+    font-weight: normal;
+    cursor: pointer;
+    background-position: top;
+    display: inline-block;
+}
+#page-character .btn-control:hover { background-position: bottom; border-color: #888; }
+#page-character .btn-control.btn-control-small {
+    height: 18px;
+    line-height: 18px;
+    font-size: 11px;
+    background-image: url('../../images/StyleGuide/btn-control-small-tile.png');
+}
+#page-character .btn-control.active { background-position: center; border-color: #555; }
+
+/* ---------- mannequin (Character.css verbatim) ---------- */
+#page-character .Mannequin { clear: right; margin-top: 10px; text-align: center; width: 350px; height: 400px; }
+#page-character .Mannequin .ColorChooserFrame { margin: 10px auto 0; }
+#page-character .Mannequin .ColorChooserRegion { border: 1px solid #ddd; }
+
+/* ---------- color picker modal (Character.css + main-bundle-2014 verbatim) ---------- */
+#page-character .popupControl { background-color: #fff; border: 1px outset #fff; position: absolute; visibility: hidden; z-index: 1; }
+#page-character .ColorPickerItem { border-color: #fff; border-style: solid; border-width: 2px; }
+#page-character .ColorPickerItem:hover { border-color: #e1e1e1; border-style: solid; border-width: 2px; }
+#page-character .ColorPickerModal { display: none; border-color: #888; background-color: #fff; }
+#page-character .ColorPickerContainer { height: 398px; margin: 0 5px 5px; }
+#page-character .modalPopup { background-color: #ffd; border-width: 3px; border-style: solid; border-color: Gray; padding: 3px; }
+#page-character .unifiedModal { background-color: #e1e1e1; font: bold 27px Arial; color: #363636; border: 2px solid #272727; text-align: center; position: relative; }
+#page-character .unifiedModalContent { text-align: left; background-color: White; color: #000; font: Bold 15px Arial; margin-left: 5px; margin-right: 5px; margin-bottom: 5px; letter-spacing: normal; }
+#page-character .ImageButton { cursor: pointer; padding: 0; border: 0; text-decoration: none; margin: 0; display: inline-block; }
+#page-character .closeBtnCircle_20h { width: 20px; height: 20px; cursor: pointer; position: absolute; top: 5px; left: 5px; background: url('../../images/Buttons/btn-x.png'); }
+#page-character .closeBtnCircle_20h:hover { background-position: 0 20px; }
+/* Modal placement: simplemodal centered it fixed over an overlay (behavior, not styling) */
+#page-character .ColorPickerModal { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10010; width: 440px; }
+#page-character #ColorPickerOverlay { display: none; position: fixed; inset: 0; background: #000; opacity: 0.5; z-index: 10009; }
+#page-character .ColorPickerModal .ColorPickerItem { width: 40px; height: 40px; display: inline-block; cursor: pointer; }
+#page-character .CustomColorRow { font: normal 12px Arial; padding: 6px 2px; }
+
+/* ---------- tabs (main-bundle-2014 verbatim; .tab-container in main-bundle-2013 too) ---------- */
+#page-character .tab-container { overflow: hidden; padding-left: 5px; }
+#page-character .tab-container > div {
+    float: left;
+    background-color: #D6D6D6;
+    padding: 7px;
+    border: 1px solid #9e9e9e;
+    font-weight: bold;
+    font-size: 15px;
+    margin: 4px 2px 0 1px;
+    border-bottom-width: 0;
+    position: relative;
+    top: -1px;
+}
+#page-character .tab-container > div:hover { background-color: #e9e9e9; cursor: pointer; }
+#page-character .tab-container > .tab-active,
+#page-character .tab-container > .tab-active:hover {
+    background-color: #fff;
+    padding: 9px 7px;
+    border-bottom: 0;
+    position: relative;
+    border-color: #ccc;
+    z-index: 1;
+    margin: 0 1px 0 0;
+    top: 1px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+#page-character .tab-container + div > div { top: -1px; position: relative; background-color: #fff; border-top: 1px solid #CCC; display: none; padding: 21px 15px; }
+#page-character .tab-container + div > .tab-active { display: block; }
+/* pane sizing (Character.css verbatim; the rip's panes use dashed ids) */
+#page-character #tab-outfits,
+#page-character #tab-wardrobe { width: 550px; height: 470px; margin-bottom: 2px; padding-bottom: 40px; padding-top: 10px; }
+
+/* ---------- wardrobe grid (Character.css verbatim) ---------- */
+/* font-family re-asserted: 2011 AllCSS sets Verdana here; main-bundle-2013 says Arial */
+#page-character .CustomizeCharacterContainer { margin: 0; font-family: Arial, Helvetica, Sans-Serif; }
+#page-character .CustomizeCharacterContainer .NoResults { padding: 0; text-align: center; line-height: 40px; }
+#page-character .CustomizeCharacterContainer .AttireContent { min-height: 386px; }
+#page-character .CustomizeCharacterContainer .AccoutrementContent { min-height: 402px; }
+#page-character .CustomizeCharacterContainer .TileGroup { min-height: 175px; clear: left; text-align: center; }
+#page-character .CustomizeCharacterContainer .Asset { float: left; margin: 5px 7px 5px 0; text-align: left; vertical-align: top; width: 130px; min-height: 181px; }
+#page-character .CustomizeCharacterContainer .Asset .AssetThumbnail { height: 110px; position: relative; text-align: center; width: 128px; }
+#page-character .CustomizeCharacterContainer .Asset .AssetDetails { overflow: hidden; padding: 2px 0 6px 0; width: 125px; }
+#page-character .CustomizeCharacterContainer .AssetName a { font-weight: bold; line-height: 1.5em; vertical-align: top; }
+#page-character .CustomizeCharacterContainer .Label,
+#page-character .CustomizeCharacterContainer .Detail { font-size: 12px; }
+#page-character .CustomizeCharacterContainer .Label { font-weight: 600; color: #999; }
+#page-character .CustomizeCharacterContainer a { color: #095fb5; }
+#page-character .singleMessage { padding: 15px; display: block; text-align: center; }
+
+/* limited overlays inside thumbnails (same treatment as item pages) */
+#page-character .AssetThumbnail .limited-overlay { position: absolute; left: 0; bottom: 0; width: auto; }
+
+/* ---------- footer pager (Character.css verbatim) ---------- */
+/* border-top/padding re-asserted: 2011 AllCSS adds a black border-top + 3px padding here */
+#page-character .CustomizeCharacterContainer .FooterPager { clear: left; margin: 0; text-align: center; border-top: 0; padding: 0; }
+#page-character .FooterPager { -ms-user-select: none; -moz-user-select: none; -webkit-user-select: none; user-select: none; }
+#page-character .FooterPager a { padding: 2px 6px; }
+#page-character .FooterPager a:not([disabled]):hover { background: #efefef; }
+#page-character .FooterPager a[disabled=disabled]:active { color: inherit; }
+#page-character .FooterPager span { cursor: default; padding: 2px 6px; }
+#page-character .FooterPager span span { cursor: default; background: #d8d8d8; }
+/* disabled link treatment (main-bundle verbatim) */
+#page-character a[disabled=disabled],
+#page-character a[disabled=disabled]:hover { text-decoration: none; cursor: default; color: #808080; }
+
+/* ---------- attire categories (Character.css verbatim) ---------- */
+#page-character .AttireCategory { height: 84px; cursor: default; }
+/* ROVLOO: the extra accessory row adds a 4th line; authentic height:84px clips it */
+#page-character .AttireCategory { height: auto; min-height: 84px; }
+#page-character .AttireCategory a.AttireCategorySelector { line-height: 1.8; }
+#page-character .AttireCategory a.AttireCategorySelector:hover { background-color: #efefef; }
+#page-character .AttireCategory .AttireCategorySelector_Selected { background-color: #dedede; line-height: 1.8; padding: 3px 6px; }
+
+/* ---------- btn-small / btn-neutral Wear-Remove buttons (main-bundle verbatim,
+     same system as the item pages' StyleGuide buttons) ---------- */
+#page-character .btn-small {
+    margin: 0;
+    display: inline-block;
+    zoom: 1;
+    text-align: center;
+    font-weight: bold;
+    text-decoration: none;
+    letter-spacing: -1px;
+    border-width: 1px;
+    border-style: solid;
+    cursor: pointer;
+    padding: 1px 7px 0 7px;
+    height: 20px;
+    min-width: 40px;
+    font-size: 15px;
+    line-height: 18px;
+    background-position: left -160px;
+}
+#page-character .btn-small:hover { text-decoration: none; background-position: left -181px; }
+#page-character .btn-text { display: block; margin: 0; position: relative; color: #fff; }
+#page-character .btn-small .btn-text { bottom: 17px; }
+#page-character .btn-neutral,
+#page-character .btn-neutral:link,
+#page-character .btn-neutral:active,
+#page-character .btn-neutral:visited {
+    border-color: #0852b7;
+    background-color: #0852b7;
+    background-image: url('../../images/Buttons/StyleGuide/bg-btn-blue.png');
+    color: #00243d;
+}
+
+/* ---------- outfits (Outfits.css verbatim) ---------- */
+#page-character .outfit-container { float: left; margin: 10px; width: 100px; height: 170px; position: relative; }
+#page-character .outfit-avatar { cursor: pointer; margin: 0 0 8px 0; width: 100px; height: 100px; z-index: 0; }
+#page-character .outfit-name { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; font-weight: bold; }
+#page-character .outfits-banner { margin-top: 5px; margin-bottom: 10px; padding-right: 124px; position: relative; height: 30px; }
+#page-character .outfits-banner-left { display: inline-block; float: left; height: 100%; width: 100%; margin-right: 5px; }
+#page-character .outfits-error { display: none; }
+#page-character .outfits-error.visible { display: block; }
+#page-character .status-error { background-color: #FAE5E5; border: 1px solid #C00; padding: 5px 10px; }
+#page-character .outfits-tab { width: 570px; }
+#page-character .outfits-container { display: inline-block; width: 100%; min-height: 380px; }

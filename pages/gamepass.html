@@ -1,75 +1,74 @@
-<!-- Game Pass Detail Page - Authentic 2011 Two-Column Structure -->
-<div id="ItemContainer" style="width: 700px !important;">
-    <div class="StandardBoxHeader">
-        <span id="gamepass-name">Loading...</span>
+<!-- Game Pass Detail Page - faithful port of 2013 Item.aspx
+     (same skeleton as the archived Bighead item page; functional ids preserved for gamepass.js) -->
+<div id="ItemContainer" class="text">
+    <div>
+        <h1 class="notranslate" id="gamepass-name">Loading...</h1>
+        <h3 class="item-type">Game Pass</h3>
     </div>
-    <div id="Item" class="StandardBox" style="display: flex !important; gap: 30px; padding: 15px;">
-        <!-- Left Column - Large Game Pass Image -->
-        <div id="LeftColumn" style="flex-shrink: 0;">
-            <a id="gamepass-large-link" href="#" title="">
-                <img id="gamepass-large-image" src="images/spinners/spinner100x100.gif" alt="" style="width: 313px; height: 313px;">
-            </a>
-        </div>
-        
-        <!-- Right Column - Game Pass Info -->
-        <div id="RightColumn" style="flex: 1;">
-            <h3 style="margin: 0 0 10px 0; font-size: 12px; font-weight: normal; color: #888;">Game Pass</h3>
-            
-            <!-- Creator Avatar Thumbnail -->
-            <div id="CreatorThumbnail" style="margin-bottom: 10px;">
-                <a id="gamepass-creator-avatar-link" href="#" title="">
-                    <img id="gamepass-creator-avatar" src="images/spinners/spinner100x100.gif" alt="" style="max-width: 100px; max-height: 100px;">
-                </a>
-            </div>
-            
-            <!-- Stats -->
-            <div class="gamepass-stats">
-                <div class="stat-row">
-                    <span class="label">Creator:</span>
-                    <a id="gamepass-creator-link" href="#">Loading...</a>
-                </div>
-                <div class="stat-row">
-                    <span class="label">Price:</span>
-                    <span id="gamepass-price" class="price-robux">--</span>
-                </div>
-            </div>
-            
-            <!-- Description -->
-            <div class="gamepass-section">
-                <div class="section-header">Description:</div>
-                <div class="section-box">
-                    <span id="gamepass-description">Loading...</span>
-                </div>
-            </div>
-            
-            <!-- Buy Button -->
-            <div id="GamePassBuySection" class="gamepass-section">
-                <button id="gamepass-buy-btn" class="buy-button" style="display: none;">
-                    Buy for <span id="gamepass-buy-price">0</span> Robux
-                </button>
-                <span id="gamepass-owned-label" class="owned-label" style="display: none;">✓ You own this Game Pass</span>
-                <span id="gamepass-offsale-label" class="offsale-label" style="display: none;">This Game Pass is not for sale</span>
-            </div>
-            
-            <!-- Get this Game Pass at -->
-            <div id="GamePassPlaceSection" class="gamepass-section" style="display: none;">
-                <div class="place-box">
-                    <div class="place-header">Get this Game Pass at:</div>
-                    <a id="gamepass-place-image-link" href="#" title="">
-                        <img id="gamepass-place-image" src="images/spinners/spinner100x100.gif" alt="">
+    <div id="Item">
+        <div id="Details">
+            <div id="assetContainer">
+                <div id="Thumbnail">
+                    <a id="gamepass-large-link" class="AssetThumbnailImage" title="" onclick="return false" style="display:inline-block;height:320px;width:320px;">
+                        <img id="gamepass-large-image" src="images/spinners/spinner100x100.gif" height="320" width="320" border="0" alt=""/>
                     </a>
-                    <div class="place-name">
-                        <a id="gamepass-place-name-link" href="#">Loading...</a>
+                </div>
+            </div>
+
+            <div id="Summary">
+                <div class="SummaryDetails">
+                    <div id="Creator" class="Creator">
+                        <div class="Avatar">
+                            <a id="gamepass-creator-avatar-link" class="notranslate" title="" href="#" style="display:inline-block;height:70px;width:70px;cursor:pointer;">
+                                <img id="gamepass-creator-avatar" src="images/spinners/spinner100x100.gif" height="70" width="70" border="0" alt=""/>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="item-detail">
+                        <div><span class="stat-label notranslate">Creator:</span>
+                        <a id="gamepass-creator-link" class="stat notranslate" href="#">Loading...</a></div>
+                        <div><span class="stat-label">Created:</span> <span id="gamepass-created" class="stat">--</span></div>
+                        <div id="LastUpdate"><span class="stat-label">Updated:</span> <span id="gamepass-updated" class="stat">--</span></div>
+                    </div>
+
+                    <div class="DescriptionPanel notranslate">
+                        <pre id="gamepass-description" class="Description body text">No description available.</pre>
+                    </div>
+
+
+                    <!-- Get this Game Pass at (gamepass.js toggles display) -->
+                    <div id="GamePassPlaceSection" class="BadgePlaceLink divider-top" style="display:none;">
+                        <div class="Description badge-place-line">
+                            Use this pass in:
+                            <a id="gamepass-place-name-link" href="#">Loading...</a>
+                        </div>
+                        <div class="badge-place-thumb">
+                            <a id="gamepass-place-image-link" href="#" title="">
+                                <img id="gamepass-place-image" src="images/spinners/spinner100x100.gif" width="110" height="110" border="0" alt=""/>
+                            </a>
+                        </div>
                     </div>
                 </div>
+
+                <div class="BuyPriceBoxContainer">
+                    <div class="BuyPriceBox">
+                        <div class="PriceInRobux">
+                            <span id="gamepass-price" class="price-robux">--</span>
+                        </div>
+                        <div id="BuyWithRobux">
+                            <button id="gamepass-buy-btn" class="btn-primary roblox-buy-now btn-medium buy-button" style="display:none;">Buy Now <span class="btn-text">Buy Now</span><span id="gamepass-buy-price" style="display:none;">0</span></button>
+                            <span id="gamepass-owned-label" class="owned-label" style="display:none;">&#10003; You own this Game Pass</span>
+                            <span id="gamepass-offsale-label" class="offsale-label" style="display:none;">This Game Pass is not for sale</span>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+                    <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
             </div>
-            
-            <!-- Report Abuse -->
-            <div class="report-abuse">
-                <a href="#" class="abuse-link">Report Abuse</a>
-            </div>
+
+            <div class="clear"></div>
         </div>
-        
-        <div style="clear: both;"></div>
     </div>
+    <div class="clear"></div>
 </div>

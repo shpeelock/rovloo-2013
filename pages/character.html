@@ -1,116 +1,163 @@
-<!-- Character/Avatar Page - Authentic 2011 Style -->
-<div id="CharacterContainer">
-    <!-- Top Row: My Character + My Wardrobe -->
-    <div class="CharacterRow">
-        <!-- Left Column: My Character -->
-        <div class="CharacterColumn CharacterLeft">
-            <div class="StandardBoxHeader"><span>My Character</span></div>
-            <div class="CharacterBox">
-                <div id="AvatarPreview">
-                    <img id="AvatarImage" src="images/spinners/spinner100x100.gif" alt="Your Avatar" />
-                </div>
-                <div id="AvatarTypeSelector">
-                    <span class="AvatarTypeLabel">Avatar Type:</span>
-                    <div class="AvatarTypeButtons">
-                        <button id="R6Button" class="AvatarTypeButton">R6</button>
-                        <button id="R15Button" class="AvatarTypeButton">R15</button>
+<!-- Character Customizer — faithful port of the 2013/2014 /My/Character.aspx.
+     Structure transcribed from reference/archive-character-2014-raw.html (ASP.NET server markup;
+     ctl00 ids replaced with Rovloo hook ids, __doPostBack wiring replaced by scripts/pages/character.js).
+     Deviations (documented in skill references/pages/character.md): Enable 3D omitted (no 3D renderer),
+     Create New Outfit omitted (no API), R6/R15 switch + extra accessory categories are Rovloo extras. -->
+<div class="MyRobloxContainer">
+    <h1>Character Customizer</h1>
+
+    <!-- Left column: avatar + mannequin color chooser -->
+    <div class="Column1f left-nav-menu">
+        <h2><span>Avatar</span></h2>
+        <div style="height: 446px; margin-top: 10px;">
+            <div class="thumbnail-holder" id="UserAvatar" style="width: 352px; height: 352px;">
+                <span class="thumbnail-span"><img id="AvatarImage" src="images/spinners/spinner100x100.gif" alt="Your Avatar" /></span>
+            </div>
+            <div class="ReDrawAvatar">
+                <span>Something wrong with your Avatar?</span><br>
+                <a href="#" id="RedrawAvatarLink">Click here to re-draw it!</a>
+            </div>
+            <!-- Rovloo extra: avatar body type (not on the 2013 page) -->
+            <div class="AvatarTypeRow">
+                <button id="R6Button" class="btn-control btn-control-small">R6</button>
+                <button id="R15Button" class="btn-control btn-control-small">R15</button>
+            </div>
+        </div>
+
+        <div class="Mannequin" id="ColorChooser">
+            <p>
+                Click a body part to change its color:
+            </p>
+            <div class="ColorChooserFrame" style="width: 194px; height: 240px; text-align: center;">
+                <div style="margin: 11px 4px; height: 1%; position: relative;">
+                    <div style="left: 72px; top: 0px; position: absolute; cursor: pointer;">
+                        <div class="ColorChooserRegion" id="BP_Head" data-part="head" style="width: 44px; height: 44px;"></div>
                     </div>
-                </div>
-                <div id="AvatarRedraw">
-                    Something wrong with your Avatar? <a href="#" id="RedrawAvatarLink">Click here to re-draw it!</a>
+                    <div style="left: 0px; top: 52px; position: absolute; cursor: pointer;">
+                        <div class="ColorChooserRegion" id="BP_RightArm" data-part="rightArm" style="width: 40px; height: 88px;"></div>
+                    </div>
+                    <div style="left: 48px; top: 52px; position: absolute; cursor: pointer;">
+                        <div class="ColorChooserRegion" id="BP_Torso" data-part="torso" style="width: 88px; height: 88px;"></div>
+                    </div>
+                    <div style="left: 144px; top: 52px; position: absolute; cursor: pointer;">
+                        <div class="ColorChooserRegion" id="BP_LeftArm" data-part="leftArm" style="width: 40px; height: 88px;"></div>
+                    </div>
+                    <div style="left: 48px; top: 146px; position: absolute; cursor: pointer;">
+                        <div class="ColorChooserRegion" id="BP_RightLeg" data-part="rightLeg" style="width: 40px; height: 88px;"></div>
+                    </div>
+                    <div style="left: 96px; top: 146px; position: absolute; cursor: pointer;">
+                        <div class="ColorChooserRegion" id="BP_LeftLeg" data-part="leftLeg" style="width: 40px; height: 88px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column: My Wardrobe -->
-        <div class="CharacterColumn CharacterRight">
-            <div class="StandardBoxHeader"><span>My Wardrobe</span></div>
-            <div class="CharacterBox WardrobeBox">
-                <!-- Category Tabs -->
-                <div id="WardrobeTabs">
-                    <div class="TabRow">
-                        <a href="#" class="WardrobeTab" data-category="8">Hats</a> |
-                        <a href="#" class="WardrobeTab" data-category="41">Hair</a> |
-                        <a href="#" class="WardrobeTab" data-category="18">Faces</a> |
-                        <a href="#" class="WardrobeTab active" data-category="2">T-Shirts</a> |
-                        <a href="#" class="WardrobeTab" data-category="11">Shirts</a> |
-                        <a href="#" class="WardrobeTab" data-category="12">Pants</a>
-                    </div>
-                    <div class="TabRow">
-                        <a href="#" class="WardrobeTab" data-category="46">Back</a> |
-                        <a href="#" class="WardrobeTab" data-category="45">Front</a> |
-                        <a href="#" class="WardrobeTab" data-category="43">Neck</a> |
-                        <a href="#" class="WardrobeTab" data-category="44">Shoulder</a> |
-                        <a href="#" class="WardrobeTab" data-category="47">Waist</a> |
-                        <a href="#" class="WardrobeTab" data-category="42">Face Accessory</a> |
-                        <a href="#" class="WardrobeTab" data-category="19">Gear</a>
-                    </div>
-                    <div class="TabRow">
-                        <a href="#" class="WardrobeTab" data-category="17">Heads</a> |
-                        <a href="#" class="WardrobeTab" data-category="27">Torsos</a> |
-                        <a href="#" class="WardrobeTab" data-category="29">L Arms</a> |
-                        <a href="#" class="WardrobeTab" data-category="28">R Arms</a> |
-                        <a href="#" class="WardrobeTab" data-category="31">L Legs</a> |
-                        <a href="#" class="WardrobeTab" data-category="30">R Legs</a>
-                    </div>
-                    <div class="TabRow PackagesRow">
-                        <a href="#" class="WardrobeTab" data-category="costumes">Costumes</a> |
-                        <a href="#" class="WardrobeTab" data-category="animations">Animations</a>
-                        <span class="TabSpacer"></span>
-                        <a href="https://www.roblox.com/catalog" target="_blank" class="WardrobeAction">Shop</a> |
-                        <a href="https://www.roblox.com/develop" target="_blank" class="WardrobeAction">Create</a>
-                    </div>
-                </div>
-
-                <!-- Wardrobe Items Grid -->
-                <div id="WardrobeItems">
-                    <div class="loading">Loading wardrobe...</div>
-                </div>
-
-                <!-- Wardrobe Pagination -->
-                <div id="WardrobePagination" class="ItemPagination" style="display: none;">
-                    <a href="#" id="WardrobeFirst">First</a>
-                    <a href="#" id="WardrobePrev">Previous</a>
-                    <span id="WardrobePages"></span>
-                    <a href="#" id="WardrobeNext">Next</a>
-                    <a href="#" id="WardrobeLast">Last</a>
-                </div>
+        <!-- Shared color picker modal (authentic page had one simplemodal per body part;
+             Rovloo reuses a single one, repopulated per part) -->
+        <div class="modalPopup unifiedModal ColorPickerModal" id="ColorPickerModal">
+            <div style="height: 38px; padding-top: 2px;">Choose a Body Color</div>
+            <div class="simplemodal-close"><a class="ImageButton closeBtnCircle_20h" id="ColorPickerClose"></a></div>
+            <div class="unifiedModalContent ColorPickerContainer">
+                <div id="ColorGrid"></div>
+                <!-- Rovloo extra: free color input (bodyColor3s accepts any hex) -->
+                <div class="CustomColorRow">Custom: <span id="ColorPickerContainer"></span></div>
             </div>
         </div>
+        <div id="ColorPickerOverlay"></div>
     </div>
 
-    <!-- Bottom Row: Choose Colors + Currently Wearing -->
-    <div class="CharacterRow">
-        <!-- Left Column: Choose Colors -->
-        <div class="CharacterColumn CharacterLeft">
-            <div class="StandardBoxHeader"><span>Choose Colors</span></div>
-            <div class="CharacterBox ColorsBox">
-                <div class="ColorsInstruction">Click a body part to change its color:</div>
-                <div id="BodyPartSelector">
-                    <!-- Humanoid body part selector - authentic 2011 style -->
-                    <div class="BodyPart BP-Head" data-part="head" id="BP_Head" title="Head"></div>
-                    <div class="BodyPart BP-LeftArm" data-part="leftArm" id="BP_LeftArm" title="Left Arm"></div>
-                    <div class="BodyPart BP-Torso" data-part="torso" id="BP_Torso" title="Torso"></div>
-                    <div class="BodyPart BP-RightArm" data-part="rightArm" id="BP_RightArm" title="Right Arm"></div>
-                    <div class="BodyPart BP-LeftLeg" data-part="leftLeg" id="BP_LeftLeg" title="Left Leg"></div>
-                    <div class="BodyPart BP-RightLeg" data-part="rightLeg" id="BP_RightLeg" title="Right Leg"></div>
+    <!-- Right column: wardrobe/outfits tabs + currently wearing -->
+    <div class="Column2f">
+        <div class="tab-container">
+            <div class="tab-active" data-id="tab-wardrobe">Wardrobe</div>
+            <div data-id="tab-outfits">Outfits</div>
+        </div>
+        <div>
+            <div class="tab-active" id="tab-wardrobe">
+                <div style="margin-top: 10px;">
+                    <div class="CustomizeCharacterContainer">
+                        <div class="AttireCategory" style="text-align: center;">
+                            <a href="#" class="AttireCategorySelector" data-category="17">Heads</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="18">Faces</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector_Selected" data-category="8">Hats</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="2">T-Shirts</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="11">Shirts</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="12">Pants</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="19">Gear</a>
+                            <br>
+                            <a href="#" class="AttireCategorySelector" data-category="27">Torsos</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="29">L Arms</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="28">R Arms</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="31">L Legs</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="30">R Legs</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="costumes">Packages</a>
+                            <br>
+                            <!-- Rovloo extras: modern accessory categories (not on the 2013 page) -->
+                            <a href="#" class="AttireCategorySelector" data-category="41">Hair</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="46">Back</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="45">Front</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="43">Neck</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="44">Shoulder</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="47">Waist</a>
+                            &nbsp;|&nbsp;
+                            <a href="#" class="AttireCategorySelector" data-category="42">Face Acc</a>
+                            <br>
+                            <b><a href="#" id="CatalogHyperLink">Shop</a></b>
+                        </div>
+                        <div class="AttireContent">
+                            <div id="WardrobeItems">
+                                <span class="singleMessage">Loading items...</span>
+                            </div>
+                        </div>
+                        <div class="FooterPager">
+                            <!-- rebuilt per render by updateWardrobePagination (authentic DataPager
+                                 anatomy: one span; current page is the only nested span) -->
+                            <span id="WardrobePagination"><a disabled="disabled">First</a>&nbsp;<a disabled="disabled">Previous</a>&nbsp;<span>1</span>&nbsp;<a disabled="disabled">Next</a>&nbsp;<a disabled="disabled">Last</a>&nbsp;</span>
+                        </div>
+                    </div>
                 </div>
-                <!-- Color Palette (shown when body part is clicked) -->
-                <div id="ColorPalette" style="display: none;">
-                    <div class="PaletteHeader">Select a color: <span id="ColorPickerContainer"></span></div>
-                    <div id="ColorGrid"></div>
+            </div>
+            <div id="tab-outfits">
+                <div class="outfits-tab" id="OutfitsTab">
+                    <div class="outfits-banner">
+                        <div class="outfits-banner-left">
+                            <div class="outfits-error status-error" id="outfits-error"></div>
+                        </div>
+                    </div>
+                    <div class="outfits-container" id="OutfitsContainer">
+                        <span class="singleMessage">Loading outfits...</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column: Currently Wearing -->
-        <div class="CharacterColumn CharacterRight">
-            <div class="StandardBoxHeader"><span>Currently Wearing</span></div>
-            <div class="CharacterBox WearingBox">
+        <div class="divider-top" style="left: -20px; padding-left: 20px; margin-top: 10px; position: relative;"></div>
+        <h2 style="margin-top: 20px;">
+            <span>Currently Wearing</span>
+        </h2>
+        <div style="margin-top: 10px;">
+            <div class="CustomizeCharacterContainer" id="AccoutrementsPane">
                 <div id="CurrentlyWearing">
-                    <div class="loading">Loading outfit...</div>
+                    <span class="singleMessage">Loading outfit...</span>
                 </div>
             </div>
         </div>
     </div>
+    <div style="clear: both;"></div>
 </div>

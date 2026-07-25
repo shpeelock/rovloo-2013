@@ -391,7 +391,14 @@
                     }
 
                     if (window.addObcOverlayIfPremium) {
-                        await window.addObcOverlayIfPremium(creatorAvatarLink, creatorId, { bottom: '3px', left: '1px' });
+                        // The 50px builder-image box floats with no positioning context, so the
+                        // overlay's absolute position must anchor to this link, not escape up to
+                        // #ItemContainer (matches the fix already established in catalog-item.js).
+                        creatorAvatarLink.style.position = 'relative';
+                        creatorAvatarLink.style.display = 'inline-block';
+                        // 'small' = the 22x12 mini corner badge, appropriate for this 50px avatar
+                        // (the 66x19 big banner is for the larger contexts like the main profile avatar).
+                        await window.addObcOverlayIfPremium(creatorAvatarLink, creatorId, { bottom: '3px', left: '1px', size: 'small' });
                     }
                 } else if (creatorType === 'Group' && window.roblox?.getGroupThumbnails) {
                     
@@ -442,8 +449,11 @@
                 const upVotes = votes.data[0].upVotes || 0;
                 const downVotes = votes.data[0].downVotes || 0;
 
-                upVotesEl.textContent = formatVoteCount(upVotes);
-                downVotesEl.textContent = formatVoteCount(downVotes);
+                // The whole label is one text node (matches the authentic single-span
+                // markup — see the comment in game-detail.html), so it's rewritten in full
+                // rather than just swapping a nested count span.
+                upVotesEl.textContent = 'Thumbs up: ' + formatVoteCount(upVotes);
+                downVotesEl.textContent = 'Thumbs down: ' + formatVoteCount(downVotes);
 
                 updateVoteBar(upVotes, downVotes);
             }
@@ -607,39 +617,39 @@
     }
     
     function updateVoteButtonStates(userVote) {
+        // Verbatim VotingPanel.css states: .has-voted goes on the .users-vote CONTAINER (dims
+        // both buttons to their "already voted" sprite frames), .selected goes on whichever
+        // button the user actually picked. The container never got a class before (JS only
+        // toggled a bare .voted on individual buttons, which matched nothing in the CSS), so
+        // the highlight never rendered at all.
+        const usersVote = document.querySelector('#page-game-detail .users-vote');
         const voteUpBtn = document.getElementById('VoteUpButton');
         const voteDownBtn = document.getElementById('VoteDownButton');
-        
-        if (!voteUpBtn || !voteDownBtn) return;
 
-        voteUpBtn.classList.remove('voted');
-        voteDownBtn.classList.remove('voted');
+        if (!usersVote || !voteUpBtn || !voteDownBtn) return;
 
-        if (userVote === true) {
-            voteUpBtn.classList.add('voted');
-        } else if (userVote === false) {
-            voteDownBtn.classList.add('voted');
+        voteUpBtn.classList.remove('selected');
+        voteDownBtn.classList.remove('selected');
+
+        if (userVote === true || userVote === false) {
+            usersVote.classList.add('has-voted');
+            (userVote ? voteUpBtn : voteDownBtn).classList.add('selected');
+        } else {
+            usersVote.classList.remove('has-voted');
         }
     }
 
     function updateVoteBar(upVotes, downVotes) {
+        // Authentic markup has only ONE colored element: green .percent drawn over a static
+        // grey .background — there's no separate "dislikes" color, the grey shows through
+        // wherever the green doesn't reach.
         const likesBar = document.getElementById('VoteBarLikes');
-        const dislikesBar = document.getElementById('VoteBarDislikes');
-
-        if (!likesBar || !dislikesBar) return;
+        if (!likesBar) return;
 
         const total = upVotes + downVotes;
-        if (total === 0) {
-            likesBar.style.width = '50%';
-            dislikesBar.style.width = '50%';
-            return;
-        }
-
-        const likePercent = (upVotes / total) * 100;
-        const dislikePercent = (downVotes / total) * 100;
+        const likePercent = total === 0 ? 50 : (upVotes / total) * 100;
 
         likesBar.style.width = likePercent + '%';
-        dislikesBar.style.width = dislikePercent + '%';
     }
 
     function formatVoteCount(count) {
@@ -2752,20 +2762,21 @@
                 return;
             }
 
-            const isFavorited = favStar.classList.contains('favorited');
+            // CSS (.redesign .AddRemoveFavorite.Favorited, verbatim from GamePage.css) only
+            // defines the "on" state as a single .Favorited modifier class — the default
+            // (0,0 sprite frame) needs no class of its own.
+            const isFavorited = favStar.classList.contains('Favorited');
 
             try {
                 // Toggle favorite status using setGameFavorite
                 if (isFavorited) {
                     await window.roblox.setGameFavorite(universeId, false);
-                    favStar.classList.remove('favorited');
-                    favStar.classList.add('notFavorited');
+                    favStar.classList.remove('Favorited');
                     favStar.title = 'Add to favorites';
                     if (favText) favText.textContent = 'Add to Favorites';
                 } else {
                     await window.roblox.setGameFavorite(universeId, true);
-                    favStar.classList.remove('notFavorited');
-                    favStar.classList.add('favorited');
+                    favStar.classList.add('Favorited');
                     favStar.title = 'Remove from favorites';
                     if (favText) favText.textContent = 'Favorited';
                 }
@@ -2810,8 +2821,7 @@
                 const status = await window.roblox.getGameFavoriteStatus(universeId);
                 const favText = document.getElementById('FavoriteText');
                 if (status?.isFavorited) {
-                    favStar.classList.remove('notFavorited');
-                    favStar.classList.add('favorited');
+                    favStar.classList.add('Favorited');
                     favStar.title = 'Remove from favorites';
                     if (favText) favText.textContent = 'Favorited';
                 }
@@ -2883,8 +2893,8 @@
                     const downVotes = votes.data[0].downVotes || 0;
 
                     if (upVotesEl && downVotesEl) {
-                        upVotesEl.textContent = formatVoteCount(upVotes);
-                        downVotesEl.textContent = formatVoteCount(downVotes);
+                        upVotesEl.textContent = 'Thumbs up: ' + formatVoteCount(upVotes);
+                        downVotesEl.textContent = 'Thumbs down: ' + formatVoteCount(downVotes);
                     }
 
                     // Update the ratio bar

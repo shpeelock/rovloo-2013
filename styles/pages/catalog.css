@@ -1,385 +1,309 @@
+/* Catalog — faithful 2013 /catalog/ port.
+   Structure transcribed from reference/archive-catalog-2013.html (real Jun-2013 #catalog body:
+   header + .CatalogSearchBar, .left-nav-menu.divider-right browse dropdown + #legend,
+   .right-content.divider-left with .bolded label and .CatalogItemOuter hover-expand tiles).
+   CSS values lifted VERBATIM from reference/authentic-css/catalog-page-bundle-2013.css (the real,
+   unbundled ~/CSS/Pages/Catalog.css from the page bundle — NOT a guess). Image paths re-pointed to
+   local (../../images/...). Sprites fetched from wayback into images/UI/catalog/.
+   Scoped #CatalogContainer #catalog (2 ids) so it beats the 2011 AllCSS that loads after page CSS.
+   Modern category taxonomy retained (user decision) but presented in authentic 2013 left-nav
+   styling; JS injects #CategoryList/#SortByList/#TimeFilterSection — styled here to match. */
 
+/* ---- Container / layout ---- */
+#CatalogContainer { font-family: Arial, Helvetica, sans-serif; min-width: 0; position: relative; padding-top: 6px; }
+#CatalogContainer #catalog { width: 970px; margin: 0 auto; color: #000; font-size: 12px; }
+#CatalogContainer #catalog a { color: #095fb5; text-decoration: none; }
+#CatalogContainer #catalog a:hover { text-decoration: underline; }
 
-#CatalogContainer {
-    font-family: Verdana, Sans-Serif;
-    min-width: 0;
-    position: relative;
+/* 2011 AllCSS leak guards (measured leaks, not hypothetical): AllCSS ships `#CatalogContainer h2`
+   (Verdana, letter-spacing .1em, line-height 24px, margin-left 10px), `#CatalogContainer ul`
+   (Verdana) and `#CatalogContainer ul li` (margins + padding-left 20px + font-size 14px) for the OLD
+   2011 catalog page, and AllCSS loads AFTER the 2013 bundles. These 2-id guards re-assert the 2013
+   look everywhere; more specific rules below still win where they declare. */
+#CatalogContainer #catalog h2 { font-family: Arial, Helvetica, sans-serif; letter-spacing: normal; line-height: normal; margin-left: 0; }
+#CatalogContainer #catalog ul { font-family: Arial, Helvetica, sans-serif; }
+#CatalogContainer #catalog li { font-size: 12px; }
+
+/* ---- Header + search bar (verbatim Catalog.css) ---- */
+/* overflow:hidden contains the floated title/search bar — without it the 40px h1's float overhangs
+   the 60px header and shoves the left-nav/right-content floats sideways until the grid wraps. */
+#CatalogContainer #catalog .catalog-header { height: 60px; overflow: hidden; }
+#CatalogContainer #catalog .catalog-title { float: left; }
+/* Verbatim main-bundle-2013.css: h1,h1 a{font-size:40px;font-weight:bold;letter-spacing:-2px;
+   margin:12px 0;color:#363636} — the markup is h1 > a#CatalogLink (the bundle's `a#CatalogLink h1`
+   selector was dead even on the real page; the h1 look came from this site-wide rule). */
+#CatalogContainer #catalog .catalog-title h1,
+#CatalogContainer #catalog .catalog-title h1 a { font-size: 40px; font-weight: bold; letter-spacing: -2px; margin: 12px 0; color: #363636; display: inline-block; }
+#CatalogContainer #catalog .catalog-title h1 a { margin: 0; }
+#CatalogContainer #catalog a#CatalogLink:hover { text-decoration: none; }
+
+#CatalogContainer #catalog .CatalogSearchBar { padding-left: 20px; float: right; padding-top: 5px; padding-right: 6px; }
+#CatalogContainer #catalog .CatalogSearchBar input#ctl00_cphRoblox_rbxCatalog_SearchTextBox {
+    width: 325px; float: left; padding: 2px 5px; margin-right: 4px; height: 21px;
+    border: 1px solid #a7a7a7; box-sizing: content-box; font-family: Arial, Helvetica, sans-serif; font-size: 13px;
 }
-
-#CatalogContainer h2 {
-    font-family: Verdana, Sans-Serif;
-    font-weight: normal;
-    letter-spacing: .1em;
-    line-height: 24px;
-    padding: 0;
-    color: #555;
-    font-size: 14px;
-    margin-left: 10px;
+#CatalogContainer #catalog .keyword-cat-wrap {
+    height: 23px; border: 1px solid #a7a7a7; padding: 2px 2px 0 2px; margin-right: 6px; float: left; position: relative;
 }
-
-#CatalogContainer h2.filters-heading {
-    margin-left: 5px;
+#CatalogContainer #catalog #categoriesForKeyword {
+    border: 1px solid #fff; font-size: 12px; height: 21px; width: 150px;
+    -webkit-appearance: none; -moz-appearance: none; appearance: none; -webkit-border-radius: 0; border-radius: 0;
+    background-color: #fff; background-image: url('../../images/UI/catalog/dropdown.png');
+    background-position: right top; background-repeat: no-repeat;
 }
+#CatalogContainer #catalog #categoriesForKeyword:hover,
+#CatalogContainer #catalog #categoriesForKeyword:focus { background-position: right bottom; }
+#CatalogContainer #catalog #ctl00_cphRoblox_rbxCatalog_SearchButton { float: left; }
+#CatalogContainer #catalog .catalog-reset-link { float: left; margin: 4px 0 0 8px; font-size: 11px; }
 
-#CatalogContainer ul {
-    font-family: Verdana, Sans-Serif;
-    list-style: none;
-    margin: 0 0 20px 0;
-    padding-left: 0;
+/* .btn-control — VERBATIM main-bundle-2013.css (grey tiled control button; sprites fetched into
+   images/StyleGuide/). The earlier blue version was invented — wrong. */
+#CatalogContainer #catalog .btn-control,
+#CatalogContainer #catalog .btn-control:active,
+#CatalogContainer #catalog .btn-control:link,
+#CatalogContainer #catalog .btn-control:visited,
+#CatalogContainer #catalog .btn-control:hover {
+    border: 1px solid #777; padding: 0 6px; color: #000; text-decoration: none; background-color: #ccc;
+    text-align: center; font-weight: normal; cursor: pointer; background-position: top; display: inline-block;
 }
+#CatalogContainer #catalog .btn-control:hover { background-position: bottom; border-color: #888; text-decoration: none; }
+#CatalogContainer #catalog .btn-control.btn-control-small { height: 18px; line-height: 18px; font-size: 11px; background-image: url('../../images/StyleGuide/btn-control-small-tile.png'); }
+#CatalogContainer #catalog .btn-control.btn-control-large { height: 25px; line-height: 24px; font-size: 13px; padding: 0 7px; background-image: url('../../images/StyleGuide/btn-control-large-tile.png'); }
+#CatalogContainer #catalog a.btn-control.top-level { font-weight: bold; }
 
-#CatalogContainer ul li {
-    margin: 5px 0 5px 10px;
-    font-family: Arial, Helvetica, sans-serif;
-    padding-left: 20px;
-    font-size: 14px;
+/* ---- Left nav (verbatim Catalog.css) ---- */
+#CatalogContainer #catalog .left-nav-menu { float: left; width: 150px; z-index: 7; position: relative; }
+#CatalogContainer #catalog .divider-right { border-right: 1px solid #ccc; }
+#CatalogContainer #catalog .left-nav-menu .filter-title { margin: 5px 0; font-weight: bold; font-size: 14px; }
+#CatalogContainer #catalog .left-nav-menu h2 { margin: 0 0 5px 0; font-size: 16px; font-weight: bold; color: #363636; text-transform: uppercase; display: block; }
+#CatalogContainer #catalog .left-nav-menu li { list-style-type: none; padding: 0; margin: 0; }
+#CatalogContainer #catalog .left-nav-menu ul {
+    padding: 0; margin: 0; padding-left: 5px; padding-top: 0; margin-top: 0;
+    border-bottom: 1px solid #eee; margin-bottom: 10px; padding-bottom: 10px; line-height: 17px;
 }
+#CatalogContainer #catalog .left-nav-menu ul li h3 { display: inline; font-size: 13px; font-weight: normal; }
+#CatalogContainer #catalog .left-nav-menu ul li h3 a { font-weight: normal; font-size: 13px; color: #095fb5; }
 
-#BrowseMode ul li h3 a {
-    font-weight: normal;
-    font-size: 14px;
+/* "Browse by Category" sprite button header (verbatim) — the boxed dropdown attaches directly below */
+#CatalogContainer #catalog .browseDropdownButton {
+    background: url('../../images/UI/catalog/btn-browse_categories.png'); background-position: top left;
+    width: 136px; height: 34px; cursor: default; display: block; margin: 0; text-indent: -9999px; overflow: hidden;
 }
+#CatalogContainer #catalog .browseDropdownButton:hover,
+#CatalogContainer #catalog .browseDropdownButton.hover { background-position: bottom left; text-decoration: none; }
 
-#CatalogContainer .Selected {
-    background: url('../../images/gamesPage_filterArrow.png') no-repeat scroll 0 1px transparent;
+/* ===== Authentic "Browse by Category" boxed dropdown (verbatim ~/CSS/Pages/Catalog.css) =====
+   #CategoryList is the JS category hook (getElementById('CategoryList')) shaped as the real
+   #dropdownUl: a bordered grey box of 134px rows, subcategory rows show a right-arrow and reveal a
+   hover flyout (.slideOut). Modern taxonomy kept, presented in the authentic widget. */
+#CatalogContainer #catalog #dropdown { font-size: 14px; position: relative; z-index: 7; margin-bottom: 12px; }
+#CatalogContainer #catalog #CategoryList {
+    margin: 0; padding: 0; list-style: none; width: 134px; border: 1px solid #777; background: #efefef;
 }
-
-#CatalogContainer .Assets {
-    float: left;
-    min-width: 0;
-    overflow: hidden;
-    padding-bottom: 10px;
-    padding-left: 0;
-    
-    will-change: transform;
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    padding-right: 0;
-    position: relative;
-    width: 680px;
+/* Rows have NO dividers (verbatim — the real menu's only divider is the .DropdownDivider li) */
+#CatalogContainer #catalog #dropdown #CategoryList > li {
+    position: relative; height: 31px; width: 134px; box-sizing: border-box;
+    margin: 0; padding: 0; list-style: none; float: none;
 }
-
-.Assets .StandardBoxHeader {
-    width: 660px;
+/* The authentic section divider (verbatim: li.slideHeader.DropdownDivider.divider-bottom) */
+#CatalogContainer #catalog #dropdown #CategoryList > li.DropdownDivider {
+    height: 1px; margin: 0 0 1px 5px; width: 92%; border-bottom: 1px solid #ccc; background: none;
 }
-
-.Assets .StandardBox {
-    width: 660px;
+#CatalogContainer #catalog #dropdown #CategoryList > li.DropdownDivider:hover { background: #efefef; }
+#CatalogContainer #catalog #dropdown #CategoryList > li:hover { background: #d8d8d8; }
+#CatalogContainer #catalog #dropdown #CategoryList > li.subcategories {
+    background: url('../../images/UI/catalog/img-right_arrow.png') no-repeat 118px 11px;
 }
-
-#CatalogContainer .Asset {
-    margin: -1px 0 15px -1px;
-    vertical-align: top;
-    width: 122px;
+#CatalogContainer #catalog #dropdown #CategoryList > li.subcategories:hover {
+    background: #d8d8d8 url('../../images/UI/catalog/img-right_arrow.png') no-repeat 118px 11px;
 }
-
-#CatalogContainer .Asset .AssetThumbnail {
-    border: solid 1px #EEE;
-    height: 110px;
-    text-align: center;
-    width: 110px;
-    background-color: #FFF;
-    position: relative;
-    
-    transform: translateZ(0);
-    will-change: opacity;
-    contain: layout style paint;
+#CatalogContainer #catalog #dropdown #CategoryList li a,
+#CatalogContainer #catalog #dropdown #CategoryList li span {
+    display: block; text-decoration: none; color: #000; padding: 7px 6px; font-size: 13px; cursor: pointer;
 }
-
-#CatalogContainer .Asset .AssetThumbnail a img {
-    max-width: 110px;
-    max-height: 110px;
-    width: auto;
-    height: auto;
-    
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    transform: translateZ(0);
+/* Top-level rows keep ONE consistent text style (in the real menu every top row was an <a>; the
+   bundle's bold-span rule only ever hit the .slideHeader flyout titles — scope it there). The real
+   dropdown had no selected state either (it navigated away), so no bold-selected here; the flat
+   Filters list keeps its authentic bold .selected. */
+#CatalogContainer #catalog #dropdown #CategoryList li.disabled > a { color: #999; pointer-events: none; }
+/* Flyout submenu — display is driven by the JS hierarchical-dropdown widget (below), NOT CSS :hover,
+   so it reproduces the real hover-intent + single-open + align-to-top behavior of the 2013 plugin. */
+#CatalogContainer #catalog #dropdown #CategoryList .slideOut {
+    position: absolute; left: 133px; top: 0; display: none; z-index: 8;
+    margin: 0; padding: 0; list-style: none; border: 1px solid #777; background: #efefef; min-width: 128px;
 }
+#CatalogContainer #catalog #dropdown #CategoryList > li.subcategories.hover-open { background: #d8d8d8 url('../../images/UI/catalog/img-right_arrow.png') no-repeat 118px 11px; }
+#CatalogContainer #catalog #dropdown #CategoryList .slideOut li { position: relative; width: 100%; white-space: nowrap; }
+#CatalogContainer #catalog #dropdown #CategoryList .slideOut li:hover { background: #d8d8d8; }
+#CatalogContainer #catalog #dropdown #CategoryList .slideOut li a { padding: 7px 14px 7px 8px; }
+#CatalogContainer #catalog #dropdown #CategoryList .slideOut .slideHeader span { font-weight: bold; color: #363636; cursor: default; }
+#CatalogContainer #catalog #dropdown #CategoryList .slideOut .slideHeader:hover { background: #efefef; }
 
-#CatalogContainer .Asset .AssetThumbnail .limited-badge {
-    position: absolute;
-    top: 97px;
-    left: 0;
-    pointer-events: none;
+/* Selected-state: NOT in the dropdown (its rows keep one uniform style — the real dropdown had no
+   selected state at all); bold-selected lives only in the flat Filters lists (authentic). */
+#CatalogContainer #catalog .left-nav-menu li.disabled > h3 > a { color: #999; pointer-events: none; }
+
+/* BrowseMode (sort) + SortByList (show) + TimeFilter — clean authentic left-nav sections */
+#CatalogContainer #catalog #BrowseMode h2,
+#CatalogContainer #catalog #SortByList-section h2,
+#CatalogContainer #catalog #TimeFilterSection h2 { margin: 12px 0 5px 0; }
+#CatalogContainer #catalog #SortByList { padding-left: 5px; }
+
+/* ===== Two-state left nav (authentic): splash (landing) vs browse (after category/search) =====
+   Splash: #dropdown.splashdropdown{display:block} — menu always open under the lit button.
+   Browse: #dropdown.browsedropdown{display:none;position:absolute;z-index:3} — collapsed into a
+   click-toggle popup (the plugin's InitializeDropdown), and #CatalogFilters appears. Verbatim
+   from ~/CSS/Pages/Catalog.css. */
+#CatalogContainer #catalog .splashdropdown { display: block; }
+/* 3-id + class so this BEATS the `#dropdown{position:relative}` base rule — the browse-state popup
+   must be absolute (verbatim .browsedropdown{position:absolute;z-index:3}) so opening/closing it
+   OVERLAYS the Filters stack instead of pushing it down and snapping back on collapse. */
+#CatalogContainer #catalog #dropdown.browsedropdown { display: none; position: absolute; z-index: 3; }
+#CatalogContainer #catalog #dropdown.browsedropdown.open { display: block; }
+
+/* Browse-state Filters stack (authentic: .filter-title sections; creator/px geometry verbatim —
+   creatorTextbox 90px, pxInput 30px, Go = 23x18 silver sprite buttons) */
+#CatalogContainer #catalog #CatalogFilters ul { border-bottom: 1px solid #eee; margin-bottom: 10px; padding-bottom: 10px; }
+#CatalogContainer #catalog #CatalogFilters ul.separatorForLegend { margin-bottom: 0; padding-bottom: 20px; border-bottom: 0; }
+#CatalogContainer #catalog #CatalogFilters a { color: #095fb5; font-size: 12px; }
+#CatalogContainer #catalog #CatalogFilters a.selected { font-weight: bold; color: #000; text-decoration: none; }
+#CatalogContainer #catalog .left-nav-menu input#CatalogCreatorFilter { width: 90px; padding: 0 0 0 3px; height: 18px; border: 1px solid #a7a7a7; }
+#CatalogContainer #catalog .left-nav-menu input.pxInput { width: 30px; padding: 0 0 0 3px; height: 18px; border: 1px solid #a7a7a7; }
+/* Go buttons — verbatim Catalog.css #submitCreatorButton/#submitPxButton (silver 27px tile over the
+   btn-control-small base, which supplies border/line-height/font). Markup carries
+   class="btn-control btn-control-small" so the base rules above apply first. */
+#CatalogContainer #catalog #CatalogApplyFilters,
+#CatalogContainer #catalog #CatalogPriceGo {
+    background: url('../../images/UI/catalog/bg-27px_silver_btn.png') repeat-x;
+    width: 23px; height: 18px; position: relative; top: 1px; margin-left: 3px; padding: 2px 2px 0 2px;
+    box-sizing: border-box; line-height: 14px;
 }
+#CatalogContainer #catalog #CatalogApplyFilters:hover,
+#CatalogContainer #catalog #CatalogPriceGo:hover { background-position: bottom left; }
 
-#CatalogContainer .Asset .AssetThumbnail .limited-badge img {
-    width: auto;
-    height: auto;
+/* Legend (VERBATIM Catalog.css geometry — the sprite is an 8x16 two-frame strip, so the header box
+   must be the tiny 3px+5px-padding strip with width:20px or BOTH arrow frames show; the h2 hangs out
+   of it via position:relative;top:-5px, exactly like the real page). */
+#CatalogContainer #catalog #legend { padding: 18px 20px 5px 0; }
+#CatalogContainer #catalog #legend .header {
+    background: url('../../images/UI/catalog/sprite-arrow.png'); background-repeat: no-repeat;
+    padding-left: 12px; height: 3px; margin-top: 5px; font-weight: bold; text-transform: uppercase; font-size: 14px;
+    padding-bottom: 5px; display: block; width: 20px; cursor: pointer; overflow: visible;
 }
+#CatalogContainer #catalog #legend .header.expanded { background-position: bottom left; }
+#CatalogContainer #catalog #legend h2 { top: -5px; position: relative; margin: 0; font-size: 14px; font-weight: bold; color: #363636; text-transform: uppercase; white-space: nowrap; }
+#CatalogContainer #catalog #legendcontent { width: 137px; margin-top: 17px; margin-left: 5px; }
+#CatalogContainer #catalog #legend .legend-icon { display: block; margin-left: -13px; border: 0; }
+#CatalogContainer #catalog #legend .legendText { margin-top: 3px; margin-bottom: 3px; font-size: 11px; line-height: 14px; }
 
-#CatalogContainer .Asset .AssetDetails {
-    font-family: Verdana, Sans-Serif;
-    overflow: hidden;
-    padding: 2px 0 6px 0;
-    width: 110px;
+/* ---- Right content (verbatim Catalog.css) ---- */
+#CatalogContainer #catalog .right-content { float: left; width: 792px; margin-left: -1px; padding-left: 20px; z-index: 1; position: relative; }
+#CatalogContainer #catalog .divider-left { border-left: 1px solid #ccc; }
+#CatalogContainer #catalog .bolded { font-size: 16px; font-weight: bold; text-transform: uppercase; color: #363636; display: block; padding: 2px 0 8px 0; }
+
+/* Authentic browse-state header: breadcrumb label + #secondRow (results count left, sorts right).
+   #SortOptions verbatim Catalog.css: float:right, bold, bordered selects. */
+#CatalogContainer #catalog a.breadCrumbFilter { color: #363636; text-decoration: none; cursor: pointer; }
+#CatalogContainer #catalog a.breadCrumbFilter:hover { text-decoration: underline; }
+#CatalogContainer #catalog #secondRow { font-size: 12px; }
+#CatalogContainer #catalog #CatalogResultsCount { font-size: 12px; color: #000; }
+#CatalogContainer #catalog #SortOptions { float: right; padding-left: 10px; font-weight: bold; font-size: 12px; color: #363636; }
+#CatalogContainer #catalog #SortOptions select { border: 1px solid #a7a7a7; font-size: 12px; margin-right: 4px; vertical-align: middle; }
+
+/* JS render container (.Assets/.StandardBox are 2011 hook classes — neutralize their AllCSS styling) */
+#CatalogContainer #catalog .right-content .Assets { width: auto; float: none; overflow: visible; padding: 0; position: relative; min-width: 0; }
+#CatalogContainer #catalog .right-content .Assets .StandardBox { width: auto; background: none; border: 0; box-shadow: none; padding: 0; min-height: 400px; position: relative; }
+
+/* ---- Catalog item tiles (verbatim Catalog.css hover-expand behavior) ---- */
+#CatalogContainer #catalog .CatalogItemOuter { float: left; padding: 24px 11px; }
+#CatalogContainer #catalog .SmallCatalogItemView { background: #fff; height: 140px; position: relative; width: 110px; }
+#CatalogContainer #catalog .SmallCatalogItemView .CatalogItemInner { height: 110px; position: relative; width: 120px; }
+#CatalogContainer #catalog .CatalogItemInner { width: 60px; z-index: 1; }
+#CatalogContainer #catalog .CatalogItemInner,
+#CatalogContainer #catalog .CatalogItemInner:hover { background: #fff; border: 0; outline: 0; overflow: visible; position: absolute; margin: 0; padding: 0; }
+#CatalogContainer #catalog .SmallCatalogItemView:hover .CatalogItemInner {
+    border: 1px solid #ccc; height: auto; left: -10px; top: -20px; width: 130px; z-index: 6;
+    padding-top: 10px; padding-bottom: 10px; margin-top: 10px;
 }
+/* On the REAL page the id-scoped `#catalog .BigInner{width:176px;padding-top:12px}` out-specified
+   the hover rule's width:130px AND padding-top:10px, so hovered Big tiles kept full width and their
+   12px padding (which is exactly what zeroes the content shift: -10 top +10 margin +1 border
+   +12 padding -1 img = 12 = base). Our rules are all 2-id-scoped (the hover rule would wrongly win,
+   shrinking the box and nudging content up 2px) — restore the real cascade's outcome explicitly. */
+#CatalogContainer #catalog .SmallCatalogItemView:hover .CatalogItemInner.BigInner { top: -10px; padding-bottom: 12px; padding-top: 12px; width: 176px; }
+#CatalogContainer #catalog .SmallCatalogItemView:hover .textDisplay { position: relative; top: -1px; left: 9px; }
 
-#CatalogContainer .AssetName a {
-    font-size: .9em;
-    font-weight: bold;
-    line-height: 1.5em;
-    vertical-align: top;
+/* thumbnail image (verbatim) */
+#CatalogContainer #catalog .CatalogItemInner div.roblox-item-image { text-align: center; width: 112px; }
+#CatalogContainer #catalog .CatalogItemInner div.image-small { height: 110px; }
+#CatalogContainer #catalog .CatalogItemInner div.image-large { position: relative; height: 150px; width: 152px; padding-left: 3px; }
+#CatalogContainer #catalog .SmallCatalogItemView div.roblox-item-image { padding-bottom: 5px; }
+#CatalogContainer #catalog .CatalogItemInner:hover div.roblox-item-image { position: relative; left: 9px; top: -1px; }
+#CatalogContainer #catalog .roblox-item-image img { border: 0; }
+#CatalogContainer #catalog div.image-small a img { width: 110px; height: 110px; }
+#CatalogContainer #catalog div.image-large a img { width: 150px; height: 150px; }
+/* limited/BC badge overlaid on the thumbnail (JS appends .limited-badge into .roblox-item-image).
+   Authentic Widgets.ItemImage placement: absolute at left:0;bottom:0, and the verbatim Catalog.css
+   ribbon offsets (image-small img margin-left:-13px, image-large -18px). Scope thumbnail sizing to
+   the anchor's img above so the badge img keeps its natural ribbon size. */
+/* overflow:hidden is the authentic clip — Widgets.ItemImage wrapped every thumbnail in a
+   position:relative;overflow:hidden div, so the ribbon's -13px/-18px overhang gets clipped
+   instead of spilling outside the tile. */
+#CatalogContainer #catalog .roblox-item-image { position: relative; overflow: hidden; }
+#CatalogContainer #catalog .limited-badge { position: absolute; left: 0; bottom: 0; pointer-events: none; line-height: 0; }
+#CatalogContainer #catalog .limited-badge img { border: 0; width: auto; height: auto; max-width: none; margin-left: -13px; }
+#CatalogContainer #catalog .image-large .limited-badge img { margin-left: -18px; }
+
+/* name + price (verbatim) */
+#CatalogContainer #catalog .textDisplay { padding-left: 3px; }
+#CatalogContainer #catalog .CatalogItemInner .CatalogItemName { font-weight: bold; width: 110px; max-height: 29px; overflow: hidden; }
+#CatalogContainer #catalog .CatalogItemName a { color: #000; }
+#CatalogContainer #catalog .CatalogItemInner .robux-price { font-weight: bold; color: green; }
+#CatalogContainer #catalog .robux-price .SalesText { color: #666; font-weight: normal; }
+#CatalogContainer #catalog .PrivateSales { text-overflow: ellipsis; overflow: hidden; height: 14px; width: 100px; white-space: nowrap; }
+
+/* hover-content (Creator/Favorited/etc — hidden until hover, verbatim) */
+#CatalogContainer #catalog .CatalogItemInner .CatalogHoverContent { display: block; line-height: 15px; padding-left: 3px; }
+#CatalogContainer #catalog .BigOuter .CatalogItemInner .CatalogHoverContent { padding-left: 6px; }
+#CatalogContainer #catalog .CatalogItemInner .CatalogHoverContent div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#CatalogContainer #catalog .CatalogItemInfoLabel { color: #666; font-size: 11px; margin-right: 3px; text-align: left; padding: 0; display: none; margin-left: 6px; }
+#CatalogContainer #catalog .HoverInfo { color: #000; display: none; font-size: 11px; text-align: left; padding: 0; }
+#CatalogContainer #catalog .CatalogItemInner:hover .HoverInfo,
+#CatalogContainer #catalog .CatalogItemInner:hover .CatalogItemInfoLabel { display: inline; }
+
+/* Big (featured hero) tiles (verbatim) */
+#CatalogContainer #catalog .BigView { height: 190px; width: 160px; }
+#CatalogContainer #catalog .BigInner { width: 176px; padding-top: 12px; height: auto; }
+#CatalogContainer #catalog .BigInner .CatalogItemName { width: 160px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#CatalogContainer #catalog .BigOuter { padding: 15px 19px 31px 19px; }
+
+/* ---- Pager (authentic browse.aspx markup: .PagingContainerDivTop > span.pager.previous +
+   span.page.text "Page [.Paging_Input] of N" + span.pager.next). .pager sprites verbatim from
+   main-bundle-2013.css (silver 27px arrows); .Paging_Input + container verbatim from Catalog.css. ---- */
+#CatalogContainer #catalog .PagingContainerDivTop { clear: both; padding-top: 40px; text-align: center; }
+#CatalogContainer #catalog .PagingContainerDivTop .page.text { vertical-align: middle; margin: 0 10px; font-size: 12px; color: #000; display: inline-block; }
+#CatalogContainer #catalog .PagingContainerDivTop .Paging_Input { height: 17px; padding: 2px 3px 0; border: 1px solid #a7a7a7; width: 26px; text-align: center; position: relative; top: 3px; font-size: 12px; box-sizing: content-box; }
+#CatalogContainer #catalog .PagingContainerDivTop .pager.previous,
+#CatalogContainer #catalog .PagingContainerDivTop .pager.next {
+    display: inline-block; width: 27px; height: 27px; vertical-align: middle;
+    background-repeat: no-repeat; background-position: top left; cursor: pointer; text-decoration: none;
 }
+#CatalogContainer #catalog .PagingContainerDivTop .pager.previous { background-image: url('../../images/Buttons/Arrows/btn-silver-left-27.png'); }
+#CatalogContainer #catalog .PagingContainerDivTop .pager.next { background-image: url('../../images/Buttons/Arrows/btn-silver-right-27.png'); }
+#CatalogContainer #catalog .PagingContainerDivTop .pager.previous:hover,
+#CatalogContainer #catalog .PagingContainerDivTop .pager.next:hover { background-position: bottom left; }
+#CatalogContainer #catalog .PagingContainerDivTop .pager.disabled,
+#CatalogContainer #catalog .PagingContainerDivTop .pager.disabled:hover { background-position: 0 -27px; cursor: default; }
+/* Legend gains the authentic divider-top rule in browse state */
+#CatalogContainer #catalog #legend.divider-top { border-top: 1px solid #ccc; }
 
-.AssetsBullet {
-    padding-right: 3px;
+/* ---- Loading states (Rovloo — perceived-performance aids) ---- */
+#CatalogContainer #catalog .catalog-classic-loading { text-align: center; padding: 60px 20px; }
+#CatalogContainer #catalog .catalog-loading-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.85);
+    display: flex; align-items: center; justify-content: center; z-index: 10; min-height: 200px;
 }
-
-#CatalogContainer .Label,
-#CatalogContainer .Detail,
-#CatalogContainer .DetailHighlighted,
-#CatalogContainer .PriceInRobux,
-#CatalogContainer .PriceInTickets {
-    font-size: .8em;
-}
-
-#CatalogContainer .DetailHighlighted {
-    color: Red;
-    font-weight: bold;
-}
-
-#CatalogContainer .PriceInRobux {
-    color: Green;
-    font-weight: bold;
-}
-
-#CatalogContainer .PriceInTickets {
-    color: #fbb117;
-    font-weight: bold;
-}
-
-.HeaderPager {
-    text-align: right;
-    padding: 5px 10px;
-    font-size: 11px;
-    color: #666;
-}
-
-.HeaderPager a {
-    color: #006699;
-    text-decoration: none;
-    margin-left: 10px;
-}
-
-.HeaderPager a:hover {
-    text-decoration: underline;
-}
-
-.NavigationIndicators {
-    font-family: Arial, sans-serif;
-    font-weight: bold;
-}
-
-#CatalogContainer .Assets .FooterPager {
-    clear: both;
-    margin: 0 12px 0 10px;
-    padding: 2px 0;
-    text-align: center;
-}
-
-#CatalogContainer .Assets .FooterPager .Label {
-    font-size: 1em;
-    vertical-align: middle;
-}
-
-.FooterPager a {
-    color: #00f;
-    text-decoration: none;
-}
-
-.FooterPager a:hover {
-    text-decoration: underline;
-}
-
-#BrowseMode #CategoryList li.selected {
-    background: url('../../images/gamesPage_filterArrow.png') no-repeat scroll 0 1px transparent;
-}
-
-#SortByList li.selected {
-    background: url('../../images/gamesPage_filterArrow.png') no-repeat scroll 0 1px transparent;
-}
-
-#SortByList li h3 a {
-    font-weight: normal;
-    font-size: 14px;
-}
-
-#TimeFilterList li.selected {
-    background: url('../../images/gamesPage_filterArrow.png') no-repeat scroll 0 1px transparent;
-}
-
-#TimeFilterList li h3 a {
-    font-weight: normal;
-    font-size: 14px;
-}
-
-#TimeFilterSection {
-    margin-bottom: 0;
-}
-
-#TimeFilterSection h2 {
-    font-family: Verdana, Sans-Serif;
-    font-weight: normal;
-    letter-spacing: .1em;
-    line-height: 24px;
-    padding: 0;
-    color: #555;
-    font-size: 14px;
-    margin-left: 10px;
-}
-
-#TimeFilterSection ul {
-    font-family: Verdana, Sans-Serif;
-    list-style: none;
-    margin: 0 0 20px 0;
-    padding-left: 0;
-}
-
-#TimeFilterSection ul li {
-    margin: 5px 0 5px 10px;
-    font-family: Arial, Helvetica, sans-serif;
-    padding-left: 20px;
-    font-size: 14px;
-}
-
-#ResellersSection {
-    margin-top: 20px;
-    clear: both;
-}
-
-#ResellersSection .StandardBoxHeader {
-    background-color: #006699;
-    color: white;
-    font-weight: bold;
-    padding: 5px 10px;
-    font-size: 12px;
-}
-
-.ResellerItem {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    overflow: hidden;
-}
-
-.ResellerItem:last-child {
-    border-bottom: none;
-}
-
-.ResellerItem .SellerInfo {
-    float: left;
-    width: 200px;
-}
-
-.ResellerItem .Price {
-    float: right;
-    font-size: 11px;
-    font-weight: bold;
-    color: Green;
-}
-
-.StandardBoxWhite {
-    position: relative;
-    top: -1px;
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 8px;
-    color: Black;
-}
-
-.catalog-loading {
-    text-align: center;
-    padding: 40px;
-    color: #666;
-    font-size: 14px;
-}
-
-.catalog-error {
-    text-align: center;
-    padding: 40px;
-    color: #cc0000;
-    font-size: 14px;
-}
-
-.no-results {
-    text-align: center;
-    padding: 40px;
-    color: #666;
-    font-size: 12px;
-}
-
-.catalog-loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    min-height: 200px;
-}
-
-.catalog-loading-spinner {
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 15px 25px;
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    color: #666;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-
-#CatalogContainer .Assets .StandardBox table {
-    transition: opacity 0.15s ease-out;
-}
-
-#CatalogContainer .Assets .StandardBox {
-    min-height: 400px;
-    position: relative;
-}
-
-#CategoryList li.category-group {
-    padding-left: 20px;
-}
-
-#CategoryList li.category-group > h3 > a.category-toggle {
-    font-weight: normal;
-    font-size: 14px;
-    color: #00f;
-    cursor: pointer;
-}
-
-#CategoryList li.category-group > h3 > a.category-toggle:hover {
-    text-decoration: underline;
-}
-
-#CategoryList .category-subitems {
-    list-style: none;
-    margin: 5px 0 10px 0;
-    padding-left: 0;
-}
-
-#CategoryList .category-subitems li {
-    margin: 3px 0 3px 5px;
-    padding-left: 15px;
-    font-size: 12px;
-}
-
-#CategoryList .category-subitems li h3 a {
-    font-weight: normal;
-    font-size: 12px;
-}
-
-#CategoryList .category-subitems li.selected {
-    background: url('../../images/gamesPage_filterArrow.png') no-repeat scroll 0 1px transparent;
-}
-
-#CategoryList .category-subitems li.disabled a {
-    pointer-events: none;
-    color: #999;
+#CatalogContainer #catalog .catalog-loading-spinner {
+    background: #fff; border: 1px solid #ccc; padding: 15px 25px; font-family: Arial, sans-serif;
+    font-size: 12px; color: #666; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }

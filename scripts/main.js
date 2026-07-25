@@ -159,12 +159,16 @@ function getBCTypeForUser(userId) {
 
 window.getBCTypeForUser = getBCTypeForUser;
 
-function getBCOverlayImage(bcType) {
+// size: 'big' (66x19 banner, the default — used on larger avatar contexts like the main
+// profile avatar) or 'small' (22x12 corner badge — images/icons/overlay_*_small.png, matches
+// the authentic Big/Small overlay naming convention e.g. .PersonalServerOverlay_Big/_Small)
+function getBCOverlayImage(bcType, size = 'big') {
+  const suffix = size === 'small' ? '_small' : 'Only';
   switch (bcType) {
-    case 'BC': return 'images/icons/overlay_bcOnly.png';
-    case 'TBC': return 'images/icons/overlay_tbcOnly.png';
-    case 'OBC': 
-    default: return 'images/icons/overlay_obcOnly.png';
+    case 'BC': return `images/icons/overlay_bc${suffix}.png`;
+    case 'TBC': return `images/icons/overlay_tbc${suffix}.png`;
+    case 'OBC':
+    default: return `images/icons/overlay_obc${suffix}.png`;
   }
 }
 
@@ -577,7 +581,7 @@ async function addObcOverlayIfPremium(container, userId, overlayStyle = {}) {
     if (hasPremium === true) {
       
       const bcType = isRandomizeBCEnabled() ? getBCTypeForUser(userId) : 'OBC';
-      const overlayImage = getBCOverlayImage(bcType);
+      const overlayImage = getBCOverlayImage(bcType, overlayStyle.size);
       
       const overlay = document.createElement('img');
       overlay.src = overlayImage;
@@ -816,7 +820,66 @@ function navigateToPage(pageName, params = {}) {
 let currentPageName = null;
 window.currentPageName = currentPageName;
 
+// Keep the heavy list pages (games, catalog) warm across in-session
+// navigation: wiping them on every nav-away forced a full refetch + rerender
+// on "back", even though both pages short-circuit when still loaded.
+// Reset only once the page hasn't been visited for a while.
+const PAGE_WARM_TTL = 5 * 60 * 1000;
+const pageLastVisited = {};
+function pageIsStale(pageName) {
+  const last = pageLastVisited[pageName];
+  return !last || (Date.now() - last) > PAGE_WARM_TTL;
+}
+
+// Hover prefetch: after a short dwell on a game/profile link, warm the main
+// process's caches for the click that's probably coming. Best-effort only —
+// the main process dedupes identical in-flight requests, so this never
+// duplicates work the click itself would do.
+const prefetchedHrefs = new Set();
+let prefetchHoverTimer = null;
+let profilePrefetchesInFlight = 0;
+document.addEventListener('mouseover', function (e) {
+  if (!e.target || !e.target.closest || !window.roblox) return;
+  const link = e.target.closest('a[href*="#game?"], a[href*="#profile?"]');
+  if (!link) return;
+  const href = link.getAttribute('href') || '';
+  if (!href || prefetchedHrefs.has(href)) return;
+
+  // 300ms dwell: sweeping the cursor across a friends grid must not fire a
+  // prefetch per tile — profile bundles hit the rate-limited friends API.
+  clearTimeout(prefetchHoverTimer);
+  prefetchHoverTimer = setTimeout(function () {
+    if (prefetchedHrefs.size > 300) prefetchedHrefs.clear();
+    try {
+      const params = new URLSearchParams(href.split('?')[1] || '');
+      if (href.includes('#game?')) {
+        prefetchedHrefs.add(href);
+        const universeId = parseInt(params.get('universe'), 10);
+        if (universeId && window.roblox.getGameDetails) {
+          window.roblox.getGameDetails([universeId]).catch(function () {});
+        }
+      } else {
+        // At most 2 speculative profile bundles at a time — a real click
+        // is never gated by this, it goes straight through.
+        if (profilePrefetchesInFlight >= 2) return;
+        prefetchedHrefs.add(href);
+        const userId = parseInt(params.get('id'), 10);
+        // Guest links carry id=-1 — nothing to prefetch for those
+        if (userId > 0 && window.roblox.getProfileBundle) {
+          profilePrefetchesInFlight++;
+          window.roblox.getProfileBundle(userId)
+            .catch(function () {})
+            .finally(function () { profilePrefetchesInFlight--; });
+        }
+      }
+    } catch (err) { /* prefetch is best-effort */ }
+  }, 300);
+});
+
 function navigateTo(pageName, params = {}) {
+  if (currentPageName) {
+    pageLastVisited[currentPageName] = Date.now();
+  }
   
   if (currentPageName && currentPageName !== pageName && window.Performance) {
     window.Performance.cleanupPage(currentPageName);
@@ -864,11 +927,11 @@ function navigateTo(pageName, params = {}) {
     window.GameDetailPage.reset();
   }
 
-  if (pageName !== 'catalog' && window.CatalogPage?.reset) {
+  if (pageName !== 'catalog' && window.CatalogPage?.reset && pageIsStale('catalog')) {
     window.CatalogPage.reset();
   }
 
-  if (pageName !== 'games' && window.GamesPage?.reset) {
+  if (pageName !== 'games' && window.GamesPage?.reset && pageIsStale('games')) {
     window.GamesPage.reset();
   }
 
@@ -914,23 +977,10 @@ function navigateTo(pageName, params = {}) {
 
   switch (pageName) {
     case 'home':
-      // If logged in, redirect to My ROBLOX page instead of landing page
-      if (window.RobloxClient && window.RobloxClient.auth) {
-        window.RobloxClient.auth.isLoggedIn().then(isLoggedIn => {
-          if (isLoggedIn) {
-            navigateTo('myroblox');
-          } else {
-            loadHomePage();
-          }
-        }).catch(() => {
-          loadHomePage();
-        });
-      } else {
-        loadHomePage();
-      }
-      break;
     case 'landing':
-      // Always show landing page (used by logo click)
+      // loadHomePage() itself gates on login state and redirects to myroblox when logged in
+      // (matches the real 2013 site's server-side redirect off Default.aspx) — no duplicate
+      // login check needed here, and no case may bypass it.
       loadHomePage();
       break;
     case 'games':
@@ -997,7 +1047,10 @@ function navigateTo(pageName, params = {}) {
       loadCharacterPage();
       break;
     case 'account':
-      
+
+      if (window.loadAccountPage) {
+        window.loadAccountPage();
+      }
       if (window.BlacklistMenu && typeof window.BlacklistMenu.initAccountPage === 'function') {
         window.BlacklistMenu.initAccountPage();
       }
@@ -1222,141 +1275,178 @@ async function loadProfilePage(userId) {
       <p>Failed to load profile.</p>
     </div>
     <div id="ProfileContent" class="MyRobloxContainer" style="display: none;">
-      <!-- Left Column -->
-      <div class="Column1d">
-        <!-- Profile Header Box -->
-        <div class="StandardBoxHeader">
-          <span id="ProfileHeader">User's Profile</span>
-        </div>
-        <div class="StandardBox">
-          <div style="text-align: center;">
-            <div>
-              <span id="UserOnlineStatus" class="UserOfflineMessage">[ Offline ]</span>
-            </div>
-            <div style="margin-bottom: 10px;">
-              <span style="font-size: 12px;">
-                <a id="UserProfileURL" href="#" target="_blank" style="color: #006699;"></a>
-              </span>
-            </div>
-            <div id="AvatarImageContainer" style="margin-bottom: 10px; position: relative; display: inline-block; width: 150px; height: 200px;">
-              <img id="AvatarImage" src="assets/ui/guest.png" alt="Avatar" style="height:200px;width:150px;"/>
-            </div>
-            <div class="UserBlurb">
-              <span id="UserBlurb" style="font-size: 12px;"></span>
+      <!-- Faithful transcription of the 2013 User.aspx #Body (reference/archive-profile-roblox-2013.html):
+           two 484px divider-right/divider-left columns, each section's content wrapped in its own
+           .divider-bottom; full-width #UserContainer Inventory below. Render-target ids preserved. -->
+      <div>
+        <!-- LEFT COLUMN -->
+        <div class="divider-right" style="width: 484px; float: left;">
+          <h2 class="title"><span id="ProfileHeader">User's Profile</span></h2>
+
+          <!-- Profile card -->
+          <div class="divider-bottom" style="position: relative; z-index: 3; padding-bottom: 20px;">
+            <div style="width: 100%;">
+              <div>
+                <div style="text-align: center;">
+                  <span id="UserOnlineStatus" class="UserOfflineMessage">[ Offline ]</span>
+                </div>
+              </div>
+              <div><div><center>
+                <div style="margin-bottom: 10px;">
+                  <span style="font-size: 13px;"><a id="UserProfileURL" href="#" target="_blank"></a></span><br/>
+                </div>
+                <a id="AvatarImageLink" title="" style="display:inline-block;height:200px;width:150px;">
+                  <img id="AvatarImage" src="assets/ui/guest.png" height="200" width="150" border="0" alt="Avatar"/>
+                </a>
+                <br/>
+                <div class="UserBlurb" style="margin-top: 10px; overflow-y: auto; max-height: 450px;">
+                  <span id="UserBlurb"></span>
+                </div>
+                <div id="ProfileButtons" style="margin: 10px auto;">
+                  <a id="FriendButton" class="GrayButton Disabled">Send Friend Request</a>
+                  <div class="SendMessageProfileBtnDiv">
+                    <a id="MessageButton" class="GrayButton" style="margin: 0 5px;" href="#">Send Message</a>
+                  </div>
+                  <div class="clear"></div>
+                </div>
+              </center></div></div>
             </div>
           </div>
-        </div>
-        
-        <!-- ROBLOX Badges -->
-        <div class="StandardTabWhite"><span>ROBLOX Badges</span></div>
-        <div class="StandardBoxWhite">
-          <div id="NoRobloxBadges" style="display: none; text-align: center; color: #666; padding: 10px;">This user has no ROBLOX badges.</div>
-          <div id="RobloxBadgesList" style="text-align: center;"></div>
-        </div>
-        
-        <!-- Player Badges -->
-        <div class="StandardTabWhite"><span>Player Badges</span></div>
-        <div class="StandardBoxWhite">
-          <div id="NoBadges" style="display: none; text-align: center; color: #666; padding: 10px;">This user has no badges.</div>
-          <div id="BadgesList" style="text-align: center;"></div>
-        </div>
-        
-        <!-- Statistics -->
-        <div class="StandardTabWhite"><span>Statistics</span></div>
-        <div class="StandardBoxWhite">
-          <table class="statsTable">
-            <tr>
-              <td class="statsLabel"><acronym title="The number of this user's friends.">Friends</acronym>:</td>
-              <td class="statsValue"><span id="FriendsCount">0</span></td>
-            </tr>
-            <tr>
-              <td class="statsLabel"><acronym title="The number of users following this user.">Followers</acronym>:</td>
-              <td class="statsValue"><span id="FollowersCount">0</span></td>
-            </tr>
-            <tr>
-              <td class="statsLabel"><acronym title="The number of users this user is following.">Following</acronym>:</td>
-              <td class="statsValue"><span id="FollowingCount">0</span></td>
-            </tr>
-            <tr>
-              <td class="statsLabel"><acronym title="When this user joined ROBLOX.">Join Date</acronym>:</td>
-              <td class="statsValue"><span id="JoinDate">Unknown</span></td>
-            </tr>
-          </table>
-        </div>
-        
-        <!-- Groups -->
-        <div class="StandardTabWhite"><span>Groups</span></div>
-        <div class="StandardBoxWhite">
-          <div id="NoGroups" style="display: none; text-align: center; color: #666; padding: 10px;">This user is not in any groups.</div>
-          <table id="GroupsList" cellspacing="0" align="Center" border="0" style="border-collapse:collapse;"></table>
-        </div>
-      </div>
-      
-      <!-- Right Column -->
-      <div class="Column2d">
-        <!-- Active Places -->
-        <div class="StandardBoxHeader">
-          <span>Active Places</span>
-        </div>
-        <div id="UserPlacesPane" class="StandardBox">
-          <div id="UserPlaces" style="overflow:visible;">
-            <div id="NoPlaces" style="display: none; text-align: center; color: #666; padding: 20px;">This user has no active places.</div>
-            <div id="PlacesList"></div>
+
+          <!-- ROBLOX Badges -->
+          <h2 class="title"><span>ROBLOX Badges</span></h2>
+          <div class="divider-bottom" style="padding-bottom: 20px;">
+            <div id="NoRobloxBadges" class="profile-empty" style="display: none;">This user has no ROBLOX badges.</div>
+            <div id="RobloxBadgesList" class="RobloxBadgeContainer"></div>
           </div>
-        </div>
-        
-        <!-- Friends -->
-        <div class="StandardTabWhite">
-          <span id="FriendsHeader">Friends</span>
-        </div>
-        <div class="StandardBoxWhite">
-          <div id="NoFriends" style="display: none; text-align: center; color: #666; padding: 20px;">This user has no friends.</div>
-          <table id="FriendsList" cellspacing="0" align="Center" border="0" style="border-collapse:collapse;"></table>
-        </div>
-        
-        <!-- Favorites -->
-        <div class="StandardTabWhite">
-          <span id="FavoritesHeader">Favorites</span>
-        </div>
-        <div class="StandardBoxWhite">
-          <div id="NoFavorites" style="display: none; text-align: center; color: #666; padding: 20px;">This user has no favorites.</div>
-          <div id="FavoritesList" style="text-align: center;"></div>
-          <div id="FavoritesPagination" style="text-align: left; padding: 10px; display: none;">
-            <a id="FavoritesPrevPage" href="#" style="margin-right: 20px;">
-              <img src="images/arrow_36px_left.png" alt="Previous" style="vertical-align: middle;" />
-            </a>
-            <span id="FavoritesPageInfo">Page 1</span>
-            <a id="FavoritesNextPage" href="#" style="margin-left: 20px;">
-              <img src="images/arrow_36px_right.png" alt="Next" style="vertical-align: middle;" />
-            </a>
+
+          <!-- Player Badges -->
+          <div id="BadgesDisplayPane" class="divider-bottom" style="clear: both; padding-bottom: 20px;">
+            <h2 class="title"><span>Player Badges</span></h2>
+            <div style="min-height: 90px;">
+              <div id="NoBadges" class="profile-empty" style="display: none;">This user has no badges.</div>
+              <div id="BadgesList" class="PlayerBadgeContainer"></div>
+            </div>
           </div>
-        </div>
-      </div>
-      <div style="clear: both;"></div>
-    </div>
-    <!-- Stuff section at bottom, full width - authentic 2011 placement -->
-    <div id="UserContainer">
-      <div id="UserAssetsPane">
-        <div class="StandardBoxHeader">
-          <span>Stuff</span>
-        </div>
-        <div id="UserAssets" class="StandardBox">
-          <div id="AssetsMenu">
-            <!-- Asset category buttons will be rendered here -->
-          </div>
-          <div id="AssetsContent">
-            <table id="AssetsList" cellspacing="0" border="0" style="border-collapse:collapse;">
+
+          <!-- Statistics -->
+          <h2 class="title"><span>Statistics</span></h2>
+          <div class="divider-bottom" style="padding-bottom: 20px;">
+            <table class="statsTable">
+              <tr>
+                <td class="statsLabel"><acronym title="The number of this user's friends.">Friends</acronym>:</td>
+                <td class="statsValue"><span id="FriendsCount">0</span></td>
+              </tr>
+              <tr>
+                <td class="statsLabel"><acronym title="The number of users following this user.">Followers</acronym>:</td>
+                <td class="statsValue"><span id="FollowersCount">0</span></td>
+              </tr>
+              <tr>
+                <td class="statsLabel"><acronym title="The number of users this user is following.">Following</acronym>:</td>
+                <td class="statsValue"><span id="FollowingCount">0</span></td>
+              </tr>
+              <tr>
+                <td class="statsLabel"><acronym title="When this user joined ROBLOX.">Join Date</acronym>:</td>
+                <td class="statsValue"><span id="JoinDate">Unknown</span></td>
+              </tr>
             </table>
           </div>
-          <div id="AssetsPagination" class="FooterPager" style="display: none;">
-            <a id="AssetsPrevPage" href="javascript:void(0)"><span class="NavigationIndicators">&lt;&lt;</span> Previous</a>
-            <span id="AssetsPageInfo" style="margin: 0 15px;">Page 1</span>
-            <a id="AssetsNextPage" href="javascript:void(0)">Next <span class="NavigationIndicators">&gt;&gt;</span></a>
+
+          <!-- Groups -->
+          <div id="UserGroupsPane" style="clear: both;">
+            <h2 class="title"><span>Groups</span></h2>
+            <div style="clear: both; padding-bottom: 20px; padding-left: 30px;">
+              <div id="NoGroups" class="profile-empty" style="display: none;">This user is not in any groups.</div>
+              <div id="GroupsList" class="GroupsGrid"></div>
+              <div class="clear"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="divider-left" style="width: 484px; float: left; position: relative; left: -1px;">
+          <!-- Active Places (right column only) -->
+          <div class="divider-bottom" style="padding-bottom: 20px; padding-left: 20px;">
+            <h2 class="title" style="float: left;"><span id="PlacesHeader">Active Places</span></h2>
+            <div class="clear"></div>
+            <div id="UserPlacesPane">
+              <div id="UserPlaces" style="overflow: hidden;">
+                <div id="NoPlaces" class="profile-empty" style="display: none;">This user has no active places.</div>
+                <div id="PlacesList"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Friends (RIGHT COLUMN, below Active Places — authentic: centered table, 3 per row) -->
+          <div class="divider-bottom" style="padding-left: 20px;">
+          <div style="margin: 12px 0 20px; overflow: visible;">
+            <h2 style="float: left;"><span id="FriendsHeader">Friends</span></h2>
+            <a id="FriendsSeeAll" class="btn-small btn-neutral" style="float: right; display: none;" href="#">See All<span class="btn-text">See All</span></a>
+            <div class="clear"></div>
+          </div>
+          <div style="padding-top: 30px;">
+            <div id="NoFriends" class="profile-empty" style="display: none;">This user has no friends.</div>
+            <table id="FriendsList" class="FriendsGrid" cellspacing="0" align="Center" border="0" style="border-collapse:collapse;"></table>
+          </div>
+        </div>
+
+          <!-- Favorites (RIGHT COLUMN, below Friends — authentic: 3 per row) -->
+          <div class="divider-bottom" style="padding-left: 20px; padding-bottom: 20px;">
+          <div style="overflow: auto;">
+            <h2 class="title" style="float: left;"><span id="FavoritesHeader">Favorites</span></h2>
+            <div class="PanelFooter" style="float: right; font: 12px Arial; text-transform: none;">
+              Category:&nbsp;
+              <select id="FavoritesCategory">
+                <option value="9" selected="selected">Places</option>
+              </select>
+            </div>
+            <div class="clear"></div>
+          </div>
+          <div id="FavoritesContent">
+            <div id="NoFavorites" class="profile-empty" style="display: none;">This user has no favorites.</div>
+            <table id="FavoritesList" cellspacing="0" border="0" style="border-collapse:collapse;"></table>
+          </div>
+          <div id="FavoritesPagination" class="FooterPager" style="display: none;">
+            <a id="FavoritesPrevPage" href="#"><span class="pager previous"></span></a>
+            <span id="FavoritesPageInfo">Page 1</span>
+            <a id="FavoritesNextPage" href="#"><span class="pager next"></span></a>
+          </div>
+        </div>
+        </div>
+        <div class="clear" style="clear: both;"></div>
+
+        <!-- Inventory (full width) -->
+        <div id="UserContainer">
+          <div id="UserAssetsPane" style="border-top: 1px solid #ccc;">
+            <h2 class="title" style="display: block;"><span>Inventory</span></h2>
+            <div id="UserAssets">
+              <div id="AssetsMenu" class="divider-right"></div>
+              <div id="AssetsContent">
+                <table id="AssetsList" cellspacing="0" border="0" style="border-collapse:collapse;"></table>
+                <div id="AssetsPagination" class="FooterPager" style="display: none;">
+                  <a id="AssetsPrevPage" href="javascript:void(0)"><span class="pager previous"></span></a>
+                  <span id="AssetsPageInfo" style="margin: 0 15px;">Page 1</span>
+                  <a id="AssetsNextPage" href="javascript:void(0)"><span class="pager next"></span></a>
+                </div>
+                <!-- Recommended Hats — authentic: INSIDE #AssetsContent, after the pager, so it aligns
+                     with the item grid (both after the 158px menu). 784px, overflows the 685px content. -->
+                <div style="width: 784px;">
+                  <div id="RecommendationsPane" style="display: none;">
+                    <h3 class="RecommendationHeader2 divider-top">Recommended Hats <a href="#catalog">See All <span>&#187;</span></a></h3>
+                    <div id="AssetRecommendations" class="AssetRecommenderContainer"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   `;
+
+  // Marks this profile as the one on display — any still-running background
+  // hydration from a previously viewed profile checks this and drops out.
+  currentProfileUserId = userId;
 
   try {
     const userInfo = await window.roblox.getUserInfo(userId);
@@ -1366,48 +1456,70 @@ async function loadProfilePage(userId) {
 
     document.title = `${userInfo.displayName || userInfo.name} - ROBLOX`;
 
-    const [
-      friendsCount,
-      followersCount,
-      followingCount,
-      presence,
-      friends,
-      games,
-      badges,
-      groups,
-      robloxBadges,
-      favorites
-    ] = await Promise.all([
-      window.roblox.getFriendsCount(userId).catch(() => ({ count: 0 })),
-      window.roblox.getFollowersCount(userId).catch(() => ({ count: 0 })),
-      window.roblox.getFollowingCount(userId).catch(() => ({ count: 0 })),
-      window.roblox.getUserPresence([userId]).catch(() => ({ userPresences: [] })),
-      window.roblox.getFriends(userId).catch(() => ({ data: [] })),
-      window.roblox.getUserGames(userId).catch(() => ({ data: [] })),
-      window.roblox.getUserBadges(userId, 25, '').catch(() => ({ data: [], nextPageCursor: null })),
-      window.roblox.getUserGroups(userId).catch(() => ({ data: [] })),
-      window.roblox.getRobloxBadges(userId).catch(() => []),
-      getAllUserFavoriteGames(userId).catch(() => ({ data: [] }))
-    ]);
-
-    await renderProfileData(userInfo, {
-      friendsCount: friendsCount.count || 0,
-      followersCount: followersCount.count || 0,
-      followingCount: followingCount.count || 0,
-      presence: presence.userPresences?.[0] || null,
-      friends: friends.data || [],
-      games: games.data || [],
-      badges: badges.data || [],
-      badgesCursor: badges.nextPageCursor || null,
-      groups: groups.data || [],
-      robloxBadges: robloxBadges || [],
-      favorites: favorites.data || [],
-      userId: userId
-    });
-
+    // Progressive render: the user's identity is enough to show the page —
+    // hiding everything until the slowest section resolved made profiles
+    // feel far slower than they are. Each section below fills into its
+    // fixed-geometry box as its own data arrives (no layout shift), and
+    // every callback is guarded so a stale profile can't paint over a new one.
+    await renderProfileIdentity(userInfo);
     document.getElementById('ProfileLoading').style.display = 'none';
     document.getElementById('ProfileContent').style.display = 'block';
-    
+
+    const ifCurrent = (fn) => (result) => {
+      if (currentProfileUserId !== userId) return;
+      return fn(result);
+    };
+
+    loadProfileAvatarAndPremium(userInfo);
+
+    window.roblox.getFriendsCount(userId).catch(() => ({ count: 0 }))
+      .then(ifCurrent(r => {
+        const el = document.getElementById('FriendsCount');
+        if (el) el.textContent = formatNumber(r.count || 0);
+      }));
+    window.roblox.getFollowersCount(userId).catch(() => ({ count: 0 }))
+      .then(ifCurrent(r => {
+        const el = document.getElementById('FollowersCount');
+        if (el) el.textContent = formatNumber(r.count || 0);
+      }));
+    window.roblox.getFollowingCount(userId).catch(() => ({ count: 0 }))
+      .then(ifCurrent(r => {
+        const el = document.getElementById('FollowingCount');
+        if (el) el.textContent = formatNumber(r.count || 0);
+      }));
+    window.roblox.getUserPresence([userId]).catch(() => ({ userPresences: [] }))
+      .then(ifCurrent(r => renderProfileStatus(r.userPresences?.[0] || null)));
+
+    window.roblox.getFriends(userId).catch(() => ({ data: [] }))
+      .then(ifCurrent(r => renderProfileFriends((r.data || []).slice(0, 6), userInfo.name, userId)));
+    window.roblox.getUserGames(userId).catch(() => ({ data: [] }))
+      .then(ifCurrent(r => renderProfileGames((r.data || []).slice(0, 6))));
+    window.roblox.getUserBadges(userId, 25, '').catch(() => ({ data: [], nextPageCursor: null }))
+      .then(ifCurrent(r => renderProfileBadges(r.data || [], r.nextPageCursor || null, userId)));
+    window.roblox.getUserGroups(userId).catch(() => ({ data: [] }))
+      .then(ifCurrent(r => renderProfileGroups(r.data || [])));
+    window.roblox.getRobloxBadges(userId).catch(() => [])
+      .then(ifCurrent(r => renderRobloxBadges(userInfo, { robloxBadges: r || [] })));
+
+    updateFriendButton(userId).catch(() => {});
+    Promise.resolve(renderProfileInventory(userId)).catch(() => {});
+
+    // Favorites: first page renders as soon as it arrives (50 items = 8+ UI
+    // pages at 6/page); any remaining pages hydrate in the background.
+    window.roblox.getUserFavoriteGames(userId, 50).catch(() => ({ data: [] }))
+      .then(ifCurrent(favorites => {
+        renderProfileFavorites(favorites.data || [], userInfo.name, userId, 1);
+        if (favorites.nextPageCursor) {
+          getAllUserFavoriteGames(userId, favorites.nextPageCursor, favorites.data || [])
+            .then(ifCurrent(all => {
+              if ((all.data || []).length > (favorites.data || []).length) {
+                renderProfileFavorites(all.data, userInfo.name, userId, 1);
+              }
+            }))
+            .catch(() => {});
+        }
+      }));
+
   } catch (error) {
     console.error('Failed to load profile:', error);
     if (window.showErrorPage) {
@@ -1420,20 +1532,12 @@ async function loadProfilePage(userId) {
   }
 }
 
-async function renderProfileData(user, data) {
-  
-  console.log('Full user object:', user);
+// Identity-only render: everything derivable from the user object alone,
+// so the page can show before any other endpoint responds.
+async function renderProfileIdentity(user) {
 
   const headerEl = document.getElementById('ProfileHeader');
   if (headerEl) headerEl.textContent = `${user.displayName || user.name}'s Profile`;
-
-  const statusEl = document.getElementById('UserOnlineStatus');
-  if (statusEl && data.presence) {
-    const isOnline = data.presence.userPresenceType > 0;
-    statusEl.textContent = isOnline ? '[ Online ]' : '[ Offline ]';
-    statusEl.className = isOnline ? 'UserOnlineMessage' : 'UserOfflineMessage';
-    statusEl.style.color = isOnline ? 'green' : '#666';
-  }
 
   const urlEl = document.getElementById('UserProfileURL');
   if (urlEl) {
@@ -1441,6 +1545,53 @@ async function renderProfileData(user, data) {
     urlEl.href = `https://www.roblox.com/users/${user.id}/profile`;
   }
 
+  const blurbEl = document.getElementById('UserBlurb');
+  if (blurbEl) {
+    let description = user.description;
+
+    if (!description && window.roblox.getUserDescription) {
+      try {
+        description = await window.roblox.getUserDescription(user.id);
+      } catch (e) {
+        console.log('Could not fetch user description:', e);
+      }
+    }
+
+    if (description && description.trim()) {
+      blurbEl.textContent = description;
+      blurbEl.style.fontStyle = 'normal';
+      blurbEl.style.color = '';
+    } else {
+      blurbEl.textContent = 'No description available.';
+      blurbEl.style.fontStyle = 'italic';
+      blurbEl.style.color = '#666';
+    }
+  }
+
+  const joinDateEl = document.getElementById('JoinDate');
+  if (joinDateEl && user.created) {
+    const joinDate = new Date(user.created);
+    joinDateEl.textContent = joinDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+}
+
+function renderProfileStatus(presence) {
+  const statusEl = document.getElementById('UserOnlineStatus');
+  if (statusEl && presence) {
+    const isOnline = presence.userPresenceType > 0;
+    statusEl.textContent = isOnline ? '[ Online ]' : '[ Offline ]';
+    statusEl.className = isOnline ? 'UserOnlineMessage' : 'UserOfflineMessage';
+    statusEl.style.color = isOnline ? 'green' : '#666';
+  }
+}
+
+// Avatar bust + BC overlay — cosmetic, so it runs unawaited alongside the
+// section fetches.
+async function loadProfileAvatarAndPremium(user) {
   try {
     const thumbResult = await window.roblox.getUserThumbnails([user.id], '150x200', 'AvatarBust');
     const avatarEl = document.getElementById('AvatarImage');
@@ -1451,9 +1602,9 @@ async function renderProfileData(user, data) {
     console.warn('Failed to load avatar:', e);
   }
 
-  const avatarContainer = document.getElementById('AvatarImageContainer');
+  const avatarContainer = document.getElementById('AvatarImageLink');
   if (avatarContainer) {
-    
+
     const existingOverlay = avatarContainer.querySelector('.obc-overlay');
     if (existingOverlay) {
       existingOverlay.remove();
@@ -1488,81 +1639,13 @@ async function renderProfileData(user, data) {
         document.body.classList.remove('obc-theme');
       }
     } catch (e) {
-      
+
       if (!isOutrageousThemeSelected()) {
         document.body.classList.remove('obc-theme');
       }
       console.debug('Could not verify premium status:', e);
     }
   }
-
-  const blurbEl = document.getElementById('UserBlurb');
-  if (blurbEl) {
-    let description = user.description;
-
-    if (!description && window.roblox.getUserDescription) {
-      try {
-        description = await window.roblox.getUserDescription(user.id);
-      } catch (e) {
-        console.log('Could not fetch user description:', e);
-      }
-    }
-    
-    if (description && description.trim()) {
-      blurbEl.textContent = description;
-      blurbEl.style.fontStyle = 'normal';
-      blurbEl.style.color = '';
-    } else {
-      blurbEl.textContent = 'No description available.';
-      blurbEl.style.fontStyle = 'italic';
-      blurbEl.style.color = '#666';
-    }
-  }
-
-  const friendsCountEl = document.getElementById('FriendsCount');
-  const followersCountEl = document.getElementById('FollowersCount');
-  const followingCountEl = document.getElementById('FollowingCount');
-  const joinDateEl = document.getElementById('JoinDate');
-  
-  if (friendsCountEl) friendsCountEl.textContent = formatNumber(data.friendsCount);
-  if (followersCountEl) followersCountEl.textContent = formatNumber(data.followersCount);
-  if (followingCountEl) followingCountEl.textContent = formatNumber(data.followingCount);
-
-  if (joinDateEl) {
-    let created = user.created;
-
-    if (!created) {
-      try {
-        const freshData = await window.roblox.getUserInfo(user.id);
-        created = freshData?.created;
-      } catch (e) {
-        console.log('Could not fetch user created date:', e);
-      }
-    }
-    
-    if (created) {
-      const joinDate = new Date(created);
-      joinDateEl.textContent = joinDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    }
-  }
-
-  renderRobloxBadges(user, data);
-
-  await renderProfileFriends(data.friends.slice(0, 6), user.name, user.id);
-
-  await renderProfileGames(data.games.slice(0, 6));
-
-  await renderProfileBadges(data.badges, data.badgesCursor, data.userId);
-
-  await renderProfileGroups(data.groups);
-
-  await renderProfileInventory(data.userId);
-
-  await renderProfileFavorites(data.favorites, user.name, user.id, 1);
 }
 
 async function renderProfileFavorites(favorites, username, userId, page = 1) {
@@ -1599,8 +1682,12 @@ async function renderProfileFavorites(favorites, username, userId, page = 1) {
 
   if (pageInfoEl) pageInfoEl.textContent = `Page ${page} of ${totalPages}`;
 
-  if (prevBtn) prevBtn.style.display = (page > 1) ? 'inline-block' : 'none';
-  if (nextBtn) nextBtn.style.display = (page < totalPages) ? 'inline-block' : 'none';
+  // Authentic pager: keep both silver arrows present; grey the unavailable one via the .disabled
+  // sprite state (matching the archive's <span class="pager previous disabled">). Hide the whole
+  // pager only when there's a single page.
+  if (paginationEl) paginationEl.style.display = totalPages > 1 ? 'block' : 'none';
+  if (prevBtn) prevBtn.querySelector('.pager')?.classList.toggle('disabled', page <= 1);
+  if (nextBtn) nextBtn.querySelector('.pager')?.classList.toggle('disabled', page >= totalPages);
 
   if (prevBtn && nextBtn) {
     const newPrevBtn = prevBtn.cloneNode(true);
@@ -1635,46 +1722,53 @@ async function renderProfileFavorites(favorites, username, userId, page = 1) {
     console.warn('Failed to load favorite thumbnails:', e);
   }
 
-  pagedFavorites.forEach(game => {
+  // Authentic 2013 favorites: <td class="Asset"> cells, 3 per row, in the FavoritesList table
+  let favRow = null;
+  pagedFavorites.forEach((game, index) => {
+    if (index % 3 === 0) {
+      favRow = document.createElement('tr');
+      container.appendChild(favRow);
+    }
     const thumb = thumbnails[game.id] || '';
     const creatorName = game.creator?.name || game.creator?.username || 'Unknown';
     const creatorType = game.creator?.type || game.creator?.creatorType || 'User';
     const creatorId = game.creator?.id || game.creator?.creatorTargetId;
+    const placeId = game.rootPlaceId || game.id;
 
     let creatorDisplay;
     if (creatorType === 'User' && creatorId) {
-      creatorDisplay = `<a href="#profile?id=${creatorId}" style="color:#00F;">${escapeHtml(creatorName)}</a>`;
+      creatorDisplay = `<a href="#profile?id=${creatorId}" class="notranslate">${escapeHtml(creatorName)}</a>`;
     } else if (creatorType === 'Group' && creatorId) {
-      creatorDisplay = `<a href="#group?id=${creatorId}" style="color:#00F;">${escapeHtml(creatorName)}</a>`;
+      creatorDisplay = `<a href="#group?id=${creatorId}" class="notranslate">${escapeHtml(creatorName)}</a>`;
     } else {
       creatorDisplay = escapeHtml(creatorName);
     }
 
-    const div = document.createElement('div');
-    div.className = 'Asset';
-    
-    div.innerHTML = `
-      <div class="AssetThumbnail">
-        <a href="#game?id=${game.rootPlaceId || game.id}" title="${escapeHtml(game.name)}" style="display:inline-block;height:110px;width:110px;cursor:pointer;">
-          ${thumb ? `<img src="${thumb}" border="0" alt="${escapeHtml(game.name)}" style="width:110px;height:110px;object-fit:cover;" onerror="this.style.display='none'"/>` : ''}
-        </a>
-      </div>
-      <div class="AssetDetails">
-        <div class="AssetName" style="font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-          <a href="#game?id=${game.rootPlaceId || game.id}" style="color:#00F;">${escapeHtml(game.name)}</a>
+    const td = document.createElement('td');
+    td.className = 'Asset';
+    td.setAttribute('valign', 'top');
+    td.innerHTML = `
+      <div style="padding:5px; margin-right: 30px; margin-left: 10px">
+        <div class="AssetThumbnail notranslate">
+          <a href="#game?id=${placeId}" title="${escapeHtml(game.name)}" style="display:inline-block;height:110px;width:110px;cursor:pointer;">
+            ${thumb ? `<img src="${thumb}" height="110" width="110" border="0" alt="${escapeHtml(game.name)}" onerror="this.style.display='none'"/>` : ''}
+          </a>
         </div>
-        <div class="AssetCreator" style="font-size: 11px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-          <strong style="color: #000;">Creator:</strong> ${creatorDisplay}
+        <div class="AssetDetails notranslate" style="clear:both;">
+          <div class="AssetName"><a href="#game?id=${placeId}">${escapeHtml(game.name)}</a></div>
+          <div class="AssetCreator"><span class="Label">Creator:</span> <span class="Detail">${creatorDisplay}</span></div>
         </div>
       </div>
     `;
-    container.appendChild(div);
+    favRow.appendChild(td);
   });
 }
 
-async function getAllUserFavoriteGames(userId) {
-    let allFavorites = [];
-    let cursor = '';
+let currentProfileUserId = null;
+
+async function getAllUserFavoriteGames(userId, startCursor = '', seed = []) {
+    let allFavorites = seed.slice();
+    let cursor = startCursor;
     let hasNextPage = true;
 
     while(hasNextPage) {
@@ -1739,26 +1833,26 @@ function renderRobloxBadges(user, data) {
 
   const table = document.createElement('table');
   table.cellSpacing = '0';
-  table.align = 'Center';
+  table.align = 'Left';
   table.border = '0';
   table.style.borderCollapse = 'collapse';
-  
+
   let currentRow = null;
   robloxBadges.forEach((badge, index) => {
-    if (index % 4 === 0) {
+    if (index % 5 === 0) {   // authentic 2013 ROBLOX-badge grid is 5 per row
       currentRow = document.createElement('tr');
       table.appendChild(currentRow);
     }
 
     const localImage = badge2011Images[badge.name] || badge2011Images[badge.id];
     const imageUrl = localImage || badge.imageUrl || '';
-    
+
     const td = document.createElement('td');
     td.innerHTML = `
-      <div class="Badge">
+      <div class="Badge notranslate">
         <div class="BadgeImage">
           <a title="${escapeHtml(badge.description || '')}">
-            <img src="${imageUrl}" alt="${escapeHtml(badge.name)}" style="height:75px;border-width:0px;" onerror="this.src='${badge.imageUrl || ''}'; this.onerror=null;"/>
+            <img src="${imageUrl}" alt="${escapeHtml(badge.name)}" style="height:75px;width:75px;border-width:0px;" onerror="this.src='${badge.imageUrl || ''}'; this.onerror=null;"/>
           </a>
         </div>
         <div class="BadgeLabel">
@@ -1772,6 +1866,68 @@ function renderRobloxBadges(user, data) {
   container.appendChild(table);
 }
 
+async function updateFriendButton(profileUserId) {
+  const buttonsEl = document.getElementById('ProfileButtons');
+  const friendBtn = document.getElementById('FriendButton');
+  if (!buttonsEl || !friendBtn) return;
+
+  try {
+    const currentUser = await window.RobloxClient.api.getCurrentUser();
+    if (!currentUser) return;
+
+    if (String(currentUser.id) === String(profileUserId)) {
+      buttonsEl.style.display = 'none';
+      return;
+    }
+
+    const statusResult = await window.roblox.getFriendshipStatuses(currentUser.id, [profileUserId]);
+    const status = statusResult?.data?.[0]?.status;
+
+    friendBtn.onclick = null;
+
+    if (status === 'Friends') {
+      friendBtn.textContent = 'Friends';
+      friendBtn.classList.add('Disabled');
+    } else if (status === 'RequestSent') {
+      friendBtn.textContent = 'Friend Request Sent';
+      friendBtn.classList.add('Disabled');
+    } else if (status === 'RequestReceived') {
+      friendBtn.textContent = 'Accept Friend Request';
+      friendBtn.classList.remove('Disabled');
+      friendBtn.onclick = async (e) => {
+        e.preventDefault();
+        friendBtn.textContent = 'Accepting...';
+        try {
+          await window.roblox.acceptFriendRequest(profileUserId);
+          friendBtn.textContent = 'Friends';
+          friendBtn.classList.add('Disabled');
+        } catch (err) {
+          console.error('Failed to accept friend request:', err);
+          friendBtn.textContent = 'Accept Friend Request';
+        }
+      };
+    } else {
+      friendBtn.textContent = 'Send Friend Request';
+      friendBtn.classList.remove('Disabled');
+      friendBtn.onclick = async (e) => {
+        e.preventDefault();
+        friendBtn.textContent = 'Sending...';
+        try {
+          await window.roblox.sendFriendRequest(profileUserId);
+          friendBtn.textContent = 'Friend Request Sent';
+          friendBtn.classList.add('Disabled');
+        } catch (err) {
+          console.error('Failed to send friend request:', err);
+          friendBtn.textContent = 'Send Friend Request';
+          friendBtn.classList.remove('Disabled');
+        }
+      };
+    }
+  } catch (e) {
+    console.warn('Could not determine friendship status:', e);
+  }
+}
+
 async function renderProfileFriends(friends, username, userId) {
   const container = document.getElementById('FriendsList');
   const noFriendsEl = document.getElementById('NoFriends');
@@ -1780,7 +1936,12 @@ async function renderProfileFriends(friends, username, userId) {
   if (!container) return;
 
   if (headerEl && username) {
-    headerEl.innerHTML = `${escapeHtml(username)}'s Friends (<a href="#friends?id=${userId}" style="color:#006699;">See All</a>)`;
+    headerEl.textContent = `${username}'s Friends`;
+    const seeAll = document.getElementById('FriendsSeeAll');
+    if (seeAll) {
+      seeAll.href = `#friends?id=${userId}`;
+      seeAll.style.display = 'inline-block';
+    }
   }
   
   if (!friends || friends.length === 0) {
@@ -1829,13 +1990,12 @@ async function renderProfileFriends(friends, username, userId) {
     console.warn('Failed to load friend presence:', e);
   }
 
-  let currentRow = null;
-  friends.forEach((friend, index) => {
-    if (index % 3 === 0) {
-      currentRow = document.createElement('tr');
-      container.appendChild(currentRow);
-    }
-    
+  // Authentic 2013 profile Friends: a centered <table> of .Friend notranslate cells, 3 PER ROW
+  // (archive dlFriends: </tr><tr> every 3). Lives in the right column below Active Places.
+  let row = null;
+  for (let index = 0; index < friends.length; index++) {
+    const friend = friends[index];
+    if (index % 3 === 0) { row = document.createElement('tr'); container.appendChild(row); }
     const thumb = thumbnails[friend.id] || 'assets/ui/guest.png';
     const presence = presenceMap[friend.id] || 0;
     const isOnline = presence > 0;
@@ -1843,29 +2003,28 @@ async function renderProfileFriends(friends, username, userId) {
 
     const user = userDetails[friend.id] || {};
     const friendName = user.name || user.displayName || friend.name || friend.displayName || 'Unknown';
-    
+
     const td = document.createElement('td');
-    td.style.cssText = 'padding: 5px; text-align: center; vertical-align: top;';
     td.innerHTML = `
-      <div class="Friend" style="width: 100px; display: inline-block;">
-        <div class="Avatar" style="position: relative; display: inline-block; width: 100px; height: 100px;">
-          <a href="#profile?id=${friend.id}" title="${escapeHtml(friendName)}" style="display:inline-block;height:100px;width:100px;cursor:pointer;">
+      <div class="Friend notranslate">
+        <div class="Avatar">
+          <a href="#profile?id=${friend.id}" title="${escapeHtml(friendName)}" style="display:inline-block;height:100px;width:100px;cursor:pointer;position:relative;">
             <img src="${thumb}" border="0" alt="${escapeHtml(friendName)}" style="width:100px;height:100px;object-fit:cover;" onerror="this.src='assets/ui/guest.png'"/>
           </a>
         </div>
-        <div class="Summary" style="margin-top: 3px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-          <img src="${statusIcon}" alt="${isOnline ? 'Online' : 'Offline'}" style="width:10px;height:10px;vertical-align:middle;margin-right:2px;"/>
-          <a href="#profile?id=${friend.id}" style="color:#006699;">${escapeHtml(friendName)}</a>
+        <div class="Summary">
+          <span class="OnlineStatus"><img src="${statusIcon}" alt="${isOnline ? 'Online' : 'Offline'}" style="width:10px;height:10px;vertical-align:middle;"/></span>
+          <span class="Name"><a href="#profile?id=${friend.id}">${escapeHtml(friendName)}</a></span>
         </div>
       </div>
     `;
-    currentRow.appendChild(td);
+    row.appendChild(td);
 
-    const avatarContainer = td.querySelector('.Avatar');
+    const avatarContainer = td.querySelector('.Avatar a');
     if (avatarContainer) {
-      addObcOverlayIfPremium(avatarContainer, friend.id);
+      addObcOverlayIfPremium(avatarContainer, friend.id, { bottom: '-12px' });
     }
-  });
+  }
 }
 
 async function renderProfileGames(games) {
@@ -1899,50 +2058,125 @@ async function renderProfileGames(games) {
     console.warn('Failed to load game thumbnails:', e);
   }
 
+  // Authentic 2013 User.aspx Active Places: jQuery-UI accordion (flat h3 headers + panels).
+  // We replicate jQuery UI's exact class structure so the page-bundle .ui-accordion/.ui-state-*
+  // /.ui-icon CSS applies verbatim; the toggle behaviour is done in JS (no jQuery UI loaded).
+  const accordion = document.createElement('div');
+  accordion.id = 'accordion';
+  accordion.className = 'accordion ui-accordion ui-widget ui-helper-reset';
+
+  // jQuery-UI 1.9.2 accordion behaviour: exactly ONE panel open at a time (collapsible:false), with a
+  // sliding open/close animation (~300ms). Replicated here in plain JS via a height transition.
+  const headers = [];
+  const panels = [];
+  let openIndex = 0;
+  const setHeaderState = (hdr, isOpen) => {
+    hdr.classList.toggle('ui-state-active', isOpen);
+    hdr.classList.toggle('ui-accordion-header-active', isOpen);
+    hdr.classList.toggle('ui-corner-top', isOpen);
+    hdr.classList.toggle('ui-corner-all', !isOpen);
+    const icon = hdr.querySelector('.ui-accordion-header-icon');
+    icon.classList.toggle('ui-icon-triangle-1-s', isOpen);
+    icon.classList.toggle('ui-icon-triangle-1-e', !isOpen);
+  };
+  const slidePanel = (pnl, open, dur = 300) => {
+    pnl.style.overflow = 'hidden';
+    let ended = false;
+    const finish = () => {
+      if (ended) return; ended = true;
+      pnl.removeEventListener('transitionend', onEnd);
+      pnl.style.transition = ''; pnl.style.height = ''; pnl.style.overflow = '';
+      if (!open) { pnl.style.display = 'none'; pnl.classList.remove('ui-accordion-content-active'); }
+    };
+    const onEnd = (e) => { if (e.target === pnl && e.propertyName === 'height') finish(); };
+    pnl.addEventListener('transitionend', onEnd);
+    // Set the START height (opening: 0 from a fresh display:block; closing: current full height).
+    if (open) {
+      pnl.style.display = 'block';
+      pnl.classList.add('ui-accordion-content-active');
+      pnl.style.height = '0px';
+    } else {
+      pnl.style.height = pnl.scrollHeight + 'px';
+    }
+    // Two rAFs guarantee the start height paints before we set the transition + target — reliable even
+    // when a sibling panel animates in the same tick (a plain reflow gets clobbered and the transition
+    // silently no-ops, leaving the old panel stuck open).
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (ended) return; // fallback already settled us (e.g. throttled background tab)
+      pnl.style.transition = `height ${dur}ms ease`;
+      pnl.style.height = open ? pnl.scrollHeight + 'px' : '0px';
+    }));
+    setTimeout(finish, dur + 80); // fallback: settle even if transitionend never fires
+  };
+  const openAccordion = (idx) => {
+    if (idx === openIndex) return; // collapsible:false — clicking the already-open header does nothing
+    const prev = openIndex;
+    openIndex = idx;
+    setHeaderState(headers[prev], false);
+    slidePanel(panels[prev], false);
+    setHeaderState(headers[idx], true);
+    slidePanel(panels[idx], true);
+  };
+
   games.forEach((game, index) => {
     const thumb = thumbnails[game.id] || '';
     const placeId = game.rootPlaceId || game.id;
-    
-    const div = document.createElement('div');
-    div.innerHTML = `
-      <div class="AccordionHeader">
-        ${escapeHtml(game.name)}
-      </div>
-      <div style="${index === 0 ? 'display:block;' : 'display:none;'}">
-        <div class="Place">
-          <div class="PlayStatus"></div>
-          <br>
-          <div class="PlayOptions" style="display:block">
-            <div style="overflow: hidden; width: 414px;">
-              <a href="#game?id=${placeId}" title="Play this game" class="profile-play-btn"></a>
+    const active = index === 0;
+
+    // jQuery-UI 1.9.2 enhances the server's `<div><h3></h3></div>` header wrapper: the ui-*
+    // classes land on the WRAPPER DIV (not the h3), the inline-styled <h3> stays as its child,
+    // and the triangle icon span is prepended. Active header adds ui-state-active +
+    // ui-accordion-header-active + ui-corner-top; the rest get ui-corner-all. No jQuery UI is
+    // loaded here, so we emit the post-enhancement DOM directly and toggle it in JS below.
+    const header = document.createElement('div');
+    header.setAttribute('role', 'tab');
+    header.className = 'ui-accordion-header ui-helper-reset ui-accordion-icons ui-state-default '
+      + (active ? 'ui-state-active ui-accordion-header-active ui-corner-top' : 'ui-corner-all');
+    header.innerHTML = `<span class="ui-accordion-header-icon ui-icon ${active ? 'ui-icon-triangle-1-s' : 'ui-icon-triangle-1-e'}"></span>`
+      + `<h3 class="notranslate" style="display:block;font-size:15px;font-weight:bold;color:#363636;float:left;overflow:hidden;height:22px;">${escapeHtml(game.name)}</h3>`;
+
+    // Panel keeps the server's notranslate class + inline padding (0 20px, top 0), exactly as the
+    // archive; jQuery UI adds the ui-accordion-content-* classes on top.
+    const panel = document.createElement('div');
+    panel.setAttribute('role', 'tabpanel');
+    panel.className = 'notranslate ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom'
+      + (active ? ' ui-accordion-content-active' : '');
+    panel.style.cssText = `margin:0;padding-left:20px;padding-right:20px;padding-top:0;display:${active ? 'block' : 'none'};`;
+    // Inline styles on Statistics/Thumbnail/Description are copied VERBATIM from the archive element
+    // attributes (they beat any bundle rule, so the rendered look is guaranteed authentic).
+    panel.innerHTML = `
+      <div class="Place">
+        <div class="PlayStatus"></div>
+        <br>
+        <div class="Statistics" style="font-family: arial;color: #666; font-size: 12px; letter-spacing: normal">
+          <span>Visited ${formatNumber(game.placeVisits || 0)} times</span>
+        </div>
+        <div class="Thumbnail" style="width:414px;overflow:hidden;position: relative;">
+          <a href="#game?id=${placeId}" title="${escapeHtml(game.name)}" style="display:inline-block;height:230px;width:420px;cursor:pointer;">
+            ${thumb ? `<img src="${thumb}" height="230" width="420" border="0" alt="${escapeHtml(game.name)}" onerror="this.style.display='none'"/>` : ''}
+          </a>
+        </div>
+        ${game.description ? `<div class="Description" style="font-family: arial; color: #666; font-size: 12px;line-height: inherit; border: none"><span>${escapeHtml(game.description)}</span></div>` : ''}
+        <div class="PlayOptions" style="display:block">
+          <div class="VisitButtonsLeft Centered">
+            <div class="VisitButton VisitButtonPlay" placeid="${placeId}">
+              <a class="btn-large btn-large-green-play" href="#game?id=${placeId}" title="Play this game">Play<span class="btn-text">Play</span></a>
             </div>
           </div>
-          <div class="Statistics">
-            <span>Visited ${formatNumber(game.placeVisits || 0)} times</span>
-          </div>
-          <div class="Thumbnail" style="width:100%;max-width:414px;overflow:hidden;">
-            <a href="#game?id=${placeId}" title="${escapeHtml(game.name)}" style="display:block;">
-              ${thumb ? `<img src="${thumb}" border="0" alt="${escapeHtml(game.name)}" style="width:100%;height:auto;" onerror="this.style.display='none'"/>` : ''}
-            </a>
-          </div>
-          ${game.description ? `<div class="Description"><span>${escapeHtml(game.description)}</span></div>` : ''}
         </div>
       </div>
     `;
 
-    const header = div.querySelector('.AccordionHeader');
-    const content = div.querySelector('.AccordionHeader + div');
-    header.addEventListener('click', () => {
-      
-      if (content.style.display === 'none') {
-        content.style.display = 'block';
-      } else {
-        content.style.display = 'none';
-      }
-    });
-    
-    container.appendChild(div);
+    const idx = index;
+    header.addEventListener('click', () => openAccordion(idx));
+
+    headers.push(header);
+    panels.push(panel);
+    accordion.appendChild(header);
+    accordion.appendChild(panel);
   });
+
+  container.appendChild(accordion);
 }
 
 const badgePaginationState = {
@@ -1958,7 +2192,7 @@ const badgesPerPage = 12;
 
 function handleBadgePagination(e) {
   const btn = e.target.closest('#badgePrevBtn, #badgeNextBtn');
-  if (!btn || btn.disabled || badgePaginationState.isLoading) return;
+  if (!btn || btn.classList.contains('disabled') || badgePaginationState.isLoading) return;
 
   if (btn.id === 'badgePrevBtn' && badgePaginationState.currentPage > 0) {
     badgePaginationState.currentPage--;
@@ -1994,7 +2228,6 @@ async function renderProfileBadges(badges, nextCursor, userId) {
   if (noBadgesEl) noBadgesEl.style.display = 'none';
 
   badgePaginationState.isLoading = true;
-  container.style.maxWidth = '416px';
   container.style.opacity = '0.5';
 
   const startIdx = badgePaginationState.currentPage * badgesPerPage;
@@ -2039,7 +2272,8 @@ async function renderProfileBadges(badges, nextCursor, userId) {
     const thumb = badgePaginationState.thumbnailCache.get(badge.id) || '';
     const div = document.createElement('div');
     div.className = 'TileBadges';
-    div.style.cssText = 'display: inline-block; margin: 5px; text-align: center; vertical-align: top;';
+    // Authentic .TileBadges (profile.css): float:left; margin:10px 10px → 95px tile, 5 per row,
+    // cleared by .PlayerBadgeContainer{overflow:hidden}. No inline override.
     div.innerHTML = `
       <a href="#badge?id=${badge.id}" title="${escapeHtml(badge.name)}" style="display:inline-block;height:75px;width:75px;cursor:pointer;">
         ${thumb ? `<img src="${thumb}" border="0" alt="${escapeHtml(badge.name)}" style="width:75px;height:75px;" onerror="this.style.display='none'"/>` : ''}
@@ -2066,9 +2300,9 @@ async function renderProfileBadges(badges, nextCursor, userId) {
       container.parentElement.appendChild(pager);
     }
     pager.innerHTML = `
-      <button id="badgePrevBtn" style="margin-right: 10px;" ${!hasPrev ? 'disabled' : ''}>« Prev</button>
+      <a id="badgePrevBtn" href="javascript:void(0)" class="pager previous${!hasPrev ? ' disabled' : ''}"></a>
       <span>Page ${badgePaginationState.currentPage + 1}</span>
-      <button id="badgeNextBtn" style="margin-left: 10px;" ${!hasNext ? 'disabled' : ''}>Next »</button>
+      <a id="badgeNextBtn" href="javascript:void(0)" class="pager next${!hasNext ? ' disabled' : ''}"></a>
     `;
   } else if (pager) {
     pager.remove();
@@ -2085,7 +2319,7 @@ const groupsPerPage = 15;
 
 function handleGroupPagination(e) {
   const btn = e.target.closest('#groupPrevBtn, #groupNextBtn');
-  if (!btn || btn.disabled || groupPaginationState.isLoading) return;
+  if (!btn || btn.classList.contains('disabled') || groupPaginationState.isLoading) return;
 
   const totalPages = Math.ceil(groupPaginationState.allGroups.length / groupsPerPage);
 
@@ -2142,26 +2376,22 @@ async function renderProfileGroups(groups, isPageChange = false) {
   }
 
   container.innerHTML = '';
-  let currentRow = null;
-  pageGroups.forEach((groupData, index) => {
+  // Authentic 2013: groups are floated .groupEmblemThumbnail divs (not a table)
+  pageGroups.forEach((groupData) => {
     const group = groupData.group || groupData;
-    if (index % 5 === 0) {
-      currentRow = document.createElement('tr');
-      container.appendChild(currentRow);
-    }
-
     const thumb = groupPaginationState.thumbnailCache.get(group.id) || '';
-    const td = document.createElement('td');
-    td.innerHTML = `
-      <div class="groupEmblemThumbnail" style="width:70px; overflow:hidden; margin-left:0px; padding:0px;">
-        <div class="groupEmblemImage" style="width: 70px; height:72px; margin: 0px; padding-top: 0px;">
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'float: left;';
+    wrap.innerHTML = `
+      <div class="groupEmblemThumbnail" style="width:70px; overflow:hidden;">
+        <div class="groupEmblemImage notranslate" style="width:70px; height:72px; margin:0; padding-top:0; background-repeat:no-repeat; background-image:none;">
           <a href="#group?id=${group.id}" title="${escapeHtml(group.name)}" style="display:inline-block;height:62px;width:60px;cursor:pointer;">
-            ${thumb ? `<img src="${thumb}" border="0" alt="${escapeHtml(group.name)}" style="width:60px;height:62px;object-fit:cover;" onerror="this.style.display='none'"/>` : ''}
+            ${thumb ? `<img src="${thumb}" height="62" width="60" border="0" alt="${escapeHtml(group.name)}" onerror="this.style.display='none'"/>` : ''}
           </a>
         </div>
       </div>
     `;
-    currentRow.appendChild(td);
+    container.appendChild(wrap);
   });
 
   container.style.opacity = '1';
@@ -2179,15 +2409,19 @@ async function renderProfileGroups(groups, isPageChange = false) {
       container.parentElement.appendChild(pager);
     }
     pager.innerHTML = `
-      <button id="groupPrevBtn" style="margin-right: 10px;" ${groupPaginationState.currentPage === 0 ? 'disabled' : ''}>« Prev</button>
+      <a id="groupPrevBtn" href="javascript:void(0)" class="pager previous${groupPaginationState.currentPage === 0 ? ' disabled' : ''}"></a>
       <span>Page ${groupPaginationState.currentPage + 1} of ${totalPages}</span>
-      <button id="groupNextBtn" style="margin-left: 10px;" ${groupPaginationState.currentPage >= totalPages - 1 ? 'disabled' : ''}>Next »</button>
+      <a id="groupNextBtn" href="javascript:void(0)" class="pager next${groupPaginationState.currentPage >= totalPages - 1 ? ' disabled' : ''}"></a>
     `;
   } else if (pager) {
     pager.remove();
   }
 }
 
+// Authentic order/labels/ids from the real 2013 /My/Stuff.aspx category rail
+// (reference/archive-stuff-2013.html AssetCategoryRepeater, ctl00-ctl19). Shared with the
+// Profile page's Inventory section — both widgets are the same #UserContainer/#AssetsMenu
+// component, just embedded (Profile) vs. standalone (Stuff).
 const assetCategories = [
   { id: 17, name: 'Heads' },
   { id: 18, name: 'Faces' },
@@ -2198,8 +2432,16 @@ const assetCategories = [
   { id: 12, name: 'Pants' },
   { id: 13, name: 'Decals' },
   { id: 10, name: 'Models' },
+  { id: 38, name: 'Plugins' },
   { id: 9, name: 'Places' },
+  { id: 34, name: 'Game Passes' },
+  { id: 3, name: 'Audio' },
   { id: 21, name: 'Badges' },
+  { id: 29, name: 'Left Arms' },
+  { id: 28, name: 'Right Arms' },
+  { id: 31, name: 'Left Legs' },
+  { id: 30, name: 'Right Legs' },
+  { id: 27, name: 'Torsos' },
   { id: 32, name: 'Packages' }
 ];
 
@@ -2209,7 +2451,7 @@ let currentAssetPage = 1;
 let currentInventoryUserId = null;
 let assetCursorHistory = []; 
 
-async function renderProfileInventory(userId) {
+async function renderProfileInventory(userId, showRecommendations = true) {
   currentInventoryUserId = userId;
   assetCursorHistory = []; 
   const menuContainer = document.getElementById('AssetsMenu');
@@ -2233,9 +2475,8 @@ async function renderProfileInventory(userId) {
   }
 
   menuContainer.innerHTML = assetCategories.map(cat => `
-    <div class="${cat.id === currentAssetCategory ? 'AssetsMenuItem_Selected' : 'AssetsMenuItem'}">
-      <a href="javascript:void(0)" class="${cat.id === currentAssetCategory ? 'AssetsMenuButton_Selected' : 'AssetsMenuButton'}"
-         onclick="selectAssetCategory(${cat.id})">${cat.name}</a>
+    <div class="verticaltab${cat.id === currentAssetCategory ? ' selected' : ''}">
+      <a href="javascript:void(0)" onclick="selectAssetCategory(${cat.id})">${cat.name}</a>
     </div>
   `).join('');
 
@@ -2255,6 +2496,51 @@ async function renderProfileInventory(userId) {
   }
 
   await loadInventoryCategory(userId, currentAssetCategory);
+  if (showRecommendations) {
+    renderProfileRecommendations().catch(e => console.warn('Recommendations failed:', e));
+  }
+}
+
+// Authentic 2013 profile "Recommended Hats" block (full-width, below the inventory). The archive
+// seeds it from the default inventory category (Hats); we reuse the catalog search API (Hats =
+// categoryFilter 8) and render the authentic 5x2 PortraitDiv grid. Fails silently (pane stays hidden).
+async function renderProfileRecommendations() {
+  const pane = document.getElementById('RecommendationsPane');
+  const list = document.getElementById('AssetRecommendations');
+  if (!pane || !list) return;
+
+  const searchApi = window.roblox?.searchCatalog ? window.roblox : (window.robloxAPI?.searchCatalog ? window.robloxAPI : null);
+  if (!searchApi) return;
+
+  const response = await searchApi.searchCatalog({ categoryFilter: 8, subcategory: '', sortType: 0, keyword: '', limit: 10 });
+  const items = (response?.data || []).filter(r => r.itemType !== 'Bundle').slice(0, 10);
+  if (items.length === 0) return;
+
+  let thumbnails = {};
+  const thumbApi = window.roblox?.getAssetThumbnails ? window.roblox : (window.robloxAPI?.getAssetThumbnails ? window.robloxAPI : null);
+  if (thumbApi) {
+    try {
+      const thumbData = await thumbApi.getAssetThumbnails(items.map(r => r.id), '110x110');
+      thumbData?.data?.forEach(t => { if (t.imageUrl) thumbnails[t.targetId] = t.imageUrl; });
+    } catch (e) { console.warn('Recommendation thumbnails failed:', e); }
+  }
+
+  const cell = (r, i) => `
+    <td><div class="PortraitDiv" style="width:140px;min-height:165px;margin:auto;" data-se="recommended-items-${i}">
+      <div class="AssetThumbnail">
+        <a href="javascript:void(0)" onclick="window.location.hash='#catalog-item?id=${r.id}&type=Asset';return false;" title="${escapeHtml(r.name)}" style="display:inline-block;height:110px;width:110px;cursor:pointer;">
+          <img src="${thumbnails[r.id] || ''}" height="110" width="110" border="0" alt="${escapeHtml(r.name)}" onerror="this.style.visibility='hidden'"/>
+        </a>
+      </div>
+      <div class="AssetDetails">
+        <div class="AssetName noTranslate"><a href="javascript:void(0)" onclick="window.location.hash='#catalog-item?id=${r.id}&type=Asset';return false;">${escapeHtml(r.name)}</a></div>
+        <div class="AssetCreator"><span class="stat-label">Creator:</span> <span class="Detail stat"><a class="notranslate" href="javascript:void(0)" onclick="window.location.hash='#profile?id=${r.creatorTargetId || 1}';return false;">${escapeHtml(r.creatorName || 'ROBLOX')}</a></span></div>
+      </div>
+    </div></td>`;
+  const row1 = items.slice(0, 5).map((r, i) => cell(r, i)).join('');
+  const row2 = items.slice(5, 10).map((r, i) => cell(r, i + 5)).join('');
+  list.innerHTML = `<table cellspacing="0" align="Center" border="0" style="height:175px;width:784px;border-collapse:collapse;"><tr>${row1}</tr>${row2 ? `<tr>${row2}</tr>` : ''}</table>`;
+  pane.style.display = 'block';
 }
 
 window.selectAssetCategory = async function(categoryId) {
@@ -2266,9 +2552,8 @@ window.selectAssetCategory = async function(categoryId) {
   const menuContainer = document.getElementById('AssetsMenu');
   if (menuContainer) {
     menuContainer.innerHTML = assetCategories.map(cat => `
-      <div class="${cat.id === currentAssetCategory ? 'AssetsMenuItem_Selected' : 'AssetsMenuItem'}">
-        <a href="javascript:void(0)" class="${cat.id === currentAssetCategory ? 'AssetsMenuButton_Selected' : 'AssetsMenuButton'}" 
-           onclick="selectAssetCategory(${cat.id})">${cat.name}</a>
+      <div class="verticaltab${cat.id === currentAssetCategory ? ' selected' : ''}">
+        <a href="javascript:void(0)" onclick="selectAssetCategory(${cat.id})">${cat.name}</a>
       </div>
     `).join('');
   }
@@ -2382,7 +2667,7 @@ async function loadInventoryCategory(userId, assetTypeId, cursor = '', isGoingBa
     container.innerHTML = '';
     let currentRow = null;
     result.data.forEach((item, index) => {
-      if (index % 5 === 0) {
+      if (index % 6 === 0) {   // authentic 2013 inventory grid is 6 per row
         currentRow = document.createElement('tr');
         container.appendChild(currentRow);
       }
@@ -2443,7 +2728,7 @@ async function loadInventoryCategory(userId, assetTypeId, cursor = '', isGoingBa
       if (pageInfo) pageInfo.textContent = `Page ${currentAssetPage}`;
       
       if (prevBtn) {
-        prevBtn.style.visibility = currentAssetPage > 1 ? 'visible' : 'hidden';
+        prevBtn.querySelector('.pager')?.classList.toggle('disabled', currentAssetPage <= 1);
         prevBtn.onclick = () => {
           if (currentAssetPage > 1) {
             currentAssetPage--;
@@ -2456,7 +2741,7 @@ async function loadInventoryCategory(userId, assetTypeId, cursor = '', isGoingBa
       }
       
       if (nextBtn) {
-        nextBtn.style.visibility = currentAssetCursor ? 'visible' : 'hidden';
+        nextBtn.querySelector('.pager')?.classList.toggle('disabled', !currentAssetCursor);
         nextBtn.onclick = () => {
           if (currentAssetCursor) {
             currentAssetPage++;
@@ -2506,7 +2791,7 @@ async function loadInventoryBadges(userId, cursor = '', isGoingBack = false) {
     container.innerHTML = '';
     let currentRow = null;
     result.data.forEach((badge, index) => {
-      if (index % 5 === 0) {
+      if (index % 6 === 0) {   // authentic 2013 inventory grid is 6 per row
         currentRow = document.createElement('tr');
         container.appendChild(currentRow);
       }
@@ -2543,7 +2828,7 @@ async function loadInventoryBadges(userId, cursor = '', isGoingBack = false) {
       if (pageInfo) pageInfo.textContent = `Page ${currentAssetPage}`;
       
       if (prevBtn) {
-        prevBtn.style.visibility = currentAssetPage > 1 ? 'visible' : 'hidden';
+        prevBtn.querySelector('.pager')?.classList.toggle('disabled', currentAssetPage <= 1);
         prevBtn.onclick = () => {
           if (currentAssetPage > 1) {
             currentAssetPage--;
@@ -2555,7 +2840,7 @@ async function loadInventoryBadges(userId, cursor = '', isGoingBack = false) {
       }
       
       if (nextBtn) {
-        nextBtn.style.visibility = currentAssetCursor ? 'visible' : 'hidden';
+        nextBtn.querySelector('.pager')?.classList.toggle('disabled', !currentAssetCursor);
         nextBtn.onclick = () => {
           if (currentAssetCursor) {
             currentAssetPage++;
@@ -2588,7 +2873,7 @@ async function loadStuffPage(userId) {
       console.error('Could not get current user:', e);
     }
   }
-  
+
   if (!userId) {
     container.innerHTML = `
       <div style="text-align: center; padding: 60px; color: #666;">
@@ -2598,359 +2883,35 @@ async function loadStuffPage(userId) {
     return;
   }
 
-  let userInfo = null;
-  try {
-    userInfo = await window.roblox.getUserInfo(userId);
-  } catch (e) {
-    console.error('Could not get user info:', e);
-  }
-  
-  const username = userInfo?.displayName || userInfo?.name || 'User';
-
+  // Authentic /My/Stuff.aspx structure (reference/archive-stuff-2013.html): the same
+  // #UserContainer > #UserAssetsPane > #AssetsMenu/#AssetsContent widget the Profile page's
+  // Inventory section already ports faithfully — reused wholesale via renderProfileInventory,
+  // minus Recommended Hats (not present on the standalone Stuff page). Header text "Inventory"
+  // is verbatim from the archive (no username prefix on the real page).
   container.innerHTML = `
-    <div id="UserContainer">
-      <div id="UserAssetsPane">
-        <div class="StandardBoxHeader">
-          <span>${escapeHtml(username)}'s Stuff</span>
-        </div>
-        <div id="StuffUserAssets" class="StandardBox">
-          <div id="StuffAssetsMenu">
-            <!-- Asset category buttons will be rendered here -->
-          </div>
-          <div id="StuffAssetsContent">
-            <table id="StuffAssetsList" cellspacing="0" border="0" style="border-collapse:collapse;">
-            </table>
-          </div>
-          <div id="StuffAssetsPagination" class="FooterPager" style="display: none;">
-            <a id="StuffAssetsPrevPage" href="javascript:void(0)"><span class="NavigationIndicators">&lt;&lt;</span> Previous</a>
-            <span id="StuffAssetsPageInfo" style="margin: 0 15px;">Page 1</span>
-            <a id="StuffAssetsNextPage" href="javascript:void(0)">Next <span class="NavigationIndicators">&gt;&gt;</span></a>
+    <div class="MyRobloxContainer">
+      <div id="UserContainer">
+        <div id="UserAssetsPane">
+          <h2 class="title" style="width:970px"><span>Inventory</span></h2>
+          <div id="UserAssets">
+            <div id="AssetsMenu" class="divider-right"></div>
+            <div id="AssetsContent">
+              <table id="AssetsList" cellspacing="0" border="0" style="border-collapse:collapse;"></table>
+              <div id="AssetsPagination" class="FooterPager" style="display: none;">
+                <a id="AssetsPrevPage" href="javascript:void(0)"><span class="pager previous"></span></a>
+                <span id="AssetsPageInfo" style="margin: 0 15px;">Page 1</span>
+                <a id="AssetsNextPage" href="javascript:void(0)"><span class="pager next"></span></a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   `;
 
-  await renderStuffPageInventory(userId);
-
-  const stuffContentEl = document.getElementById('stuff-content');
-  if (stuffContentEl && !stuffContentEl.dataset.handlerAttached) {
-    stuffContentEl.dataset.handlerAttached = 'true';
-    stuffContentEl.addEventListener('click', (e) => {
-      const link = e.target.closest('.stuff-item-link');
-      if (link) {
-        e.preventDefault();
-        const assetId = link.dataset.assetId;
-        if (assetId) {
-          navigateToPage('catalog-item', { id: assetId });
-        }
-      }
-    });
-  }
+  await renderProfileInventory(userId, false);
 }
 
-let stuffCurrentCategory = 8; 
-let stuffCurrentCursor = '';
-let stuffCurrentPage = 1;
-let stuffUserId = null;
-let stuffCursorHistory = []; 
-
-async function renderStuffPageInventory(userId) {
-  stuffUserId = userId;
-  stuffCursorHistory = []; 
-  const menuContainer = document.getElementById('StuffAssetsMenu');
-  const assetsContent = document.getElementById('StuffAssetsContent');
-  if (!menuContainer) return;
-
-  let canView = true;
-  try {
-    const result = await window.roblox.canViewInventory(userId);
-    canView = result?.canView !== false;
-  } catch (e) {
-    console.warn('Could not check inventory visibility:', e);
-  }
-  
-  if (!canView) {
-    menuContainer.innerHTML = '';
-    if (assetsContent) {
-      assetsContent.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">This user\'s inventory is private.</div>';
-    }
-    return;
-  }
-
-  menuContainer.innerHTML = assetCategories.map(cat => `
-    <div class="${cat.id === stuffCurrentCategory ? 'AssetsMenuItem_Selected' : 'AssetsMenuItem'}">
-      <a href="javascript:void(0)" class="${cat.id === stuffCurrentCategory ? 'AssetsMenuButton_Selected' : 'AssetsMenuButton'}" 
-         onclick="selectStuffCategory(${cat.id})">${cat.name}</a>
-    </div>
-  `).join('');
-
-  await loadStuffCategory(userId, stuffCurrentCategory);
-}
-
-window.selectStuffCategory = async function(categoryId) {
-  stuffCurrentCategory = categoryId;
-  stuffCurrentCursor = '';
-  stuffCurrentPage = 1;
-  stuffCursorHistory = []; 
-
-  const menuContainer = document.getElementById('StuffAssetsMenu');
-  if (menuContainer) {
-    menuContainer.innerHTML = assetCategories.map(cat => `
-      <div class="${cat.id === stuffCurrentCategory ? 'AssetsMenuItem_Selected' : 'AssetsMenuItem'}">
-        <a href="javascript:void(0)" class="${cat.id === stuffCurrentCategory ? 'AssetsMenuButton_Selected' : 'AssetsMenuButton'}" 
-           onclick="selectStuffCategory(${cat.id})">${cat.name}</a>
-      </div>
-    `).join('');
-  }
-  
-  await loadStuffCategory(stuffUserId, categoryId);
-};
-
-async function loadStuffCategory(userId, assetTypeId, cursor = '', isGoingBack = false) {
-  const container = document.getElementById('StuffAssetsList');
-  const paginationEl = document.getElementById('StuffAssetsPagination');
-
-  if (!container) return;
-
-  container.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Loading...</td></tr>';
-
-  try {
-    
-    if (assetTypeId === 21) {
-      await loadStuffBadges(userId, cursor, isGoingBack);
-      return;
-    }
-    const result = await window.roblox.getUserInventory(userId, assetTypeId, 10, cursor, 'Desc');
-
-    if (!result?.data || result.data.length === 0) {
-      container.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666; padding: 20px;">No items to display.</td></tr>';
-      if (paginationEl) paginationEl.style.display = 'none';
-      return;
-    }
-
-    const assetIds = result.data.map(item => item.assetId);
-    let thumbnails = {};
-    try {
-      const thumbResult = await window.robloxAPI.getAssetThumbnails(assetIds, '110x110');
-      if (thumbResult?.data) {
-        thumbResult.data.forEach(t => {
-          thumbnails[t.targetId] = t.imageUrl;
-        });
-      }
-    } catch (e) {
-      console.warn('Failed to load asset thumbnails:', e);
-    }
-
-    let itemDetails = {};
-    try {
-      const items = assetIds.map(id => ({ itemType: 'Asset', id: id }));
-      const detailsResult = await window.roblox.getCatalogItemDetails(items);
-      if (detailsResult?.data) {
-        detailsResult.data.forEach(item => {
-          itemDetails[item.id] = item;
-        });
-      }
-    } catch (e) {
-      console.warn('Failed to load catalog item details:', e);
-    }
-
-    const economyDetails = await fetchInventoryEconomyDetails(assetIds);
-
-    container.innerHTML = '';
-    let currentRow = null;
-    result.data.forEach((item, index) => {
-      if (index % 5 === 0) {
-        currentRow = document.createElement('tr');
-        container.appendChild(currentRow);
-      }
-
-      const thumb = thumbnails[item.assetId] || 'images/spinners/spinner100x100.gif';
-      const details = itemDetails[item.assetId] || {};
-      const ecoData = economyDetails[item.assetId] || {};
-      const creatorName = details.creatorName || 'ROBLOX';
-      const creatorType = details.creatorType || 'User';
-
-      const restrictions = details.itemRestrictions || [];
-      const isLimited = restrictions.includes('Limited') || restrictions.includes('Collectible') || ecoData.isLimited;
-      const isLimitedUnique = restrictions.includes('LimitedUnique') || ecoData.isLimitedUnique;
-
-      let limitedOverlay = '';
-      if (isLimitedUnique) {
-        limitedOverlay = '<img src="images/assetIcons/limitedunique.png" class="limited-overlay" alt="Limited U"/>';
-      } else if (isLimited) {
-        limitedOverlay = '<img src="images/assetIcons/limited.png" class="limited-overlay" alt="Limited"/>';
-      }
-
-      const priceHtml = buildInventoryPriceHtml(details, ecoData);
-
-      const td = document.createElement('td');
-      td.className = 'Asset';
-      td.setAttribute('valign', 'top');
-      td.innerHTML = `
-        <div style="padding: 5px">
-          <div class="AssetThumbnail" style="position: relative;">
-            <a href="javascript:void(0)" data-asset-id="${item.assetId}" class="stuff-item-link" title="${escapeHtml(item.assetName || item.name || 'Item')}" style="display:inline-block;height:110px;width:110px;cursor:pointer;">
-              <img src="${thumb}" border="0" alt="${escapeHtml(item.assetName || item.name || 'Item')}" onerror="this.src='images/spinners/spinner100x100.gif'"/>
-            </a>
-            ${limitedOverlay}
-          </div>
-          <div class="AssetDetails">
-            <div class="AssetName">
-              <a href="javascript:void(0)" data-asset-id="${item.assetId}" class="stuff-item-link">${escapeHtml(item.assetName || item.name || 'Item')}</a>
-            </div>
-            <div class="AssetCreator">
-              <span class="Label">Creator:</span> <span class="Detail">
-                <a href="${creatorType === 'Group' ? '#group?id=' + details.creatorTargetId : '#profile?id=' + details.creatorTargetId}">${escapeHtml(creatorName)}</a>
-              </span>
-            </div>
-            ${priceHtml}
-          </div>
-        </div>
-      `;
-      currentRow.appendChild(td);
-    });
-
-    stuffCurrentCursor = result.nextPageCursor || '';
-    
-    if (paginationEl) {
-      const prevBtn = document.getElementById('StuffAssetsPrevPage');
-      const nextBtn = document.getElementById('StuffAssetsNextPage');
-      const pageInfo = document.getElementById('StuffAssetsPageInfo');
-      
-      if (pageInfo) pageInfo.textContent = `Page ${stuffCurrentPage}`;
-      
-      if (prevBtn) {
-        prevBtn.style.visibility = stuffCurrentPage > 1 ? 'visible' : 'hidden';
-        prevBtn.onclick = () => {
-          if (stuffCurrentPage > 1) {
-            stuffCurrentPage--;
-            
-            stuffCursorHistory.pop();
-            const prevCursor = stuffCursorHistory.length > 0 ? stuffCursorHistory[stuffCursorHistory.length - 1] : '';
-            loadStuffCategory(userId, assetTypeId, prevCursor, true); 
-          }
-        };
-      }
-      
-      if (nextBtn) {
-        nextBtn.style.visibility = stuffCurrentCursor ? 'visible' : 'hidden';
-        nextBtn.onclick = () => {
-          if (stuffCurrentCursor) {
-            stuffCurrentPage++;
-            stuffCursorHistory.push(stuffCurrentCursor);
-            loadStuffCategory(userId, assetTypeId, stuffCurrentCursor);
-          }
-        };
-      }
-      
-      paginationEl.style.display = (stuffCurrentPage > 1 || stuffCurrentCursor) ? 'block' : 'none';
-    }
-    
-  } catch (error) {
-    console.error('Failed to load inventory:', error);
-    container.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #cc0000; padding: 20px;">Failed to load inventory.</td></tr>';
-  }
-}
-
-async function loadStuffBadges(userId, cursor = '', isGoingBack = false) {
-  const container = document.getElementById('StuffAssetsList');
-  const paginationEl = document.getElementById('StuffAssetsPagination');
-  
-  if (!container) return;
-  
-  try {
-    const result = await window.roblox.getUserBadges(userId, 10, cursor);
-    
-    if (!result?.data || result.data.length === 0) {
-      container.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666; padding: 20px;">No items to display.</td></tr>';
-      if (paginationEl) paginationEl.style.display = 'none';
-      return;
-    }
-
-    const badgeIds = result.data.map(badge => badge.id);
-    let thumbnails = {};
-    try {
-      const thumbResult = await window.roblox.getBadgeThumbnails(badgeIds, '150x150');
-      if (thumbResult?.data) {
-        thumbResult.data.forEach(t => {
-          thumbnails[t.targetId] = t.imageUrl;
-        });
-      }
-    } catch (e) {
-      console.warn('Failed to load badge thumbnails:', e);
-    }
-
-    container.innerHTML = '';
-    let currentRow = null;
-    result.data.forEach((badge, index) => {
-      if (index % 5 === 0) {
-        currentRow = document.createElement('tr');
-        container.appendChild(currentRow);
-      }
-      
-      const thumb = thumbnails[badge.id] || 'images/spinners/spinner100x100.gif';
-      
-      const td = document.createElement('td');
-      td.className = 'Asset';
-      td.setAttribute('valign', 'top');
-      td.innerHTML = `
-        <div style="padding: 5px">
-          <div class="AssetThumbnail" style="position: relative;">
-            <a href="#badge?id=${badge.id}" title="${escapeHtml(badge.name || 'Badge')}" style="display:inline-block;height:110px;width:110px;cursor:pointer;">
-              <img src="${thumb}" border="0" alt="${escapeHtml(badge.name || 'Badge')}" style="max-width:110px;max-height:110px;" onerror="this.src='images/spinners/spinner100x100.gif'"/>
-            </a>
-          </div>
-          <div class="AssetDetails">
-            <div class="AssetName">
-              <a href="#badge?id=${badge.id}">${escapeHtml(badge.name || 'Badge')}</a>
-            </div>
-          </div>
-        </div>
-      `;
-      currentRow.appendChild(td);
-    });
-
-    stuffCurrentCursor = result.nextPageCursor || '';
-    
-    if (paginationEl) {
-      const prevBtn = document.getElementById('StuffAssetsPrevPage');
-      const nextBtn = document.getElementById('StuffAssetsNextPage');
-      const pageInfo = document.getElementById('StuffAssetsPageInfo');
-      
-      if (pageInfo) pageInfo.textContent = `Page ${stuffCurrentPage}`;
-      
-      if (prevBtn) {
-        prevBtn.style.visibility = stuffCurrentPage > 1 ? 'visible' : 'hidden';
-        prevBtn.onclick = () => {
-          if (stuffCurrentPage > 1) {
-            stuffCurrentPage--;
-            stuffCursorHistory.pop();
-            const prevCursor = stuffCursorHistory.length > 0 ? stuffCursorHistory[stuffCursorHistory.length - 1] : '';
-            loadStuffBadges(userId, prevCursor, true);
-          }
-        };
-      }
-      
-      if (nextBtn) {
-        nextBtn.style.visibility = stuffCurrentCursor ? 'visible' : 'hidden';
-        nextBtn.onclick = () => {
-          if (stuffCurrentCursor) {
-            stuffCurrentPage++;
-            stuffCursorHistory.push(stuffCurrentCursor);
-            loadStuffBadges(userId, stuffCurrentCursor);
-          }
-        };
-      }
-      
-      paginationEl.style.display = (stuffCurrentPage > 1 || stuffCurrentCursor) ? 'block' : 'none';
-    }
-    
-  } catch (error) {
-    console.error('Failed to load badges:', error);
-    container.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #cc0000; padding: 20px;">Failed to load badges.</td></tr>';
-  }
-}
 
   async function loadFriendsPage(userId) {
     const container = document.getElementById('friends-content');
@@ -2965,6 +2926,10 @@ async function loadStuffBadges(userId, cursor = '', isGoingBack = false) {
       return;
     }
 
+    // Faithful 2013 /My/EditFriends.aspx structure (reference/roblonium-editfriends.aspx):
+    // tab-container (Friends/Friend Requests — Requests tab hidden unless viewing your own
+    // friends list, matching the real page's login-owner-only feature) + .friends-container
+    // tile grid, rendered by scripts/pages/friends.js.
     container.innerHTML = `
       <div id="FriendsLoading" style="text-align: center; padding: 60px;">
         <div class="loading">Loading friends...</div>
@@ -2972,17 +2937,23 @@ async function loadStuffBadges(userId, cursor = '', isGoingBack = false) {
       <div id="FriendsError" style="display: none; text-align: center; padding: 60px; color: #cc0000;">
         <p>Failed to load friends.</p>
       </div>
-      <div class="MyRobloxContainer" id="FriendsContent" style="display: none; padding: 10px;">
-        <div class="StandardTabWhite">
-          <span id="FriendsPageHeader">User's Friends</span>
+      <div class="MyRobloxContainer" id="FriendsContent" style="display: none;">
+        <h1 id="FriendsPageHeader">My Friends</h1>
+        <div id="FriendTabs" class="tab-container">
+          <div class="tab active" data-id="friends_tab">Friends</div>
+          <div class="tab" data-id="requests_tab" style="display: none;">Friend Requests</div>
         </div>
-        <div class="StandardBoxWhite">
-          <div id="FriendsPagerTop" style="text-align:center; padding: 5px; margin-bottom: 10px;"></div>
-          <div id="FriendsGridContainer">
-            <div id="NoFriendsMessage" style="display: none; text-align: center; padding: 20px;">This user has no friends.</div>
-            <table id="FriendsTable" cellspacing="0" align="Center" border="0" style="border-collapse:collapse; width: 100%;"></table>
+        <div class="tab-content active" id="friends_tab">
+          <div class="friends-container" id="FriendsGrid"></div>
+          <div class="friends-pager" id="FriendsPager"></div>
+        </div>
+        <div class="tab-content" id="requests_tab">
+          <div class="requests-buttons">
+            <a href="#" id="AcceptAllButton" class="btn-small btn-neutral">Accept All<span class="btn-text">Accept All</span></a>
+            <a href="#" id="DeclineAllButton" class="btn-small btn-neutral">Decline All<span class="btn-text">Decline All</span></a>
           </div>
-          <div id="FriendsPagerBottom" style="text-align:center; padding: 5px; margin-top: 10px;"></div>
+          <div class="friends-container" id="RequestsGrid"></div>
+          <div class="friends-pager" id="RequestsPager"></div>
         </div>
       </div>
     `;
@@ -2995,40 +2966,28 @@ async function loadStuffBadges(userId, cursor = '', isGoingBack = false) {
   function loadPeoplePage() {
   const container = document.getElementById('people-content');
   if (container) {
+    // Authentic Browse.aspx — the era's user search (the 2011 People.aspx was gone by 2013;
+    // the nav linked People -> /Browse.aspx). FLAT late-2013 generation, transcribed VERBATIM
+    // from reference/archive-browse-oct2013.html (+ the populated flat-era results capture
+    // archive-browse-search-oct2014.html): plain 876x28 bar with .form-label "Search:"
+    // (margin-right 30px), 400px box, native "Search Users" submit + "Search Groups" button,
+    // then a 720px table.table of results. Right 160px column held an ad — omitted.
     container.innerHTML = `
-      <div id="BrowseContainer" style="font-family: Verdana, Sans-Serif; text-align: left">
-        <!-- Search Bar - matching Group Details style -->
-        <div id="SearchControls" class="StandardBox" style="width: 876px; height: 28px; margin-left: -4px; clear: both; display: block; background-color: #006699;">
-          <table width="876px" border="0">
-            <tr>
-              <td style="font-family: Verdana, Helvetica, Sans-Serif; font-size: 12pt; color: Black; font-weight: bold; width: 200px; text-align: left;">
-                Search
-              </td>
-              <td style="width: 660px; text-align: right;">
-                <input type="text" id="peopleSearchInput" style="width: 520px;" maxlength="100" value="Search all users" onclick="if(this.value=='Search all users') this.value='';">
-                <input type="submit" id="peopleSearchBtn" value="Search">
-              </td>
-            </tr>
-          </table>
+      <div id="BrowseContainer" style="text-align: left">
+        <div style="width: 876px; height: 28px; margin-bottom: 10px; clear: both;">
+          <span class="form-label" style="margin-right: 30px;">Search: </span>
+          <span>
+            <span class="SearchBox"><input type="text" maxlength="100" id="SearchTextBox" style="width: 400px;"></span>
+            <span class="SearchButton"><input type="submit" value="Search Users" id="SearchButton" class="translate"></span>
+            <input type="button" id="GroupsSearchButton" class="translate" value="Search Groups">
+          </span>
         </div>
-        
-        <div id="peopleSearchError" class="SearchError" style="display:none; color: red; padding: 10px;"></div>
-        
-        <div id="peopleSearchInitial" class="search-initial-text" style="text-align: center; padding: 60px;">
-          <p style="font-size: 14px;">Search for users by entering a username above.</p>
+        <div class="SearchError" id="peopleSearchError"></div>
+        <div style="float:left;min-height:600px">
+          <div id="UsersSearchedPane"></div>
         </div>
-        <div id="peopleSearchLoading" style="display: none; text-align: center; padding: 60px;">
-          <div class="loading">Searching...</div>
-        </div>
-        <div id="peopleSearchResults" style="display: none;">
-          <div class="StandardBoxHeader" style="margin-top: 10px;">
-            <span id="peopleResultsHeader">Search Results</span>
-          </div>
-          <div class="StandardBox" id="peopleResultsList" style="padding: 10px;"></div>
-        </div>
-        <div id="peopleNoResults" class="search-initial-text" style="display: none; text-align: center; padding: 60px;">
-          <p style="font-size: 14px;">No users found matching your search.</p>
-        </div>
+        <div style="float:right;width:160px;"></div>
+        <br style="clear:both">
       </div>
     `;
 
@@ -3037,11 +2996,12 @@ async function loadStuffBadges(userId, cursor = '', isGoingBack = false) {
 }
 
 function initPeopleSearch() {
-  
+
   setTimeout(() => {
-    const searchBtn = document.getElementById('peopleSearchBtn');
-    const searchInput = document.getElementById('peopleSearchInput');
-    
+    const searchBtn = document.getElementById('SearchButton');
+    const searchInput = document.getElementById('SearchTextBox');
+    const groupsBtn = document.getElementById('GroupsSearchButton');
+
     if (searchBtn) {
       searchBtn.onclick = doPeopleSearch;
     }
@@ -3049,89 +3009,142 @@ function initPeopleSearch() {
       searchInput.onkeypress = (e) => {
         if (e.key === 'Enter') doPeopleSearch();
       };
+      // The real page focused the box on load ($("#...SearchTextBox").focus())
       searchInput.focus();
+    }
+    if (groupsBtn) {
+      // The real button redirected to the groups search with the same keyword
+      groupsBtn.onclick = () => {
+        const kw = document.getElementById('SearchTextBox')?.value.trim();
+        navigateTo('groups');
+        if (kw) {
+          setTimeout(() => {
+            const gInput = document.getElementById('groups-search-input');
+            const gBtn = document.getElementById('groups-search-btn');
+            if (gInput && gBtn) { gInput.value = kw; gBtn.click(); }
+          }, 150);
+        }
+      };
     }
   }, 0);
 }
 
 async function doPeopleSearch() {
-  const input = document.getElementById('peopleSearchInput');
-  let query = input?.value.trim();
+  const input = document.getElementById('SearchTextBox');
+  const errorBox = document.getElementById('peopleSearchError');
+  const pane = document.getElementById('UsersSearchedPane');
+  const query = input?.value.trim();
 
-  if (!query || query === 'Search all users') {
-    document.getElementById('peopleSearchError').textContent = 'Please enter a username to search.';
-    document.getElementById('peopleSearchError').style.display = 'block';
+  if (!query) {
+    errorBox.textContent = 'Please enter a username to search.';
     return;
   }
 
-  document.getElementById('peopleSearchError').style.display = 'none';
-  document.getElementById('peopleSearchInitial').style.display = 'none';
-  document.getElementById('peopleSearchResults').style.display = 'none';
-  document.getElementById('peopleNoResults').style.display = 'none';
-  document.getElementById('peopleSearchLoading').style.display = 'block';
-  
+  errorBox.textContent = '';
+  pane.innerHTML = '<div style="padding: 20px; color: #666;">Searching...</div>';
+
   try {
     const result = await window.roblox.searchUsers(query, 12);
-    
-    document.getElementById('peopleSearchLoading').style.display = 'none';
-    
+
     if (!result || !result.data || result.data.length === 0) {
-      document.getElementById('peopleNoResults').style.display = 'block';
+      pane.innerHTML = '';
+      errorBox.textContent = 'No users found.';
       return;
     }
 
-    const userIds = result.data.map(u => u.id);
+    const users = result.data;
+    const userIds = users.map(u => u.id);
+
+    // Avatar thumbs (48x48 like the real t*ak.roblox.com tiles), presence for the
+    // online-dot + Location/Last Seen column, and per-user info for the Blurb column.
     let thumbnails = {};
-    try {
-      const thumbResult = await window.roblox.getUserThumbnails(userIds, '150x150', 'Headshot');
-      if (thumbResult?.data) {
-        thumbResult.data.forEach(t => {
-          thumbnails[t.targetId] = t.imageUrl;
-        });
-      }
-    } catch (e) {
-      console.warn('Failed to load thumbnails:', e);
-    }
+    let presence = {};
+    const blurbs = {};
+    const [thumbResult, presenceResult] = await Promise.all([
+      window.roblox.getUserThumbnails(userIds, '48x48', 'Avatar').catch(() => null),
+      window.roblox.getUserPresence(userIds).catch(() => null),
+      Promise.all(users.map(u =>
+        window.roblox.getUserInfo(u.id).then(info => { blurbs[u.id] = info?.description || ''; }).catch(() => {})
+      ))
+    ]);
+    if (thumbResult?.data) thumbResult.data.forEach(t => { thumbnails[t.targetId] = t.imageUrl; });
+    if (presenceResult?.userPresences) presenceResult.userPresences.forEach(p => { presence[p.userId] = p; });
 
-    const container = document.getElementById('peopleResultsList');
-    container.innerHTML = '';
-    
-    for (const user of result.data) {
+    // Verbatim flat-era result grid: table.table 720px, tr.table-header, PLAIN rows
+    // (separation = the .table td 1px #ccc top border), td.first on the first two cells,
+    // "Last Seen" column, previous-usernames footnote line under the blurb.
+    const rows = users.map((user) => {
+      const name = escapeHtml(user.name);
       const thumb = thumbnails[user.id] || 'assets/ui/guest.png';
-      const div = document.createElement('div');
-      div.className = 'UserSearchResult';
-      div.style.cssText = 'display: inline-block; width: 140px; margin: 10px; text-align: center; vertical-align: top;';
-      div.innerHTML = `
-        <div class="UserThumbnail" style="margin-bottom: 5px; position: relative; display: inline-block;">
-          <a href="#profile?id=${user.id}" style="cursor: pointer;">
-            <img src="${thumb}" alt="${escapeHtml(user.name)}" 
-                 style="width: 100px; height: 100px; border: 1px solid #ccc;"
-                 onerror="this.src='assets/ui/guest.png'"/>
-          </a>
-        </div>
-        <div class="UserName" style="font-weight: bold; font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
-          <a href="#profile?id=${user.id}">${escapeHtml(user.name)}</a>
-        </div>
-        <div class="UserDisplayName" style="font-size: 11px; color: #666; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
-          ${user.displayName !== user.name ? escapeHtml(user.displayName) : ''}
-        </div>
-      `;
-      container.appendChild(div);
-
-      const thumbContainer = div.querySelector('.UserThumbnail');
-      if (thumbContainer) {
-        addObcOverlayIfPremium(thumbContainer, user.id, { bottom: '3px', left: '1px' });
+      const p = presence[user.id];
+      const isOnline = p && p.userPresenceType > 0;
+      let statusAlt, locationText;
+      if (isOnline) {
+        const where = p.lastLocation || 'Website';
+        statusAlt = `${name} is online at ${escapeHtml(where)}.`;
+        locationText = escapeHtml(where);
+      } else {
+        const lastSeen = p?.lastOnline
+          ? new Date(p.lastOnline).toLocaleString('en-US', {
+              month: 'numeric', day: 'numeric', year: 'numeric',
+              hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
+            }).replace(',', '')
+          : '';
+        statusAlt = `${name} is offline${lastSeen ? ` (last seen at ${lastSeen}` : ''}.`;
+        locationText = escapeHtml(lastSeen);
       }
+      const prevNames = Array.isArray(user.previousUsernames) && user.previousUsernames.length
+        ? escapeHtml(user.previousUsernames.join(', '))
+        : '';
+      return `
+        <tr>
+          <td class="first" style="width:50px;">
+            <a title="${name}" href="#" onclick="navigateTo('profile', { userId: ${user.id} }); return false;" style="display:inline-block;height:48px;width:48px;cursor:pointer;" data-avatar-user-id="${user.id}"><img src="${thumb}" height="48" width="48" border="0" alt="${name}" onerror="this.src='assets/ui/guest.png'; this.onerror=null;"></a>
+          </td><td class="first" style="width:7px;">
+            <span class="OnlineStatus"><img src="images/${isOnline ? 'online' : 'offline'}.png" alt="${statusAlt}" style="border-width:0px;"></span>
+          </td><td>
+            <a href="#" onclick="navigateTo('profile', { userId: ${user.id} }); return false;">${name}</a>
+          </td><td>
+            <div style="width:400px;overflow:hidden;word-wrap:break-word;"><span>${escapeHtml(blurbs[user.id] || '')}</span></div>
+            <div class="previous-usernames-container footnote" style="overflow:hidden;word-wrap:break-word;"><span>${prevNames}</span></div>
+          </td><td>
+            <span>${locationText}</span>
+          </td>
+        </tr>`;
+    }).join('');
+
+    pane.innerHTML = `
+      <div>
+        <table class="table" cellspacing="0" cellpadding="4" border="0" id="UsersSearchedGrid" style="width:720px;border-collapse:collapse;">
+          <tr class="table-header">
+            <th scope="col">Avatar</th><th scope="col">&nbsp;</th><th scope="col">Name</th><th scope="col">Blurb</th><th scope="col">Last Seen</th>
+          </tr>${rows}
+        </table>
+      </div>`;
+
+    // BC overlays exactly as the real page rendered them: a sibling img after the avatar,
+    // align=left + position:relative;top:-12px, the *_small icon variants.
+    for (const user of users) {
+      const anchor = pane.querySelector(`a[data-avatar-user-id="${user.id}"]`);
+      if (!anchor) continue;
+      try {
+        const hasPremium = await getPremiumStatus(user.id);
+        if (hasPremium === true) {
+          const bcType = isRandomizeBCEnabled() ? getBCTypeForUser(user.id) : 'OBC';
+          const overlay = document.createElement('img');
+          overlay.src = getBCOverlayImage(bcType, 'small');
+          overlay.alt = bcType;
+          overlay.setAttribute('align', 'left');
+          overlay.style.cssText = 'position:relative;top:-12px;';
+          anchor.appendChild(overlay);
+        }
+      } catch (e) {}
     }
-    
-    document.getElementById('peopleResultsHeader').textContent = `Search Results for "${query}"`;
-    document.getElementById('peopleSearchResults').style.display = 'block';
-    
+
   } catch (error) {
     console.error('Search error:', error);
-    document.getElementById('peopleSearchLoading').style.display = 'none';
-    document.getElementById('peopleSearchError').textContent = 'Failed to search users. Please try again.';
-    document.getElementById('peopleSearchError').style.display = 'block';
+    pane.innerHTML = '';
+    errorBox.textContent = 'Failed to search users. Please try again.';
   }
 }
 

@@ -1,7 +1,27 @@
+/* Browse Reviews page — Rovloo-specific feature (no 2013 original exists), skinned entirely
+   with VERIFIED 2013 vocabulary so it reads as a native page of the era:
+   - tab strip: the real tab_white_31h_t1/t2.png sprite tabs (verbatim later-generation rules
+     from main-bundle-2013.css — same family as the Groups tabs; active -62px, hover -31px).
+   - controls: the grey #C4C4C4 SearchControls bar idiom (Groups/Browse pages) with NATIVE
+     input/submit/selects (2013 shipped these unstyled).
+   - list: GroupWallPane alternating-row look (#F2F2F2 odd / #fff even, Arial, #095fb5 links).
+   Scoped to #reviews-page-content so the shared ReviewComponent keeps its own look elsewhere
+   (game-detail). Loads AFTER styles/components/reviews.css, so equal-specificity ties win here. */
 
+/* ===== Page frame ===== */
+#reviews-page-content { width: 890px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #000; }
+#reviews-page-content .reviews-container { text-align: left; }
 
+/* ===== Tab strip (verbatim white-sprite StandardTabGray family — the EXACT groups module:
+   inline-block tabs on the baseline, 30px strip vs 31px tabs so the active face merges into
+   the pane; NO floats — floats pin tabs to the strip top, sitting them visibly higher). ===== */
+#reviews-page-content .ReviewsTabs_Container { display: block; height: 30px; }
 #reviews-page-content .StandardTabGray,
 #reviews-page-content .StandardTabGrayActive {
+    display: inline-block;
+    z-index: 2;
+    font-size: 16px;
+    font-weight: bold;
     position: relative;
     background: url('../../images/cssspecific/rbx2/tab_white_31h_t1.png') no-repeat left top;
     background-position: left 0;
@@ -10,13 +30,11 @@
     text-align: left;
     cursor: pointer;
     margin: 0;
-    z-index: 0;
-    display: block;
-    float: none;
+    border: 0;
 }
-
 #reviews-page-content .StandardTabGray > span,
 #reviews-page-content .StandardTabGrayActive > span {
+    display: block;
     background: url('../../images/cssspecific/rbx2/tab_white_31h_t2.png') no-repeat right top;
     background-position: right 0;
     height: 25px;
@@ -26,430 +44,127 @@
     font-family: Arial, Helvetica, sans-serif;
     font-size: 16px;
     font-weight: bold;
-    display: block;
     white-space: nowrap;
 }
-
-#reviews-page-content .StandardTabGrayActive {
-    background: url('../../images/cssspecific/rbx2/tab_white_31h_t1.png') no-repeat left bottom;
-    margin-bottom: -1px;
-    z-index: 3;
-}
-
-#reviews-page-content .StandardTabGrayActive > span {
-    background: url('../../images/cssspecific/rbx2/tab_white_31h_t2.png') no-repeat right bottom;
-}
-
-#reviews-page-content .tab-count {
-    display: inline !important;
-    background: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    height: auto !important;
-    line-height: inherit !important;
-    font-size: inherit !important;
-}
-
-#reviews-page-content .Header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-#reviews-page-content .Header .rovloo-icon {
-  width: 24px;
-  height: 24px;
-}
-
-#reviews-page-content .Header .total-reviews {
-  margin-left: auto;
-  font-size: 12px;
-}
-
-.browse-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: -20px;
-  padding: 15px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.search-box {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-  min-width: 250px;
-}
-
-.search-input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  font-size: 13px;
-}
-
-.search-btn {
-  padding: 8px 16px;
-}
-
-.filter-controls {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.filter-group label {
-  font-size: 12px;
-  color: #666;
-}
-
-.filter-select {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  font-size: 12px;
-  background: #fff;
-}
-
-.browse-reviews-list {
-  min-height: 200px;
-}
-
-.browse-reviews-list .reviews-loading,
-.browse-reviews-list .reviews-error,
-.browse-reviews-list .no-reviews {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-}
-
-.browse-reviews-list .reviews-loading img {
-  width: 50px;
-  height: 50px;
-}
-
-.browse-review-item {
-  display: flex;
-  gap: 15px;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-bottom: 12px;
-  background: #fff;
-}
-
-.browse-review-item:hover {
-  background: #fafafa;
-}
-
-.review-game-info {
-  flex-shrink: 0;
-  width: 100px;
-  text-align: center;
-}
-
-.game-thumb-link {
-  display: block;
-  margin-bottom: 8px;
-}
-
-.game-thumbnail {
-  width: 100px;
-  height: 100px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  object-fit: cover;
-}
-
-.game-name-link {
-  display: block;
-  font-size: 11px;
-  color: #00F;
-  text-decoration: none;
-  word-wrap: break-word;
-}
-
-.game-name-link:hover {
-  text-decoration: underline;
-}
-
-.browse-review-item .review-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.browse-review-item .review-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.browse-review-item .author-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-.browse-review-item .author-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.browse-review-item .author-name-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.browse-review-item .author-link {
-  display: block;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.browse-review-item .author-name {
-  font-weight: bold;
-  color: #333;
-  text-decoration: none;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.browse-review-item .author-name:hover {
-  text-decoration: underline;
-  color: #0066cc;
-}
-
-.browse-review-item .author-score {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 1px 4px;
-  border-radius: 3px;
-}
-
-.browse-review-item .author-score.positive {
-  color: #2e7d32;
-  background: rgba(76, 175, 80, 0.15);
-}
-
-.browse-review-item .author-score.negative {
-  color: #c62828;
-  background: rgba(244, 67, 54, 0.15);
-}
-
-.browse-review-item .author-score.neutral {
-  color: #666;
-  background: rgba(0, 0, 0, 0.08);
-}
-
-.browse-review-item .author-username {
-  font-size: 11px;
-  color: #666;
-}
-
-.browse-review-item .review-meta {
-  margin-left: auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  font-size: 11px;
-}
-
-.browse-review-item .like-indicator {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: bold;
-}
-
-.browse-review-item .like-indicator img {
-  width: 14px;
-  height: 14px;
-}
-
-.browse-review-item .like-indicator.like {
-  color: #4CAF50;
-}
-
-.browse-review-item .like-indicator.dislike {
-  color: #f44336;
-}
-
-.browse-review-item .playtime-badge {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #666;
-}
-
-.browse-review-item .playtime-icon {
-  width: 12px;
-  height: 12px;
-}
-
-.browse-review-item .review-date {
-  color: #999;
-}
-
-.browse-review-item .edited-indicator {
-  color: #999;
-  font-style: italic;
-}
-
-.browse-review-item .review-text {
-  margin: 10px 0;
-  line-height: 1.5;
-  color: #333;
-  font-size: 13px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.browse-review-item .review-footer {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #eee;
-}
-
-.vote-stats {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  font-size: 12px;
-}
-
-.vote-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #666;
-}
-
-.vote-item img {
-  width: 14px;
-  height: 14px;
-}
-
-.vote-item.upvotes {
-  color: #4CAF50;
-}
-
-.vote-item.downvotes {
-  color: #f44336;
-}
-
-.vote-score {
-  font-weight: bold;
-}
-
-.vote-score.positive {
-  color: #4CAF50;
-}
-
-.vote-score.negative {
-  color: #f44336;
-}
-
-.vote-score.neutral {
-  color: #666;
-}
-
-.browse-pagination {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.browse-pagination .pagination-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 8px;
-}
-
-.browse-pagination .pagination-btn {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.browse-pagination .pagination-btn:hover:not(:disabled) {
-  background: #f0f0f0;
-}
-
-.browse-pagination .pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.browse-pagination .pagination-btn.current {
-  background: #2196F3;
-  color: white;
-  border-color: #2196F3;
-}
-
-.browse-pagination .page-numbers {
-  display: flex;
-  gap: 3px;
-}
-
-.browse-pagination .pagination-ellipsis {
-  padding: 6px 8px;
-  color: #666;
-}
-
-.browse-pagination .pagination-info {
-  font-size: 11px;
-  color: #666;
-}
-
-.browse-review-item .review-text code.inline-code {
-  background: #f0f0f0;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  padding: 1px 4px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.9em;
-  color: #c7254e;
-}
-
-.browse-review-item .review-text strong {
-  font-weight: bold;
-}
-
-.browse-review-item .review-text em {
-  font-style: italic;
-}
-
-.browse-review-item .review-text del {
-  text-decoration: line-through;
-  color: #888;
-}
-
-.browse-review-item .review-text a.markdown-link {
-  color: #0066cc;
-  text-decoration: underline;
-}
-
-.browse-review-item .review-text a.markdown-link:hover {
-  color: #004499;
-  text-decoration: none;
-}
+/* Drop the tabs 2px into the pane (same as the groups module's #GroupsPeopleContainer rule) —
+   without this the inactive tabs hover above the pane and its top border line shows beneath them. */
+#reviews-page-content .StandardTabGray,
+#reviews-page-content .StandardTabGrayActive { top: 2px; }
+#reviews-page-content .StandardTabGrayActive { background-position: left -62px; }
+#reviews-page-content .StandardTabGrayActive > span { background-position: right -62px; }
+#reviews-page-content .StandardTabGray:hover { background-position: left -31px; }
+#reviews-page-content .StandardTabGray:hover > span { background-position: right -31px; }
+#reviews-page-content .tab-count { display: inline; background: none; padding: 0; margin: 0; font-size: inherit; color: inherit; }
+
+/* ===== Content pane: the StandardBox look (gradient strip + #AAA border) ===== */
+#reviews-page-content .StandardBoxGray {
+    position: relative;
+    top: 0; /* game-detail.css's bare .StandardBoxGray{top:-1px} loads later — pin it */
+    z-index: 1;
+    background: url('../../images/cssspecific/rbx2/standardBox_01_bkg.png') top repeat-x white;
+    border: 1px solid #AAA;
+    padding: 9px;
+    box-sizing: border-box;
+    color: #000;
+    min-height: 100px;
+    border-radius: 0;
+    box-shadow: none;
+}
+#reviews-page-content .StandardBoxGray a { color: #095fb5; }
+
+/* ===== Controls: grey SearchControls bar with native controls ===== */
+#reviews-page-content .browse-controls {
+    height: 28px;
+    clear: both;
+    display: block;
+    background: #C4C4C4;
+    border: 1px solid #AAA;
+    margin: 0 0 10px 0;
+    padding: 2px 5px;
+    text-align: center;
+    border-radius: 0;
+    box-shadow: none;
+}
+#reviews-page-content .browse-controls .content { text-align: center; line-height: 26px; }
+#reviews-page-content .browse-controls input,
+#reviews-page-content .browse-controls select { all: revert; font-family: Arial, Helvetica, sans-serif; font-size: 12px; vertical-align: middle; }
+#reviews-page-content #reviewSearchInput { width: 220px; }
+#reviews-page-content .reviews-filter-label { font-weight: bold; margin: 0 3px 0 10px; vertical-align: middle; }
+
+/* ===== Review list: GroupWallPane alternating rows ===== */
+#reviews-page-content .browse-reviews-list { background: #fff; }
+#reviews-page-content .review-item {
+    background: #fff;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 10px;
+    clear: both;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+}
+#reviews-page-content .review-item:nth-child(odd) { background-color: #F2F2F2; }
+
+/* Header pieces: flat, 2013 link blue, gray metadata */
+#reviews-page-content .review-item .author-avatar { width: 48px; height: 48px; border: 1px solid #fff; border-radius: 0; background: #fff; }
+#reviews-page-content .review-item .author-name { color: #095fb5; font-weight: bold; font-size: 12px; }
+#reviews-page-content .review-item .author-name:hover { text-decoration: underline; }
+#reviews-page-content .review-item .author-username { color: #808080; font-size: 11px; }
+#reviews-page-content .review-item .author-score {
+    background: none; border: none; border-radius: 0; box-shadow: none;
+    color: #808080; font-size: 11px; padding: 0;
+}
+#reviews-page-content .review-item .review-meta { font-size: 11px; color: #808080; }
+#reviews-page-content .review-item .like-indicator,
+#reviews-page-content .review-item .playtime-badge {
+    background: none; border: none; border-radius: 0; box-shadow: none;
+    color: #808080; font-size: 11px; padding: 0;
+}
+#reviews-page-content .review-item .review-date,
+#reviews-page-content .review-item .edited-indicator { color: #808080; font-size: 8pt; }
+
+/* Game context block (browse mode): plain 2013 link + gray inline stats */
+#reviews-page-content .review-item .game-context { background: none; border: none; border-radius: 0; padding: 0; }
+#reviews-page-content .review-item .game-name-link { color: #095fb5; font-weight: bold; font-size: 12px; }
+#reviews-page-content .review-item .game-name-link:hover { text-decoration: underline; }
+#reviews-page-content .review-item .game-stats-inline span { color: #808080; font-size: 11px; }
+#reviews-page-content .review-item .game-thumbnail { border: 1px solid #ccc; border-radius: 0; }
+
+/* Body text */
+#reviews-page-content .review-item .review-text { font-size: 12px; color: #000; line-height: 1.4; }
+#reviews-page-content .review-item .show-more-btn { all: revert; color: #095fb5; background: none; border: none; padding: 0; cursor: pointer; font-size: 11px; text-decoration: underline; }
+
+/* Footer controls: native buttons (2013 shipped form controls unstyled) */
+#reviews-page-content .review-item .vote-btn,
+#reviews-page-content .review-item .reply-toggle-btn,
+#reviews-page-content .review-item .edit-review-btn-inline,
+#reviews-page-content .review-item .delete-review-btn-inline {
+    all: revert;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+#reviews-page-content .review-item .vote-btn img { width: 14px; height: 14px; vertical-align: text-bottom; }
+#reviews-page-content .review-item .vote-score { background: none; border: none; border-radius: 0; color: #808080; font-size: 11px; padding: 0; }
+#reviews-page-content .review-item .reply-icon { display: none; } /* 💬 emoji — not 2013 */
+#reviews-page-content .review-item .toggle-arrow { font-size: 9px; }
+
+/* Replies thread: nested wall look */
+#reviews-page-content .replies-thread { background: none; border: none; border-radius: 0; margin-left: 58px; }
+#reviews-page-content .replies-thread .reply-item { background: #fff; border: 1px solid #E5E5E5; border-radius: 0; box-shadow: none; }
+
+/* ===== Pagination: plain centered native buttons ===== */
+#reviews-page-content .reviews-pagination,
+#reviews-page-content .browse-pagination { clear: both; text-align: center; padding-top: 10px; }
+#reviews-page-content .pagination-btn { all: revert; font-family: Arial, Helvetica, sans-serif; font-size: 11px; cursor: pointer; margin: 0 2px; }
+#reviews-page-content .pagination-btn.current { font-weight: bold; }
+#reviews-page-content .pagination-ellipsis { color: #808080; margin: 0 3px; }
+
+/* ===== Section headers / helper text ===== */
+#reviews-page-content .my-reviews-header p,
+#reviews-page-content .admin-picks-header p { color: #808080; font-size: 11px; margin: 0 0 10px 0; }
+#reviews-page-content .reviews-loading { text-align: center; color: #666; padding: 20px; }
+#reviews-page-content .reviews-error { text-align: center; color: Red; padding: 20px; }
+#reviews-page-content .reviews-error .Button { all: revert; cursor: pointer; }

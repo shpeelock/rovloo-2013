@@ -85,6 +85,10 @@ async function populateGamePassData(gamePass) {
     }
   }
 
+  // Created:/Updated: stat rows (authentic 2013 Item.aspx shows both). The v1 details endpoint
+  // has no dates — fetch product-info; hide the rows if unavailable (no fake data).
+  populateGamePassDates(gamePassId);
+
   let creatorId = null;
   let creatorName = 'Unknown';
   let creatorType = 'User';
@@ -273,6 +277,42 @@ function resetGamePassPage() {
   const container = document.getElementById('gamepass-content');
   if (container) {
     container.innerHTML = '';
+  }
+}
+
+async function populateGamePassDates(gamePassId) {
+  const createdEl = document.getElementById('gamepass-created');
+  const updatedEl = document.getElementById('gamepass-updated');
+  if (!createdEl && !updatedEl) return;
+
+  const hideRows = () => {
+    if (createdEl?.parentElement) createdEl.parentElement.style.display = 'none';
+    if (updatedEl?.parentElement) updatedEl.parentElement.style.display = 'none';
+  };
+
+  try {
+    const info = await window.roblox.getGamePassProductInfo?.(gamePassId);
+    const created = info?.Created || info?.created;
+    const updated = info?.Updated || info?.updated;
+    if (!created && !updated) { hideRows(); return; }
+
+    // Archive format: Created = M/D/YYYY, Updated = relative ("6 years ago")
+    const fmtDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+    const fmtRel = (d) => {
+      const days = Math.floor((Date.now() - new Date(d)) / 86400000);
+      if (days < 1) return 'today';
+      if (days === 1) return 'yesterday';
+      if (days < 30) return days + ' days ago';
+      if (days < 365) { const m = Math.floor(days / 30); return m + (m === 1 ? ' month ago' : ' months ago'); }
+      const y = Math.floor(days / 365); return y + (y === 1 ? ' year ago' : ' years ago');
+    };
+    if (createdEl && created) createdEl.textContent = fmtDate(created);
+    else if (createdEl?.parentElement) createdEl.parentElement.style.display = 'none';
+    if (updatedEl && updated) updatedEl.textContent = fmtRel(updated);
+    else if (updatedEl?.parentElement) updatedEl.parentElement.style.display = 'none';
+  } catch (e) {
+    console.warn('Game pass product info unavailable:', e);
+    hideRows();
   }
 }
 

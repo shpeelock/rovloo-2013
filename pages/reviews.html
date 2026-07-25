@@ -1,8 +1,12 @@
-<!-- Browse Reviews Page - Rovloo Community Reviews -->
+<!-- Browse Reviews Page - Rovloo Community Reviews.
+     Rovloo-specific (no 2013 original exists) — chrome built ENTIRELY from verified 2013
+     vocabulary: the tab_white_31h sprite tab strip (real Groups tabs), the grey #SearchControls
+     bar idiom (real Groups/Browse search bars, native controls), StandardBox panes, and the
+     GroupWallPane alternating-row list look (skinned in styles/pages/reviews.css). -->
 <div id="reviews-page-content">
     <div class="reviews-container">
-        <!-- Tabs -->
-        <div style="display: flex; gap: 2px; margin-bottom: -2px;">
+        <!-- Tab strip: authentic StandardTabGray white-sprite tabs -->
+        <div class="ReviewsTabs_Container">
             <div id="ReviewsTab" class="StandardTabGrayActive" style="cursor: pointer;">
                 <span>Reviews (<span id="totalReviewsCount" class="tab-count">...</span>)</span>
             </div>
@@ -12,29 +16,25 @@
             <div id="AdminPicksTab" class="StandardTabGray" style="cursor: pointer;">
                 <span>Admin Picks</span>
             </div>
+            <div style="clear: both;"></div>
         </div>
 
         <!-- Tab Content Container -->
         <div class="StandardBoxGray">
             <!-- Reviews Content -->
             <div id="ReviewsContent">
-                <!-- Search and Filter Controls -->
-                <div class="browse-controls">
-                    <div class="search-box">
-                        <input type="text" id="reviewSearchInput" placeholder="Search by game name..." class="search-input">
-                        <button id="reviewSearchBtn" class="Button search-btn">Search</button>
-                    </div>
-                    <div class="filter-controls">
-                        <div class="filter-group">
-                            <label>Filter:</label>
-                            <select id="browseReviewFilter" class="filter-select">
-                                <option value="all">All Reviews</option>
-                                <option value="like">Likes Only</option>
-                                <option value="dislike">Dislikes Only</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Sort:</label>
+                <!-- Search and Filter Controls: the grey 2013 SearchControls bar, native inputs -->
+                <div class="browse-controls" id="ReviewsSearchControls">
+                    <div class="content">
+                        <input type="text" id="reviewSearchInput" maxlength="100" placeholder="Search by game name...">
+                        <input type="submit" id="reviewSearchBtn" value="Search">
+                        <span class="reviews-filter-label">Filter:</span>
+                        <select id="browseReviewFilter">
+                            <option value="all">All Reviews</option>
+                            <option value="like">Likes Only</option>
+                            <option value="dislike">Dislikes Only</option>
+                        </select>
+                        <span class="reviews-filter-label">Sort:</span>
                             <select id="browseReviewSort" class="filter-select">
                                 <option value="quality">Quality</option>
                                 <optgroup label="By Time">
@@ -68,7 +68,6 @@
                                     <option value="trending">Trending (Rising games)</option>
                                 </optgroup>
                             </select>
-                        </div>
                     </div>
                 </div>
 

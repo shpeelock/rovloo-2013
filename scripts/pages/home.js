@@ -1,24 +1,29 @@
 
 
 let currentFeaturedGameRequestId = 0;
-let currentHomeUserAvatarRequestId = 0;
 
 async function loadHomePage() {
   const container = document.getElementById('page-home');
   if (!container) return;
 
   try {
-    
+    // Authentic 2013 behavior: #page-home is the LOGGED-OUT marketing landing (Default.aspx).
+    // The real site never mutates this page in place on login — the login form POSTs and
+    // navigates the browser away to the My ROBLOX dashboard entirely. Every call site that can
+    // reach loadHomePage() (nav clicks, post-login redirects, browser back, etc.) funnels
+    // through here, so gating here is the single place that keeps a logged-in user off the
+    // landing page, matching the real site's server-side redirect.
+    const isLoggedIn = await window.RobloxClient.auth.isLoggedIn();
+    if (isLoggedIn) {
+      navigateTo('myroblox');
+      return;
+    }
+
     initVideoPlayer();
 
     loadFeaturedGame();
 
     loadRandomFacts();
-
-    const isLoggedIn = await window.RobloxClient.auth.isLoggedIn();
-    if (isLoggedIn) {
-      await updateLoggedInUI();
-    }
   } catch (error) {
     console.error('Failed to load home page:', error);
     if (window.showErrorPage) {
@@ -189,30 +194,34 @@ async function loadFeaturedGame() {
       if (favoritesEl) favoritesEl.textContent = formatNumber(featuredGame.totalUpVotes || 0) + ' times';
 
       const universeId = featuredGame.universeId;
-      if (imageEl && universeId) {
-        try {
-          
-          if (window.roblox && window.roblox.getGameThumbnails) {
-            const thumbResult = await window.roblox.getGameThumbnails([universeId], '768x432');
-            
-            if (requestId !== currentFeaturedGameRequestId) return;
-            if (thumbResult?.data && thumbResult.data[0]?.thumbnails?.[0]?.imageUrl) {
-              imageEl.src = thumbResult.data[0].thumbnails[0].imageUrl;
+      // Fired without await so the thumbnail and the game-details fetch below
+      // load in parallel instead of one after the other.
+      (async () => {
+        if (imageEl && universeId) {
+          try {
+
+            if (window.roblox && window.roblox.getGameThumbnails) {
+              const thumbResult = await window.roblox.getGameThumbnails([universeId], '768x432');
+
+              if (requestId !== currentFeaturedGameRequestId) return;
+              if (thumbResult?.data && thumbResult.data[0]?.thumbnails?.[0]?.imageUrl) {
+                imageEl.src = thumbResult.data[0].thumbnails[0].imageUrl;
+              } else if (featuredGame.imageUrl) {
+                imageEl.src = featuredGame.imageUrl;
+              }
             } else if (featuredGame.imageUrl) {
               imageEl.src = featuredGame.imageUrl;
             }
-          } else if (featuredGame.imageUrl) {
-            imageEl.src = featuredGame.imageUrl;
+          } catch (e) {
+            console.log('Could not load game thumbnail:', e);
+            if (requestId === currentFeaturedGameRequestId && featuredGame.imageUrl) {
+              imageEl.src = featuredGame.imageUrl;
+            }
           }
-        } catch (e) {
-          console.log('Could not load game thumbnail:', e);
-          if (requestId === currentFeaturedGameRequestId && featuredGame.imageUrl) {
-            imageEl.src = featuredGame.imageUrl;
-          }
+        } else if (imageEl && featuredGame.imageUrl) {
+          imageEl.src = featuredGame.imageUrl;
         }
-      } else if (imageEl && featuredGame.imageUrl) {
-        imageEl.src = featuredGame.imageUrl;
-      }
+      })();
 
       const placeId = featuredGame.placeId || featuredGame.rootPlaceId;
       if (placeId) {
@@ -225,6 +234,12 @@ async function loadFeaturedGame() {
         if (playBtn) {
           playBtn.href = '#';
           playBtn.onclick = () => { launchGame(placeId); return false; };
+        }
+
+        // The big 2013 "Play Now" button in the TopPanel launches the featured game too
+        const bigPlayBtn = document.getElementById('FeaturedGameButton');
+        if (bigPlayBtn) {
+          bigPlayBtn.onclick = () => { launchGame(placeId); return false; };
         }
       }
 
@@ -476,57 +491,9 @@ function loadRandomFacts() {
   }, 4000); 
 }
 
-async function updateLoggedInUI() {
-  try {
-    const user = await window.RobloxClient.api.getCurrentUser();
-
-    const signUpBtn = document.querySelector('.SignUpAndPlay');
-    if (signUpBtn) {
-      signUpBtn.style.display = 'none';
-    }
-
-    const loginBox = document.querySelector('#page-home .DarkGradientBox');
-    if (loginBox && user) {
-      loginBox.style.height = 'auto';
-      loginBox.innerHTML = `
-        <div class="DGB_Header">Logged in</div>
-        <div class="DGB_Content" style="text-align: center;">
-          <div id="home-user-avatar" style="width: 140px; height: 200px; margin: 0 auto; position: relative; overflow: hidden;">
-            <img src="images/spinners/spinner100x100.gif" style="width: 100%; height: 100%; margin-top: -15px; object-fit: cover; object-position: top center;" alt="Loading..."/>
-          </div>
-        </div>
-      `;
-
-      const avatarRequestId = ++currentHomeUserAvatarRequestId;
-      loadHomeUserAvatar(user.id, avatarRequestId);
-    }
-  } catch (error) {
-    console.error('Failed to update logged in UI:', error);
-  }
-}
-
-async function loadHomeUserAvatar(userId, requestId) {
-  try {
-    const container = document.getElementById('home-user-avatar');
-    if (!container) return;
-
-    const thumbnails = await window.roblox.getUserThumbnails([userId], '352x352', 'AvatarThumbnail');
-
-    if (requestId !== undefined && requestId !== currentHomeUserAvatarRequestId) return;
-    
-    if (thumbnails?.data && thumbnails.data[0]?.imageUrl) {
-      container.innerHTML = `<img src="${thumbnails.data[0].imageUrl}" alt="Avatar" style="width: 120%; height: 120%; object-fit: cover; object-position: top center; margin-left: -10%; margin-top: -14px;">`;
-    }
-
-    if (requestId !== undefined && requestId !== currentHomeUserAvatarRequestId) return;
-
-    if (window.addObcOverlayIfPremium) {
-      await window.addObcOverlayIfPremium(container, userId);
-    }
-  } catch (error) {
-    console.error('Failed to load user avatar:', error);
-  }
-}
+// (Removed: updateLoggedInUI()/loadHomeUserAvatar() — the real 2013 Default.aspx never mutated
+// the Member Login box in place on login; loadHomePage() now redirects logged-in users to the
+// authentic My ROBLOX dashboard (#page-myroblox) instead, matching the site's real behavior.)
 
 function truncateText(text, maxLength) {
   if (!text) return '';

@@ -109,11 +109,13 @@ body.rovloo-theme .UserOnlineMessage {
   color: green !important;
 }
 
-body.rovloo-theme .AssetDetails {
+/* Excluded from the Item.aspx pages: their recommendation cells use the authentic
+   .stat-label #888 / .stat #000 palette and must not be tinted. */
+body.rovloo-theme .AssetDetails:not(#page-catalog-item .AssetDetails):not(#page-badge .AssetDetails):not(#page-gamepass .AssetDetails) {
   color: #333 !important;
 }
 
-body.rovloo-theme .AssetCreator {
+body.rovloo-theme .AssetCreator:not(#page-catalog-item .AssetCreator):not(#page-badge .AssetCreator):not(#page-gamepass .AssetCreator) {
   color: #666 !important;
 }
 

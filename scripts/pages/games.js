@@ -11,11 +11,16 @@
     let currentGenre = 'All';
     let currentCategory = 'trending'; 
     let currentPage = 1;
-    const gamesPerPage = 20;
+    const gamesPerPage = 12;   // authentic 2013 pageSize (4 per row x 3 rows in the 680px content)
 
     let currentLoadRequestId = 0;
 
     function isRequestStale(requestId) {
+        // The Rovloo showcase (#BCOnlyPlaces) loads independently of the grid's category
+        // request counter — it never renders into the grid, so it can never be stale.
+        // (A strict numeric compare made the 'showcase' id always-stale, which silently
+        // killed the showcase whenever the Rovloo cache was cold.)
+        if (requestId === 'showcase') return false;
         return requestId !== currentLoadRequestId;
     }
 
@@ -274,6 +279,7 @@
         initFilterHandlers();
         initPaginationHandlers();
         initSearchHandler();
+        initRovlooShowcase();
         console.log('Games page initialized');
 
         preloadCachedGamesIntoMemory();
@@ -349,6 +355,22 @@
         } else {
             searchBox.addEventListener('keydown', keydownHandler);
             searchBox.addEventListener('input', inputHandler);
+        }
+
+        // Authentic 2013 .SearchIconButton (magnifier at the input's right edge) triggers the search
+        const searchButton = document.getElementById('GamesSearchButton');
+        if (searchButton) {
+            const clickHandler = function() {
+                const query = searchBox.value.trim();
+                if (query.length >= 2) {
+                    performSearch(query);
+                }
+            };
+            if (window.PerformanceUtils) {
+                window.PerformanceUtils.addPageListener(PAGE_ID, searchButton, 'click', clickHandler);
+            } else {
+                searchButton.addEventListener('click', clickHandler);
+            }
         }
     }
 
@@ -2074,14 +2096,17 @@
             }
         }
 
+        // Authentic 2013 pager: arrows stay visible; the unavailable one greys via the sprite's
+        // .disabled band (matching the archive <span class="pager previous disabled">).
         if (prevBtn) {
-            prevBtn.style.visibility = currentPage > 1 ? 'visible' : 'hidden';
+            prevBtn.style.visibility = 'visible';
+            prevBtn.querySelector('.pager')?.classList.toggle('disabled', currentPage <= 1);
         }
         if (nextBtn) {
-            
             const hasMorePages = currentPage < totalPages;
             const hasMoreSearchResults = isSearchMode && searchNextPageToken;
-            nextBtn.style.visibility = (hasMorePages || hasMoreSearchResults) ? 'visible' : 'hidden';
+            nextBtn.style.visibility = 'visible';
+            nextBtn.querySelector('.pager')?.classList.toggle('disabled', !(hasMorePages || hasMoreSearchResults));
         }
     }
 
@@ -2207,11 +2232,11 @@
                         <div class="GameName">
                             <a href="#game-detail?id=${placeId}&universe=${universeId}&genre=${encodeURIComponent(genre)}" title="${gameName}">${gameName}</a>
                         </div>
-                        <div class="PlayerCount">
-                            <span>${formatNumber(playerCount)} players online</span>
+                        <span class="roblox-player-count" style="float: left; font-size: 12px; font-weight: bold">${formatNumber(playerCount)}&nbsp;</span><span class="online-player roblox-player-text" style="float: left">players online</span>
+                        <div class="GenreIcons" style="float: right;">
                             <img class="GenreIcon" src="images/GenreIcons/${genreInfo.icon}" alt="${genreInfo.name}" title="${genreInfo.name}">
                         </div>
-                        <div class="CreatorName" style="margin-top: 4px !important;" title="by ${creatorName}">
+                        <div class="CreatorName" style="clear: both; float: left" title="by ${creatorName}">
                             by ${creatorDisplay}
                         </div>
                     </div>
@@ -2519,8 +2544,19 @@
 
     async function preloadCachedGamesIntoMemory() {
         try {
-            
-            const recommendedResult = await window.roblox?.getCachedRecommendedGames?.();
+            // One bundled IPC call when the app supports it; the serial
+            // three-call path is kept for older builds.
+            let recommendedResult, recentResult, rovlooResult;
+            if (window.roblox?.getCachedGamesBundle) {
+                const bundle = await window.roblox.getCachedGamesBundle();
+                recommendedResult = bundle?.recommended;
+                recentResult = bundle?.recent;
+                rovlooResult = bundle?.rovloo;
+            } else {
+                recommendedResult = await window.roblox?.getCachedRecommendedGames?.();
+                recentResult = await window.roblox?.getCachedRecentGames?.();
+                rovlooResult = await window.roblox?.getCachedRovlooGames?.();
+            }
             if (recommendedResult?.cached && recommendedResult?.data?.length > 0) {
                 console.log('[Preload] Loading', recommendedResult.data.length, 'recommended games into client memory');
                 const convertedGames = recommendedResult.data.map(game => ({
@@ -2546,14 +2582,12 @@
                 setRecommendedGamesCache(convertedGames);
             }
 
-            const recentResult = await window.roblox?.getCachedRecentGames?.();
             if (recentResult?.cached && recentResult?.data?.length > 0) {
                 console.log('[Preload] Loading', recentResult.data.length, 'recent games into client memory');
                 
                 setRecentGamesCache(recentResult.data);
             }
 
-            const rovlooResult = await window.roblox?.getCachedRovlooGames?.();
             if (rovlooResult?.cached && rovlooResult?.data?.length > 0) {
                 console.log('[Preload] Loading', rovlooResult.data.length, 'Rovloo games into client memory');
                 
@@ -3294,6 +3328,164 @@
         }
 
         console.log(`[GenreLookup] Client-side enriched ${enrichedCount}/${gamesNeedingGenre.length} games with genre data`);
+    }
+
+    // ------------------------------------------------------------------
+    // Rovloo Reviewed showcase — the authentic 2013 #BCOnlyPlaces block
+    // (formerly "Builders Club Games", pageSize 2, arrow paging) repurposed
+    // to surface Rovloo-reviewed games above the grid. Fails silently
+    // (block stays display:none) when no Rovloo data is available.
+    // ------------------------------------------------------------------
+    let showcaseGames = [];
+    let showcasePage = 0;
+    const SHOWCASE_PAGE_SIZE = 2;   // authentic BCOnly pageSize
+
+    function buildShowcaseCard(game) {
+        const playerCount = game.playerCount || game.playing || game.totalPlaying || 0;
+        const gameName = game.name || 'Unknown Game';
+        const universeId = game.universeId || game.id || 0;
+        const placeId = game.placeId || game.rootPlaceId || universeId;
+        const genre = game.genre || 'All';
+        const genreInfo = getGenreInfo(genre);
+        const imageUrl = game.imageUrl || game.thumbnailUrl || '';
+        const visits = game.visits || 0;
+        const favorites = game.favoritedCount || 0;
+        return `
+            <div class="GameItem">
+                <div class="AlwaysShown">
+                    <div class="GameThumbnail">
+                        <a href="#game-detail?id=${placeId}&universe=${universeId}&genre=${encodeURIComponent(genre)}">
+                            <img src="${imageUrl}" alt="${gameName}" width="160" height="100"
+                                 data-placeid="${placeId}" data-universeid="${universeId}"
+                                 style="opacity: ${imageUrl ? '1' : '0.3'}"
+                                 onload="this.style.opacity='1'" onerror="this.style.opacity='0.2';"/>
+                        </a>
+                    </div>
+                    <div class="GameName">
+                        <a href="#game-detail?id=${placeId}&universe=${universeId}&genre=${encodeURIComponent(genre)}" title="${gameName}">${gameName}</a>
+                    </div>
+                    <span class="roblox-player-count" style="float: left; font-size: 12px; font-weight: bold">${formatNumber(playerCount)}&nbsp;</span><span class="online-player roblox-player-text" style="float: left">players online</span>
+                    <div class="GenreIcons" style="float: right;">
+                        <img class="GenreIcon" src="images/GenreIcons/${genreInfo.icon}" alt="${genreInfo.name}" title="${genreInfo.name}">
+                    </div>
+                </div>
+                <div class="HoverShown">
+                    <div class="StatsPlayed">Played ${formatNumber(visits)} times</div>
+                    <div class="StatsFavorited">Favorited ${formatNumber(favorites)} times</div>
+                    ${game.rovlooReviewCount ? `<div class="StatsUpdated">${formatNumber(game.rovlooReviewCount)} Rovloo reviews</div>` : ''}
+                </div>
+            </div>`;
+    }
+
+    function renderShowcasePage() {
+        const content = document.getElementById('BCOnlyGamesContent');
+        const prevBtn = document.getElementById('BCOnlyGamesContentPrevNavButton');
+        const nextBtn = document.getElementById('BCOnlyGamesContentNextNavButton');
+        if (!content || showcaseGames.length === 0) return;
+
+        const totalPages = Math.ceil(showcaseGames.length / SHOWCASE_PAGE_SIZE);
+        if (showcasePage < 0) showcasePage = 0;
+        if (showcasePage >= totalPages) showcasePage = totalPages - 1;
+
+        const slice = showcaseGames.slice(showcasePage * SHOWCASE_PAGE_SIZE, (showcasePage + 1) * SHOWCASE_PAGE_SIZE);
+        content.innerHTML = slice.map(buildShowcaseCard).join('');
+
+        if (prevBtn) prevBtn.classList.toggle('disabled', showcasePage <= 0);
+        if (nextBtn) nextBtn.classList.toggle('disabled', showcasePage >= totalPages - 1);
+
+        loadGameThumbnails(slice);
+    }
+
+    async function initRovlooShowcase() {
+        const pane = document.getElementById('BCOnlyPlaces');
+        if (!pane) return;
+
+        const prevBtn = document.getElementById('BCOnlyGamesContentPrevNavButton');
+        const nextBtn = document.getElementById('BCOnlyGamesContentNextNavButton');
+        if (prevBtn && !prevBtn.dataset.wired) {
+            prevBtn.dataset.wired = 'true';
+            prevBtn.addEventListener('click', () => {
+                if (prevBtn.classList.contains('disabled')) return;
+                showcasePage--; renderShowcasePage();
+            });
+        }
+        if (nextBtn && !nextBtn.dataset.wired) {
+            nextBtn.dataset.wired = 'true';
+            nextBtn.addEventListener('click', () => {
+                if (nextBtn.classList.contains('disabled')) return;
+                showcasePage++; renderShowcasePage();
+            });
+        }
+
+        const showPane = () => {
+            pane.style.display = '';
+            document.querySelector('[roblox-bc-games-clear]')?.classList.add('showcase-divider');
+        };
+        const applyGames = (games) => {
+            showcaseGames = games;
+            showcasePage = 0;
+            renderShowcasePage();
+            showPane();
+        };
+
+        // 1) Show the section IMMEDIATELY with loading placeholders — the feature must be
+        //    discoverable even while the Rovloo pipeline warms up.
+        const content = document.getElementById('BCOnlyGamesContent');
+        if (content && showcaseGames.length === 0) {
+            const skeleton = `
+                <div class="GameItem showcase-skeleton"><div class="AlwaysShown">
+                    <div class="GameThumbnail"><div class="skeleton-box" style="width:160px;height:100px;"></div></div>
+                    <div class="skeleton-box" style="width:120px;height:12px;margin-top:4px;"></div>
+                    <div class="skeleton-box" style="width:90px;height:11px;margin-top:4px;"></div>
+                </div></div>`;
+            content.innerHTML = skeleton + skeleton;
+            showPane();
+        } else if (showcaseGames.length > 0) {
+            // revisit with data already in memory — render straight away
+            renderShowcasePage();
+            showPane();
+        }
+
+        // 2) Stale-while-revalidate: the cache TTL is only 5 min, but week-old data is fine
+        //    for a discovery teaser — render whatever localStorage has RIGHT NOW.
+        let hasRendered = showcaseGames.length > 0;
+        if (!hasRendered) {
+            try {
+                const raw = localStorage.getItem(ROVLOO_GAMES_CACHE_KEY);
+                const parsed = raw ? JSON.parse(raw) : null;
+                if (parsed?.data?.length > 0) {
+                    applyGames(sortRovlooGames([...parsed.data]));
+                    hasRendered = true;
+                    console.log('[Rovloo] Showcase rendered from stale cache (' + parsed.data.length + ' games), refreshing in background');
+                }
+            } catch (e) { /* corrupt cache — fall through to live load */ }
+        }
+
+        // 3) Fresh load in the background; poll while the main-process preload finishes.
+        const tryLoad = async () => {
+            const games = await loadRovlooReviewedGames('showcase');
+            if (!games || games.length === 0) return false;
+            applyGames(games);
+            hasRendered = true;
+            return true;
+        };
+        try {
+            if (await tryLoad()) return;
+            let attempts = 0;
+            const poll = setInterval(async () => {
+                attempts++;
+                try {
+                    if (await tryLoad() || attempts >= 8) {
+                        clearInterval(poll);
+                        // nothing ever arrived and no stale data -> hide the skeleton
+                        if (!hasRendered && attempts >= 8) pane.style.display = 'none';
+                    }
+                } catch (e) { clearInterval(poll); if (!hasRendered) pane.style.display = 'none'; }
+            }, 2500);
+        } catch (e) {
+            console.warn('[Rovloo] Showcase unavailable:', e.message);
+            if (!hasRendered) pane.style.display = 'none';
+        }
     }
 
     async function loadRovlooReviewedGames(requestId) {

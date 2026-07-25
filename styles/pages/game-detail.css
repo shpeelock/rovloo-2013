@@ -39,16 +39,25 @@
     padding-right: 10px;
 }
 
-/* Left and right column layout */
+/* Left and right column layout.
+   CSS/2013/page-2013.css (the theme's own trimmed base bundle, loaded very early) has an
+   UNRELATED generic .left-column/.right-column pair for the home-page news feed's 230/470/230
+   three-column layout, including margin-left:10px on .right-column. It's a bare 1-class
+   selector so our 2-class .place-item.redesign selector already wins on width/float, but we
+   never set margin-left ourselves — that property passed straight through unopposed and
+   overflowed the razor-tight 762px #Item box (500+20+240+10 = 770 > 762), wrapping the columns
+   onto separate lines. Reset it explicitly. */
 .place-item.redesign .left-column {
     width: 500px;
     float: left;
     margin-right: 20px;
+    margin-left: 0;
 }
 
 .place-item.redesign .right-column {
     width: 240px;
     float: left;
+    margin-left: 0;
 }
 
 /* Item media (thumbnail) */
@@ -135,27 +144,53 @@
     background-position: 5px -85px;
     margin-left: 5px;
     padding-left: 5px;
+    /* Divider between the two vote buttons (deliberate Rovloo addition, previously present —
+       not in the archived CSS itself, but requested and kept regardless of strict authenticity). */
+    border-left: 1px solid #ccc;
 }
 
+/* Verbatim from VotingPanel.css, including selector/order — the .selected rules include
+   .has-voted so they stay MORE specific than the plain .has-voted dimmed rules below (both are
+   4 classes otherwise, which would let source order decide the tie the wrong way). Previously
+   the JS toggled a class (.voted) that matched none of these selectors at all, so the "you
+   already voted" highlight never rendered. */
+.voting-panel .users-vote.has-voted .upvote:hover,
 .voting-panel .users-vote .upvote:hover {
     background-position: 0 -21px;
+    cursor: pointer;
 }
 
-.voting-panel .users-vote .upvote.selected {
+.voting-panel .users-vote.has-voted .upvote.selected {
     background-position: 0 -41px;
 }
 
-.voting-panel .users-vote .downvote:hover {
-    background-position: 5px -106px;
+.voting-panel .users-vote.has-voted .upvote {
+    background-position: 0 -63px;
 }
 
-.voting-panel .users-vote .downvote.selected {
+.voting-panel .users-vote.has-voted .downvote:hover,
+.voting-panel .users-vote .downvote:hover {
+    background-position: 5px -106px;
+    cursor: pointer;
+}
+
+.voting-panel .users-vote.has-voted .downvote.selected {
     background-position: 5px -149px;
 }
 
+.voting-panel .users-vote.has-voted .downvote {
+    background-position: 5px -128px;
+}
+
+/* Width tracks the row above it instead of the bundle's literal 233px: that value only matched
+   because it happened to be close to the archive's original 103+119=222px count-row width.
+   Since the count boxes were widened (140/165px) to stop large vote counts wrapping, a fixed
+   233px bar now falls well short of the row above and reads as misaligned/too-short. 100% of
+   .vote-summary (which shrink-wraps to the widest child, i.e. this row) keeps the bar's width
+   self-consistent with the count row above it regardless of future width tweaks. */
 .voting-panel .visual-container {
     position: relative;
-    width: 233px;
+    width: 100%;
     height: 5px;
     margin-top: 5px;
 }
@@ -177,17 +212,34 @@
     background-color: #ccc;
 }
 
+/* Width widened past the bundle's literal 103/119px: those values come from the archive's own
+   tiny sample counts (9 up / 27 down). Real Rovloo games can show "999K+"/"1M+"-scale counts —
+   measured "Thumbs down: 999K+" at 11px Arial needs ~108px text + the 12px icon + margin, which
+   already exceeds 119px, and the two floated children (text span, icon span) wrap onto separate
+   lines the moment the text doesn't fit — the icon visibly drops below the text. Widened with
+   headroom and made non-wrapping so this can't recur even for unusually large counts. */
 .voting-panel .total-upvotes {
-    width: auto;
-    text-align: left;
+    width: 140px;
+    text-align: right;
     padding-right: 5px;
 }
 
 .voting-panel .total-downvotes {
-    width: auto;
+    width: 165px;
     text-align: left;
     padding-left: 5px;
 }
+
+/* Direct-child combinator (not the bundle's plain descendant selector) — our count is nested
+   one level deeper (<span>Thumbs up: <span id="VoteUpCount">9</span></span>) so JS can update
+   just the number; a descendant selector would also float that inner span and break the line. */
+.voting-panel .total-upvotes > span,
+.voting-panel .total-downvotes > span {
+    display: block;
+    white-space: nowrap;
+}
+.voting-panel .total-upvotes > span { float: right; }
+.voting-panel .total-downvotes > span { float: left; }
 
 .voting-panel .tiny-thumbs-up,
 .voting-panel .tiny-thumbs-down {
@@ -195,7 +247,9 @@
     width: 12px;
     height: 10px;
     position: relative;
-    top: 2px;
+    /* our inline layout centers via vertical-align:middle — the 2013 top:2px nudge (made for the
+       old block-float layout) pushed the icons below the text line */
+    top: 0;
     margin-right: 5px;
     display: inline-block;
 }
@@ -253,6 +307,13 @@
 #ItemContainer.PlaceItemContainer .builder .builder-image img {
     width: 50px;
     height: 50px;
+}
+/* The mini BC corner badge (22x12) must keep its natural size — the rule above would otherwise
+   stretch it to the full 50px avatar box (same "don't stretch the overlay" pattern as
+   catalog-item.css's .Avatar img.obc-overlay). */
+#ItemContainer.PlaceItemContainer .builder .builder-image img.obc-overlay {
+    width: auto;
+    height: auto;
 }
 
 #ItemContainer.PlaceItemContainer .builder .builder-name {
@@ -438,8 +499,12 @@
     border-bottom: 1px solid #ccc;
 }
 
+.divider-right {
+    border-right: 1px solid #ccc;
+}
+
 .divider-top {
-    border-top: 1px solid #ccc;
+    /*border-top: 1px solid #ccc;*/
 }
 
 /* Clear float */

@@ -1,0 +1,307 @@
+/* Game Pass page — faithful 2013 Item.aspx (same skeleton as catalog-item).
+   Geometry mirrors CSS/2013/main-2013.css Item section; re-declared here because
+   the 2011 AllCSS base loads after main-2013.css and wins equal-specificity ties. */
+
+#page-gamepass {
+    text-align: center;
+}
+#page-gamepass #gamepass-content {
+    width: 100%;
+}
+#page-gamepass #ItemContainer {
+    width: 800px;
+    margin: 10px auto 0;
+    text-align: left;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000;
+}
+
+/* Title block */
+#page-gamepass #ItemContainer h1 {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 32px;
+    font-weight: bold;
+    color: #363636;
+    letter-spacing: -1px;
+    line-height: 1.15;
+}
+#page-gamepass #ItemContainer h3.item-type {
+    display: block;
+    margin: 2px 0 20px 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    color: #666;
+}
+
+/* Layout: 320 thumb | 480 summary (268 details + 170 buy box) */
+#page-gamepass #ItemContainer #Item {
+    float: left;
+    width: 800px;
+    color: #000;                                    /* AllCSS leaks #555 */
+    font-family: Arial, Helvetica, sans-serif;      /* AllCSS leaks Verdana */
+    background: none;
+    border: none;
+    padding: 0;
+    display: block;
+}
+#page-gamepass #ItemContainer #Details {
+    width: auto;
+    overflow: visible;
+    margin: 0;                                      /* AllCSS leaks margin:10px */
+}
+#page-gamepass #assetContainer {
+    float: left;
+    width: 320px;
+    overflow: hidden;
+}
+#page-gamepass #ItemContainer #Thumbnail {
+    height: 320px;
+    width: 320px;
+    padding: 0;
+    text-align: left;
+    min-width: 0;
+    position: relative;
+}
+#page-gamepass #Thumbnail a {
+    display: inline-block;
+    height: 320px;
+    width: 320px;
+}
+#page-gamepass #Thumbnail a img {
+    width: 320px;
+    height: 320px;
+    border: 0;
+}
+
+#page-gamepass #ItemContainer #Summary {
+    float: left;
+    display: block;
+    margin-bottom: 20px;
+    padding: 0;
+    width: 480px;
+    border: none;                                   /* AllCSS leaks dashed 1px #555 */
+    background: none;                               /* AllCSS leaks #fff box */
+    font-family: Arial, Helvetica, sans-serif;      /* AllCSS leaks Verdana 11px */
+    font-size: 12px;
+    color: #000;
+}
+#page-gamepass #Summary .SummaryDetails {
+    margin: 0 20px 5px 20px;
+    padding-bottom: 40px;                           /* bundle verbatim (was 20) */
+    position: relative;
+    min-height: 249px;
+    width: 268px;
+    float: left;
+}
+
+/* Creator avatar + stats */
+#page-gamepass #ItemContainer #Summary #Creator {
+    float: left;
+    margin: 0;
+}
+#page-gamepass .SummaryDetails .Avatar {
+    padding: 0 0 8px 0;
+    width: 70px;
+    height: 70px;
+    overflow: visible;
+    display: block;
+    margin: 0;
+}
+#page-gamepass .SummaryDetails .Avatar img {
+    width: 70px;
+    height: 70px;
+    border: 0;
+    margin: 0;
+}
+#page-gamepass #Summary .item-detail {
+    float: left;
+    padding-left: 5px;      /* bundle verbatim */
+    width: 180px;
+    margin: 0;
+    clear: none;
+}
+#page-gamepass #Summary .item-detail div {
+    line-height: 1.5em;     /* bundle verbatim */
+}
+#page-gamepass #ItemContainer .stat-label {
+    color: #888;
+    font-size: 11px;        /* bundle verbatim */
+    line-height: 1.5em;
+    font-weight: normal;
+}
+#page-gamepass #ItemContainer .stat,
+#page-gamepass #ItemContainer a.stat {
+    color: #000;
+    font-size: 11px;        /* bundle verbatim */
+    line-height: 1.5em;
+}
+#page-gamepass #ItemContainer a.stat,
+#page-gamepass .badge-place-line a {
+    color: #095fb5;
+    text-decoration: none;
+}
+#page-gamepass #ItemContainer a.stat:hover,
+#page-gamepass .badge-place-line a:hover {
+    text-decoration: underline;
+}
+
+/* Description — plain 2013 text (3 ids to beat AllCSS's bordered box) */
+#page-gamepass #Summary .DescriptionPanel {
+    clear: both;
+    padding-top: 8px;
+}
+#page-gamepass #ItemContainer #Summary .Description {
+    white-space: pre-line;
+    max-height: 200px;
+    overflow: auto;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #000;
+    width: auto;
+}
+
+
+/* Get this Game Pass at */
+#page-gamepass .BadgePlaceLink {
+    overflow: hidden;
+    margin-top: 8px;
+    padding-top: 10px;
+}
+#page-gamepass #ItemContainer .divider-top {
+    border-top: 1px solid #ccc;
+}
+#page-gamepass .badge-place-line {
+    margin: 5px 0;
+    font-size: 12px;
+}
+#page-gamepass .badge-place-thumb a {
+    display: inline-block;
+    width: 110px;
+    height: 110px;
+}
+#page-gamepass .badge-place-thumb img {
+    width: 110px;
+    height: 110px;
+    border: 1px solid #ccc;
+    background: #fff;
+}
+
+/* Buy box — gray 2013 panel */
+#page-gamepass #Summary .BuyPriceBoxContainer {
+    text-align: center;
+    float: left;
+    width: 170px;
+}
+#page-gamepass #Summary .BuyPriceBox {
+    width: 158px;
+    background-color: #e1e1e1;
+    border: 1px solid #a7a7a7;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+#page-gamepass .BuyPriceBox .PriceInRobux {
+    font-size: 15px;
+    font-weight: bold;
+    margin: 3px 0 5px;
+}
+#page-gamepass .price-robux {
+    color: #060;
+    font-weight: bold;
+}
+#page-gamepass .price-free {
+    color: #060;
+    font-weight: bold;
+}
+#page-gamepass .price-offsale {
+    color: #999;
+    font-weight: bold;
+}
+#page-gamepass #BuyWithRobux {
+    margin: 5px 0;
+}
+#page-gamepass .owned-label {
+    display: inline-block;
+    color: #060;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 4px 0;
+}
+#page-gamepass .offsale-label {
+    display: inline-block;
+    color: #999;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 4px 0;
+}
+
+/* 2013 StyleGuide buttons — VERBATIM from the bundle. bg-btn-green.png is the 5x250 stacked-state
+   strip (btn-medium band -96, hover -128, disabled -202); the dark #013401 fallback label sits
+   under the white .btn-text pulled up 22px (markup duplicates the label). */
+#page-gamepass .btn-medium {
+    margin: 0;
+    display: inline-block;
+    zoom: 1;
+    text-align: center;
+    font-weight: bold;
+    text-decoration: none;
+    letter-spacing: -1px;
+    border-width: 1px;
+    border-style: solid;
+    cursor: pointer;
+    padding: 4px 13px 0 13px;
+    height: 28px;
+    min-width: 62px;
+    font-size: 20px;
+    line-height: 23px;
+    background-position: left -96px;
+}
+#page-gamepass .btn-medium:hover {
+    text-decoration: none;
+    background-position: left -128px;
+}
+#page-gamepass .btn-primary,
+#page-gamepass .btn-primary:link,
+#page-gamepass .btn-primary:active,
+#page-gamepass .btn-primary:visited {
+    border-color: #007001;
+    background-color: #007001;
+    background-image: url('../../images/Buttons/StyleGuide/bg-btn-green.png');
+    color: #013401;
+}
+#page-gamepass .btn-text {
+    display: block;
+    margin: 0;
+    position: relative;
+    color: #fff;
+}
+#page-gamepass .btn-medium .btn-text {
+    bottom: 22px;
+}
+#page-gamepass .btn-disabled-primary,
+#page-gamepass .btn-disabled-primary:link,
+#page-gamepass .btn-disabled-primary:active,
+#page-gamepass .btn-disabled-primary:visited {
+    background-color: #99c699;
+    background-image: url('../../images/Buttons/StyleGuide/bg-btn-green.png');
+    border-color: #99c699;
+    color: #9aa89a;
+}
+#page-gamepass .btn-disabled-primary,
+#page-gamepass .btn-disabled-primary:hover {
+    cursor: default;
+    background-position: left -202px;
+}
+
+#page-gamepass .clear {
+    clear: both;
+}

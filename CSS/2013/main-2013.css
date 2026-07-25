@@ -928,7 +928,7 @@ div.ContestBox {
     width: 900px;
     margin: 10px auto 0;
     min-height: 760px;
-    background-color: #F2F2F2;
+    background-color: #ffffff;
 }
 
 .ContestTitle {
@@ -2977,7 +2977,7 @@ input.default {
 }
 
 .GroupWallPane .AlternatingItemTemplateOdd {
-    background-color: #F2F2F2;
+    background-color: #ffffff;
     clear: both;
     padding: 10px;
 }
@@ -4977,7 +4977,7 @@ div.ConfirmationModal {
     width: 248px;
     height: auto;
     margin: 0;
-    background: #f2f2f2;
+    background: #ffffff;
     border: 1px solid #a6a6a6;
     border-top: 0 none;
     overflow: auto;
@@ -7984,7 +7984,7 @@ a.ViewTradeLink,
 }
 
 .PaymentMethodRow:hover {
-    background-color: #f2f2f2;
+    background-color: #ffffff;
     cursor: pointer;
     color: #00d900;
 }

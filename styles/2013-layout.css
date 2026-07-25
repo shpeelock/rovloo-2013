@@ -414,7 +414,7 @@ body.theme-2013 #SubNav:not(.subMenu) {
 body.theme-2013 {
     padding-top: 30px !important; /* Titlebar only - header is fixed */
     margin: 0 !important;
-    background: #f2f2f2;
+    background: #ffffff;
 }
 
 #Container {
@@ -435,7 +435,7 @@ body.theme-2013 #Body {
     width: 970px !important;
     padding: 0 !important;
     margin: 0 auto !important;
-    background: #f2f2f2;
+    background: #ffffff;
 }
 
 body.theme-2013 #Container {

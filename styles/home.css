@@ -11,7 +11,7 @@
     width: 970px;
     margin: 0 auto;
     padding: 10px 0;
-    background: #f2f2f2;
+    background: #ffffff;
     overflow: hidden;
 }
 
@@ -505,3 +505,136 @@
 .home-container .feed-item-rovloo {
     background: #f0f8ff;
 }
+
+/* =====================================================================================
+   2013 LANDING (logged-out index) — faithful port of reference/archive-landing-2013.html.
+   Rules lifted VERBATIM from reference/authentic-css/main-bundle-2013.css (cascade-resolved
+   where the bundle declares a selector twice), image paths re-pointed local. All scoped
+   #page-home so ID specificity beats the legacy .DarkGradientBox/.DGB_* rules in main.css
+   and overrides.css regardless of load order.
+   ===================================================================================== */
+
+/* TopPanel row: login box | video | big play button */
+#page-home .ShadowedStandardBox { position: relative; z-index: 0; margin-bottom: 10px; }
+#page-home div.TopPanel {
+    min-height: 252px; float: left; margin: 0; width: 970px;
+    border-bottom: 1px solid #ccc; padding: 5px 0;
+}
+/* FrontPageLoginBox (cascade-resolved: the later bundle rule narrows padding + widens to 250px) */
+#page-home div.FrontPageLoginBox {
+    float: left; padding: 0 5px; background: #e1e1e1; border: 1px solid #bcbcbc;
+    height: 248px; width: 250px; margin-right: 5px; text-align: center;
+}
+/* overrides.css leaks a 2011-era #LoginViewContainer{width:164px} that off-centers the Sign In
+   button inside the 250px box (button margin:0 auto centers against ITS parent's width, so a
+   too-narrow ancestor shifts it). Bundle only sets padding-left:10px here — no width. */
+#page-home #LoginViewContainer {
+    width: auto;
+    padding-left: 10px;
+}
+/* DarkGradientBox, 2013 flavor (cascade-resolved: bg/border stripped, black text) */
+#page-home .DarkGradientBox { background: none; width: auto; color: Black; position: relative; border: none; height: auto; }
+#page-home .DarkGradientBox .DGB_Header {
+    text-align: center; padding-bottom: 5px; border-bottom: none; text-transform: uppercase;
+    font-family: Arial; font-size: 16px; font-weight: bold; padding-top: 8px; color: #000;
+}
+#page-home .DarkGradientBox .DGB_Content { padding: 0; }
+#page-home .DarkGradientBox .DGB_Label { color: Black; text-align: left; font-family: Arial; font-size: 11px; }
+#page-home div.FrontPageLoginBox .DarkGradientBox .DGB_Label {
+    font-weight: bold; position: relative; height: 20px; line-height: 20px; padding: 1px 0;
+}
+#page-home .DarkGradientBox .DGB_TextBox { width: 155px; height: 18px; border: 1px solid #bcbcbc; background: #fff; color: #000; }
+#page-home div.FrontPageLoginBox .DarkGradientBox .DGB_TextBox { width: 95%; margin-right: 5px; padding-left: 5px; }
+#page-home .form-outer { overflow: hidden; width: 100%; clear: both; }
+#page-home .form-inner.label-column { float: left; margin-right: 5px; }
+#page-home .form-inner.input-column { overflow: hidden; text-align: left; }
+#page-home span#ForgetPasswordPrompt { font-size: 11px; padding-left: 5px; }
+#page-home div.FrontPageLoginBox span#ForgetPasswordPrompt { display: block; text-align: left; padding: 3px 0 0 0; }
+#page-home #ForgetPasswordPrompt a { color: #095fb5; text-decoration: none; }
+#page-home #ForgetPasswordPrompt a:hover { text-decoration: underline; }
+/* Sign In — the silver tile button (5x60 sprite: top band normal, bottom hover) */
+#page-home a.ControlLoginButton {
+    padding: 6px 0 !important; margin: 0 auto;
+    background: url('../images/UI/btn-big_silver_tile.png') top left;
+    display: block; width: 88px; font-family: Arial; font-size: 16px; font-weight: bold;
+    color: #000; height: 18px; border: 1px solid #bcbcbc; text-decoration: none;
+}
+#page-home a.ControlLoginButton:hover,
+#page-home a.ControlLoginButton:active { background-position: bottom left; text-decoration: none; }
+/* Not a member? + Sign Up */
+#page-home .separateSignUpFromLoginWithBorder { margin-top: 10px; border-top: 1px solid #bdbdbd; padding-top: 6px; }
+#page-home div.FrontPageLoginBox div.CenterSignupText { margin: 0 auto; padding-top: 0; margin-top: 12px; }
+#page-home span.not-a-member { position: relative; top: -7px; line-height: 12px; }
+/* btn-medium / btn-neutral (bundle verbatim; blue StyleGuide strip) */
+#page-home .btn-medium {
+    margin: 0; display: inline-block; zoom: 1; text-align: center; font-weight: bold;
+    text-decoration: none; letter-spacing: -1px; border-width: 1px; border-style: solid;
+    cursor: pointer; padding: 4px 13px 0 13px; height: 28px; min-width: 62px;
+    font-size: 20px; line-height: 23px; background-position: left -96px;
+}
+#page-home .btn-medium:hover { text-decoration: none; background-position: left -128px; }
+#page-home .btn-neutral,
+#page-home .btn-neutral:link,
+#page-home .btn-neutral:active,
+#page-home .btn-neutral:visited {
+    border-color: #0852b7; background-color: #0852b7;
+    background-image: url('../images/Buttons/StyleGuide/bg-btn-blue.png');
+    color: #00243d;
+}
+#page-home .btn-text { display: block; margin: 0; position: relative; color: #fff; }
+#page-home .btn-medium .btn-text { bottom: 22px; }
+/* Video slot */
+#page-home div.FrontPageVideoIntro { display: inline; padding: 0 5px; float: left; }
+#page-home .videoURL { width: 380px; height: 250px; }
+/* Big Play Now button (btn-playnow_big2 sprite 215x428, absolute within the TopPanel box) */
+#page-home #FeaturedGameButtonContainer { border: none; width: 330px; height: 267px; }
+#page-home .FeaturedGameButton {
+    background: url('../images/buttons/btn-playnow_big2.png') no-repeat;
+    height: 214px; width: 214px; overflow: hidden; cursor: pointer;
+    position: absolute; right: 60px; top: 28px;
+}
+#page-home .FeaturedGameButton:hover { background-position: 0 -214px; }
+
+/* Columns */
+#page-home .overrideColumn1c { font-family: Verdana; float: left; padding: 5px 0 0; border-right: 1px solid #ccc; width: 659px; }
+#page-home .overrideColumn2c { font-family: Verdana; width: 310px; float: right; padding-top: 8px; }
+
+/* Right column SidePanels */
+#page-home div.SidePanel { border-top: 1px solid #CCC; font-family: Arial; padding-top: 10px; padding-bottom: 10px; padding-left: 10px; }
+#page-home div.SidePanel h2 {
+    display: block; font-size: 16px; font-weight: bold; color: black;
+    text-transform: uppercase; margin: 0 0 10px 0; letter-spacing: 0;
+}
+#page-home div.SidePanel p { color: #000; margin: 0 0 8px; }
+#page-home div.SidePanel img { margin-right: 10px; }
+#page-home .SidePanel #RobloxNews { font-size: 12px; }
+#page-home #RobloxNews a { margin-right: 5px; color: #095fb5; text-decoration: none; }
+#page-home #RobloxNews a:hover { text-decoration: underline; }
+#page-home .SidePanel a { color: #095fb5; text-decoration: none; }
+#page-home .SidePanel a:hover { text-decoration: underline; }
+#page-home .RandomFactImageContainer { float: left; }
+#page-home .RandomFactTextContainer { overflow: hidden; line-height: 1.4; }
+
+/* Left column: banner + featured game */
+#page-home a.RobloxFreeBuildingBanner { display: block; height: 90px; width: 648px; background-repeat: no-repeat; }
+#page-home .FeaturedGameBox { border-bottom: 1px solid #ccc; height: 320px; font-family: Arial; padding-top: 5px; }
+#page-home .FeaturedGameBox h1 {
+    display: inline-block; font-size: 40px; font-weight: bold; color: #363636;
+    letter-spacing: -2px; margin: 0; padding: 0;
+}
+#page-home span.placeName { font-size: 16px; font-weight: bold; color: #000; text-transform: uppercase; }
+#page-home .FeaturedGameBox a { color: #095fb5; text-decoration: none; }
+#page-home .FeaturedGameBox a:hover { text-decoration: underline; }
+#page-home div.FeaturedGameImage { float: left; }
+#page-home div.FeaturedGameInfo {
+    font-size: 10px; white-space: nowrap; overflow: hidden; float: left;
+    padding-left: 14px; line-height: 140%; width: 155px;
+}
+#page-home div.FeaturedGameInfo .PlaceStatLabel { color: #464646; font-size: 10px; }
+/* PlaceStatValue: bundle + the archive page's inline <style> (margin-left 15, bold) */
+#page-home div.FeaturedGameInfo .PlaceStatValue { margin: 0 0 8px; font-size: 12px; margin-left: 15px; font-weight: bold; }
+#page-home a.PlayThisFeaturedGame {
+    background: url('../images/landing/btn-play-this-featured.png') top left;
+    display: block; width: 112px; height: 34px; margin: 0 0 15px;
+}
+#page-home a.PlayThisFeaturedGame:hover { background-position: bottom left; }

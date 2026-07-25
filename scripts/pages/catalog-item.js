@@ -106,6 +106,7 @@ async function loadCatalogItemPage(itemId, itemType = 'Asset') {
                     if (economyDetails.PriceInRobux !== undefined && item.price === undefined) item.price = economyDetails.PriceInRobux;
                     
                     if (economyDetails.LowestSellerPrice !== undefined) item.lowestResalePrice = economyDetails.LowestSellerPrice;
+                    if (economyDetails.Sales !== undefined) item.sales = economyDetails.Sales;
                 }
             } catch (e) {
                 console.warn('Failed to fetch economy details:', e);
@@ -240,7 +241,12 @@ async function populateCatalogItemData(item) {
     if (nameEl) nameEl.textContent = name;
 
     const typeEl = document.getElementById('item-type');
-    if (typeEl) typeEl.textContent = 'ROBLOX ' + assetTypeName;
+    if (typeEl) {
+        // Archive verbatim: limiteds append " / Collectible Item / Limited Edition" to the type line
+        let typeLine = 'ROBLOX ' + assetTypeName;
+        if (isLimited || isLimitedUnique) typeLine += ' / Collectible Item / Limited Edition';
+        typeEl.textContent = typeLine;
+    }
 
     const thumbEl = document.getElementById('item-thumbnail');
     const thumbLinkEl = document.getElementById('item-thumbnail-link');
@@ -271,11 +277,15 @@ async function populateCatalogItemData(item) {
 
         const limitedImg = document.createElement('img');
         limitedImg.className = 'limited-overlay';
-        limitedImg.style.cssText = 'position: relative; top: -38px; display: block;';
         if (isLimitedUnique) {
-            limitedImg.src = 'images/overlay_limitedUnique_big.png';
+            // Archive verbatim: the authentic 185x52 banner hangs 28px past the thumb's left edge
+            // (the overflow clip on #assetContainer is authentic too)
+            limitedImg.style.cssText = 'position: absolute; bottom: 0; left: 0; margin-left: -28px; z-index: 1;';
+            limitedImg.src = 'images/icons/overlay_limitedUnique_banner.png';
             limitedImg.alt = 'Limited Unique';
         } else {
+            // The plain-Limited asset (138x27) is designed flush-left — the -28px hang clips its text
+            limitedImg.style.cssText = 'position: absolute; bottom: 0; left: 0; z-index: 1;';
             limitedImg.src = 'images/overlay_limited_big.png';
             limitedImg.alt = 'Limited';
         }
@@ -404,9 +414,11 @@ async function populateCatalogItemData(item) {
                 }
                 
                 if (creatorAvatarLinkEl && window.addObcOverlayIfPremium) {
+                    // Archive: the 66x19 BC strip sits flush at the avatar's bottom-left
+                    // (in-flow img with top:-19px = bottom-aligned), natural size.
                     creatorAvatarLinkEl.style.position = 'relative';
                     creatorAvatarLinkEl.style.display = 'inline-block';
-                    window.addObcOverlayIfPremium(creatorAvatarLinkEl, creatorId, { width: '50px', left: '20px', bottom: '20px' });
+                    window.addObcOverlayIfPremium(creatorAvatarLinkEl, creatorId, { left: '0', bottom: '0' });
                 }
             }
         } catch (e) {
@@ -426,13 +438,14 @@ async function populateCatalogItemData(item) {
     }
 
     const favoritesEl = document.getElementById('item-favorites');
-    if (favoritesEl) favoritesEl.textContent = favoriteCount.toLocaleString() + ' times';
+    if (favoritesEl) favoritesEl.textContent = favoriteCount.toLocaleString();
 
-    if (isLimitedUnique && remaining !== undefined) {
-        const remainingSection = document.getElementById('item-remaining-section');
-        const remainingEl = document.getElementById('item-remaining');
-        if (remainingSection) remainingSection.style.display = 'block';
-        if (remainingEl) remainingEl.textContent = remaining.toLocaleString();
+    // Buy-box footnote: "N Remaining" (replaces the archive's non-functional "N Sold")
+    if (isLimitedUnique && remaining !== undefined && remaining !== null) {
+        const remFootnote = document.getElementById('item-remaining-footnote');
+        const remCount = document.getElementById('item-remaining-count');
+        if (remCount) remCount.textContent = Number(remaining).toLocaleString();
+        if (remFootnote) remFootnote.style.display = 'block';
     }
 
     const descEl = document.getElementById('item-description');
@@ -475,6 +488,12 @@ async function loadItemResellers(item) {
     const collectibleItemId = item.collectibleItemId;
     const isLimitedUnique = item.isLimitedUnique || item.collectibleItemType === 'LimitedUnique';
 
+    // Total stock for "Serial #N of TOTAL" — catalog details / collectibles details / economy remaining+sales
+    window.currentItemTotalQuantity =
+        item.totalQuantity ??
+        item.collectiblesItemDetails?.TotalQuantity ??
+        ((item.remaining !== undefined && item.sales !== undefined) ? (Number(item.remaining) + Number(item.sales)) : null);
+
     try {
         let resellers = [];
 
@@ -494,7 +513,7 @@ async function loadItemResellers(item) {
 
             if (section) section.style.display = 'block';
             if (list) {
-                
+
                 window.currentResellers = resellers;
                 window.currentResellersPage = 1;
                 window.resellersPerPage = 10;
@@ -504,10 +523,50 @@ async function loadItemResellers(item) {
 
                 await renderResellersPage(resellers, 1, itemId);
             }
+
+            // Archive verbatim buy box for limiteds with sellers: "Best Price: R$N" + Buy Now
+            // (cheapest reseller) + "See all private sellers (N)" replaces the regular price panel.
+            const bestPanel = document.getElementById('item-bestprice-panel');
+            if (bestPanel) {
+                const cheapest = resellers.reduce((a, b) => ((b.price || Infinity) < (a.price || Infinity) ? b : a), resellers[0]);
+                const priceEl = document.getElementById('item-bestprice-price');
+                if (priceEl) priceEl.textContent = (cheapest.price || 0).toLocaleString();
+                const seeAll = document.getElementById('item-see-all-sellers');
+                if (seeAll) seeAll.textContent = `See all private sellers (${resellers.length})`;
+                const buyBtn = document.getElementById('item-bestprice-buy');
+                if (buyBtn) {
+                    const sellerId = cheapest.seller?.sellerId || cheapest.seller?.id || 0;
+                    const sellerName = (cheapest.seller?.name || 'Unknown').replace(/'/g, "\\'");
+                    buyBtn.onclick = () => {
+                        if (collectibleItemId && cheapest.collectibleProductId) {
+                            window.purchaseFromReseller(collectibleItemId, cheapest.collectibleProductId, cheapest.collectibleItemInstanceId || '', sellerId, cheapest.price || 0, sellerName);
+                        } else {
+                            window.openItemOnRoblox(itemId);
+                        }
+                        return false;
+                    };
+                }
+                ['item-robux-panel', 'item-tickets-panel', 'item-offsale-panel'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+                bestPanel.style.display = 'block';
+            }
         }
     } catch (e) {
         console.warn('Failed to load resellers:', e);
     }
+}
+
+// "Serial #1 of 10M" — stock counts from the millions up get truncated
+function formatStockCount(n) {
+    n = Number(n);
+    if (!isFinite(n)) return '';
+    if (n >= 1e6) {
+        const m = n / 1e6;
+        return (m % 1 === 0 ? m : m.toFixed(1)) + 'M';
+    }
+    return n.toLocaleString();
 }
 
 async function renderResellersPage(resellers, page, itemId) {
@@ -539,19 +598,14 @@ async function renderResellersPage(resellers, page, itemId) {
         }
     }
 
+    // Archive verbatim (Midnight Blue Shaggy): table.ItemSalesTable, rows of
+    // [avatar 48] [.SellerNameAndSerial: .SellerName link, span.robux price, .SerialNum
+    // "Serial #N of TOTAL"] [.PriceBuyContainer: small green Buy Now].
     let html = `
-        <table class="ResellersTable" cellspacing="0" cellpadding="0" style="width:100%; border-collapse:collapse; font-size:12px;">
-            <thead>
-                <tr style="text-align:left;">
-                    <th style="padding:5px 10px; font-weight:bold; font-size:12px;">Seller</th>
-                    ${isLimitedUnique ? '<th style="padding:5px 10px; font-weight:bold; font-size:12px; color:#555;">Serial Number</th>' : ''}
-                    <th style="padding:5px 10px; font-weight:bold; font-size:12px;">Price</th>
-                    <th style="padding:5px 10px; font-size:12px;"></th>
-                </tr>
-            </thead>
+        <table class="ItemSalesTable" cellspacing="0" cellpadding="0">
             <tbody>
     `;
-    
+
     html += pageResellers.map(r => {
         const sellerId = r.seller?.sellerId || r.seller?.id || 0;
         const sellerName = r.seller?.name || 'Unknown';
@@ -569,23 +623,18 @@ async function renderResellersPage(resellers, page, itemId) {
 
         return `
                 <tr>
-                    <td style="padding:5px 10px; vertical-align:top; font-size:12px;">
-                        <a href="#" onclick="window.location.hash='#profile?id=${sellerId}'; return false;">
-                            ${avatarUrl ? `<img src="${avatarUrl}" alt="${escapeItemHtml(sellerName)}" style="width:48px; height:48px; vertical-align:middle;">` : `<span style="display:inline-block; width:48px; height:48px; background:#ccc; vertical-align:middle;"></span>`}
+                    <td>
+                        <a href="#" onclick="window.location.hash='#profile?id=${sellerId}'; return false;" style="display:inline-block;height:48px;width:48px;cursor:pointer;">
+                            ${avatarUrl ? `<img src="${avatarUrl}" alt="${escapeItemHtml(sellerName)}" width="48" height="48" border="0">` : `<span style="display:inline-block; width:48px; height:48px; background:#ccc;"></span>`}
                         </a>
-                        <br>
-                        <a href="#" onclick="window.location.hash='#profile?id=${sellerId}'; return false;" style="font-size:12px;">${escapeItemHtml(sellerName)}</a>
                     </td>
-                    ${isLimitedUnique ? `
-                    <td style="padding:5px 10px; vertical-align:middle; font-size:12px; color:#555;">
-                        ${serialNumber ? `#${serialNumber}${totalQuantity ? ` / ${totalQuantity}` : ''}` : ''}
+                    <td class="SellerNameAndSerial">
+                        <p class="SellerName"><a href="#" onclick="window.location.hash='#profile?id=${sellerId}'; return false;">${escapeItemHtml(sellerName)}</a></p>
+                        <span class="robux">${price.toLocaleString()}</span>
+                        ${isLimitedUnique && serialNumber ? `<p class="SerialNum">Serial #${serialNumber}${totalQuantity ? ` of ${formatStockCount(totalQuantity)}` : ''}</p>` : ''}
                     </td>
-                    ` : ''}
-                    <td style="padding:5px 10px; vertical-align:middle; font-weight:bold; font-size:12px; color:green;">
-                        R$${price.toLocaleString()}
-                    </td>
-                    <td style="padding:5px 10px; vertical-align:middle; font-size:12px;">
-                        <a class="Button" href="#" onclick="${buyAction}" style="font-size:.9em; color:#777; padding:3px 10px 3px 10px;">Buy Now</a>
+                    <td class="PriceBuyContainer">
+                        <a class="roblox-buy-now btn-primary btn-small PurchaseButton" href="#" onclick="${buyAction}">Buy Now<span class="btn-text">Buy Now</span></a>
                     </td>
                 </tr>
         `;
@@ -736,11 +785,14 @@ async function loadItemRecommendations(item) {
                     }
                 }
 
-                const row1 = recommendations.slice(0, 3);
-                const row2 = recommendations.slice(3, 6);
+                // Authentic 2013 RecommendationsTab: ONE row of up to 5 .PortraitDiv cells in a
+                // 175px x 800px centered table; PortraitDiv inline width:140/overflow:hidden/
+                // margin:auto (NO height — long names push); imgs carry explicit 110x110 attrs;
+                // creator line = stat-label + Detail stat (archive verbatim).
+                const recRow = recommendations.slice(0, 5);
 
                 const buildRow = (items) => items.map(r => {
-                    
+
                     const restrictions = r.itemRestrictions || [];
                     const isLimited = restrictions.includes('Limited');
                     const isLimitedUnique = restrictions.includes('LimitedUnique');
@@ -754,19 +806,19 @@ async function loadItemRecommendations(item) {
 
                     return `
                     <td>
-                        <div class="PortraitDiv" style="width: 140px; height: 190px; overflow: hidden;">
+                        <div class="PortraitDiv" style="width: 140px; overflow: hidden; margin: auto;">
                             <div class="AssetThumbnail">
                                 <a href="#" onclick="window.location.hash='#catalog-item?id=${r.id}&type=${r.itemType || 'Asset'}'; return false;" title="${escapeItemHtml(r.name)}" style="display:inline-block;height:110px;width:110px;cursor:pointer;">
-                                    <img src="${thumbnails[r.id] || 'images/spinners/spinner100x100.gif'}" border="0" alt="${escapeItemHtml(r.name)}"/>
+                                    <img src="${thumbnails[r.id] || 'images/spinners/spinner100x100.gif'}" height="110" width="110" border="0" alt="${escapeItemHtml(r.name)}"/>
                                 </a>
                                 ${limitedOverlay}
                             </div>
-                            <div class="AssetDetails" style="height:90px;">
-                                <div class="AssetName">
+                            <div class="AssetDetails">
+                                <div class="AssetName noTranslate">
                                     <a href="#" onclick="window.location.hash='#catalog-item?id=${r.id}&type=${r.itemType || 'Asset'}'; return false;">${escapeItemHtml(r.name)}</a>
                                 </div>
                                 <div class="AssetCreator">
-                                    <span class="Label">Creator:</span> <a href="#" onclick="window.location.hash='#profile?id=${r.creatorTargetId || 1}'; return false;">${escapeItemHtml(r.creatorName || 'ROBLOX')}</a>
+                                    <span class="stat-label">Creator:</span> <span class="Detail stat"><a class="notranslate" href="#" onclick="window.location.hash='#profile?id=${r.creatorTargetId || 1}'; return false;">${escapeItemHtml(r.creatorName || 'ROBLOX')}</a></span>
                                 </div>
                             </div>
                         </div>
@@ -774,9 +826,8 @@ async function loadItemRecommendations(item) {
                     `;
                 }).join('');
 
-                list.innerHTML = `<table cellspacing="0" align="Center" border="0" style="height:200px;width:600px;border-collapse:collapse;">
-                    <tr>${buildRow(row1)}</tr>
-                    ${row2.length > 0 ? `<tr>${buildRow(row2)}</tr>` : ''}
+                list.innerHTML = `<table cellspacing="0" align="Center" border="0" style="height:175px;width:800px;border-collapse:collapse;">
+                    <tr>${buildRow(recRow)}</tr>
                 </table>`;
                 return;
         }
@@ -862,7 +913,7 @@ async function toggleItemFavorite(starEl) {
         const match = favoritesEl.textContent.match(/(\d+)/);
         if (match) currentCount = parseInt(match[1], 10);
         const newCount = newFavorited ? currentCount + 1 : Math.max(0, currentCount - 1);
-        favoritesEl.textContent = newCount.toLocaleString() + ' times';
+        favoritesEl.textContent = newCount.toLocaleString();
     }
     
     try {
@@ -878,7 +929,7 @@ async function toggleItemFavorite(starEl) {
         starEl.dataset.favorited = isFavorited ? 'true' : 'false';
         starEl.title = isFavorited ? 'Remove from Favorites' : 'Add to Favorites';
         if (favoritesEl) {
-            favoritesEl.textContent = currentCount.toLocaleString() + ' times';
+            favoritesEl.textContent = currentCount.toLocaleString();
         }
     }
 }

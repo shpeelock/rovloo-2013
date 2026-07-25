@@ -1,117 +1,137 @@
-<!-- Catalog Item Detail Page - Authentic 2011 Structure -->
-<div id="ItemContainer">
-    <div class="StandardBoxHeader" style="width: 709px;">
-        <span><span id="item-fav-star" class="notFavorited"></span> <span id="item-name">Loading...</span></span>
+<!-- Catalog Item Detail Page - faithful port of 2013 Item.aspx
+     (structure mirrors the archived Bighead page; functional ids preserved for catalog-item.js) -->
+<div id="ItemContainer" class="text">
+    <div>
+        <h1 class="notranslate" id="item-name">Loading...</h1>
+        <h3 id="item-type" class="item-type">ROBLOX Hat</h3>
     </div>
-    <div id="Item" class="StandardBox" style="width: 709px;">
+    <div id="Item">
         <div id="Details">
-            <!-- Left side - Thumbnail -->
-            <div id="assetContainer" style="float:left; width:420px;">
+            <div id="assetContainer">
                 <div id="Thumbnail">
-                    <a id="item-thumbnail-link" title="" onclick="return false" style="display:inline-block;height:420px;width:420px;">
-                        <img id="item-thumbnail" src="images/spinners/spinner100x100.gif" border="0" alt="" style="width:420px;height:420px;"/>
+                    <a id="item-thumbnail-link" class="AssetThumbnailImage" title="" onclick="return false" style="display:inline-block;height:320px;width:320px;">
+                        <img id="item-thumbnail" src="images/spinners/spinner100x100.gif" height="320" width="320" border="0" alt=""/>
                     </a>
                 </div>
-                <div id="Actions">
-                </div>
+                <div id="Actions"></div>
             </div>
-            
-            <!-- Right side - Summary/Details -->
-            <div id="Summary" style="float:right; display:inline; width:235px; padding:7px; box-sizing:border-box;">
-                <h3 id="item-type">ROBLOX Hat</h3>
-                
-                <div id="item-robux-panel">
-                    <div id="RobuxPurchase">
-                        <div id="PriceInRobux">
-                            <span id="item-price-robux">R$: 0</span>
-                        </div>
-                        <div id="BuyWithRobux">
-                            <a id="buy-robux-btn" class="Button" href="#" onclick="window.showPurchaseConfirmation && window.showPurchaseConfirmation(); return false;">Buy with R$</a>
+
+            <div id="Summary">
+                <div class="SummaryDetails">
+                    <div id="Creator" class="Creator">
+                        <div class="Avatar">
+                            <a id="item-creator-avatar-link" class="notranslate" title="" href="#" style="display:inline-block;height:70px;width:70px;cursor:pointer;">
+                                <img id="item-creator-avatar" src="images/spinners/spinner100x100.gif" height="70" width="70" border="0" alt=""/>
+                            </a>
                         </div>
                     </div>
-                </div>
-                <div id="item-tickets-panel" style="display:none;">
-                    <div id="TicketsPurchase">
-                        <div id="PriceInTickets">
-                            <span id="item-price-tickets">Tx: 0</span>
+                    <div class="item-detail">
+                        <span class="stat-label notranslate">Creator:</span>
+                        <a id="item-creator-link" class="stat notranslate" href="#">ROBLOX</a>
+                        <div>
+                            <span class="stat-label">Created:</span>
+                            <span class="stat" id="item-created">--</span>
                         </div>
-                        <div id="BuyWithTickets">
-                            <a class="Button" href="#" onclick="alert('Tickets are no longer supported'); return false;">Buy with Tx</a>
+                        <div id="LastUpdate">
+                            <span class="stat-label">Updated:</span>
+                            <span class="stat" id="item-updated">--</span>
                         </div>
                     </div>
+
+                    <div class="DescriptionPanel notranslate">
+                        <pre id="item-description" class="Description body text">No description available.</pre>
+                    </div>
+
+                    <div id="BlacklistSection"></div>
+
+                    <div class="GearGenreContainer divider-top">
+                        <div id="GenresDiv">
+                            <div class="stat-label">Genres:</div>
+                            <div class="GenreInfo stat">
+                                <div class="AssetGenreRepeater_Container">
+                                    <div class="GamesInfoIcon All"></div>
+                                    <div><a href="#games">All</a></div>
+                                </div>
+                                <div style="clear:both;"></div>
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
                 </div>
-                <div id="item-owned-panel" style="display:none;">
-                    <div style="color: green; font-weight: bold; padding: 5px;">✓ You own this item</div>
-                </div>
-                <div id="item-offsale-panel" style="display:none;">
-                    <div style="color: #cc0000; font-weight: bold; padding: 5px;">This item is not for sale</div>
+
+                <div class="BuyPriceBoxContainer">
+                    <div class="BuyPriceBox">
+                        <div id="item-robux-panel" style="display:none;">
+                            <div id="PriceInRobux" class="PriceInRobux">
+                                <span id="item-price-robux">R$: 0</span>
+                            </div>
+                            <div id="BuyWithRobux">
+                                <a id="buy-robux-btn" class="btn-primary roblox-buy-now btn-medium" href="#" onclick="window.showPurchaseConfirmation && window.showPurchaseConfirmation(); return false;">Buy Now <span class="btn-text">Buy Now</span></a>
+                            </div>
+                        </div>
+                        <div id="item-tickets-panel" style="display:none;">
+                            <div id="PriceInTickets" class="PriceInTickets">
+                                <span id="item-price-tickets">Tx: 0</span>
+                            </div>
+                            <div id="BuyWithTickets">
+                                <a class="btn-primary btn-medium btn-disabled-primary" href="#" onclick="alert('Tickets are no longer supported'); return false;">Buy Now <span class="btn-text">Buy Now</span></a>
+                            </div>
+                        </div>
+                        <div id="item-owned-panel" style="display:none;">
+                            <div class="UserOwnsMessage">&#10003; You own this item</div>
+                        </div>
+                        <div id="item-offsale-panel" style="display:none;">
+                            <!-- Archive: offsale = disabled button with tooltip only, no visible caption -->
+                            <a class="btn-primary btn-medium btn-disabled-primary" title="This item is no longer for sale.">Buy Now <span class="btn-text">Buy Now</span></a>
+                        </div>
+                        <!-- Limited items with private sellers — archive verbatim PrivateSalesPurchasePanel -->
+                        <div id="item-bestprice-panel" class="PrivateSalesPurchasePanel" style="display:none;">
+                            <span class="Price">Best Price: <span id="item-bestprice-price" class="robux">0</span></span>
+                            <a id="item-bestprice-buy" class="roblox-buy-now btn-primary btn-medium PurchaseButton" href="#" onclick="return false;">Buy Now<span class="btn-text">Buy Now</span></a>
+                            <br />
+                            <a id="item-see-all-sellers" href="#" onclick="document.getElementById('UserSalesTab')?.scrollIntoView({behavior:'smooth'}); return false;">See all private sellers (0)</a>
+                        </div>
+                        <div class="clear"></div>
+                        <div class="footnote" id="item-remaining-footnote" style="display:none;"><span id="item-remaining-count" class="stat">0</span> Remaining</div>
+                    </div>
+                    <div class="clear"></div>
+                    <span class="FavoriteContainer">
+                        <span id="item-fav-star" class="notFavorited"></span>
+                        <span class="FavoriteStar" id="item-favorites">0 times</span>
+                    </span>
                 </div>
                 <div class="clear"></div>
-                
-                <div id="Creator" class="Creator section">
-                    <div class="Avatar">
-                        <a id="item-creator-avatar-link" class="tooltip-right" title="" href="#">
-                            <img id="item-creator-avatar" src="images/spinners/spinner100x100.gif" border="0" alt=""/>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="item-detail">
-                    <div>
-                        <span class="label">Creator:</span>
-                        <a id="item-creator-link" href="#">ROBLOX</a>
-                    </div>
-                    <div>
-                        <span class="label">Created:</span>
-                        <span id="item-created">--</span>
-                    </div>
-                    <div id="LastUpdate">
-                        <span class="label">Updated:</span>
-                        <span id="item-updated">--</span>
-                    </div>
-                    <div id="Favorited">
-                        <span class="label">Favorited:</span>
-                        <span id="item-favorites">0 times</span>
-                    </div>
-                    <div id="item-remaining-section" style="display:none;">
-                        <span class="label" style="color:#cc0000;">Remaining:</span>
-                        <span id="item-remaining">0</span>
-                    </div>
-                </div>
-                
-                <div class="box section">
-                    <div class="head label">Description:</div>
-                    <pre id="item-description" class="Description body" style="max-height:200px; overflow-x: hidden;">No description available.</pre>
-                </div>
-                
-                <div class="ReportAbuse">
-                    <div id="BlacklistSection"></div>
-                    <div class="ReportAbusePanel">
-                        <span class="AbuseButton"><a href="#">Report Abuse</a></span>
-                    </div>
-                </div>
             </div>
-            
+
             <div class="clear"></div>
         </div>
-        
-        <!-- Recommendations Section -->
-        <div style="margin-top: 10px;">
-            <div class="StandardTabWhite"><span>Recommendations</span></div>
-            <div class="StandardBoxWhite">
-                <div style="font-size: x-small;">Here are some other items that we think you might like.</div>
-                <div id="item-recommendations"></div>
-            </div>
-        </div>
-        
-        <!-- Resellers Section for Limited Items -->
-        <div id="item-resellers-section" style="display:none; margin-top:10px;">
-            <div class="StandardTabGrayActive"><span>Private Sales</span></div>
-            <div class="StandardBoxGray">
+
+        <!-- Private Sales (Limited items) -->
+        <div id="item-resellers-section" class="PrivateSales divider-top" style="display:none;">
+            <h2>PRIVATE SALES</h2>
+            <div id="UserSalesTab">
                 <div id="item-resellers-list"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+
+        <!-- Recommendations tab -->
+        <div id="Tabs">
+            <ul id="TabHeader" class="WhiteSquareTabsContainer">
+                <li id="RecommendationsTabHeader" class="SquareTabGray ItemTabs selected">
+                    <span><a href="#" onclick="return false;">Recommendations</a></span>
+                </li>
+            </ul>
+            <div class="StandardPanelContainer">
+                <div id="RecommendationsTab" class="StandardPanelWhite TabContent selected">
+                    <div class="AssetRecommenderContainer">
+                        <div id="item-recommendations"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    <div class="clear"></div>
 </div>
 
 <!-- Purchase Confirmation Modal -->
@@ -123,8 +143,8 @@
             <img id="purchase-modal-thumbnail" src="images/spinners/spinner100x100.gif" style="width:100px; height:100px; border:1px solid #ccc;">
         </div>
         <div id="purchase-modal-name" style="font-weight:bold; margin-bottom:10px;">Item Name</div>
-        <div id="purchase-modal-price" style="color:green; font-size:16px; margin-bottom:15px; font-family: Verdana, Geneva, Tahoma, sans-serif;">R$ 0</div>
-        <div id="purchase-modal-balance" style="font-size:12px; color:#666; margin-bottom:15px; font-family: Verdana, Geneva, Tahoma, sans-serif;">Your balance: R$ 0</div>
+        <div id="purchase-modal-price" style="color:#060; font-size:16px; margin-bottom:15px; font-family: Arial, Helvetica, sans-serif;">R$ 0</div>
+        <div id="purchase-modal-balance" style="font-size:12px; color:#666; margin-bottom:15px; font-family: Arial, Helvetica, sans-serif;">Your balance: R$ 0</div>
         <div id="purchase-modal-error" style="display:none; color:#cc0000; margin-bottom:10px;"></div>
         <div id="purchase-modal-success" style="display:none; color:#01a90f; margin-bottom:10px;"></div>
         <!-- CAPTCHA Container - shown when verification is needed -->

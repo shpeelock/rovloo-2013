@@ -1,0 +1,197 @@
+/* 2013 Builders Club upgrade page */
+
+#page-bc #BuildersClubContainer {
+    width: 970px;
+    margin: 0 auto;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000;
+    padding-top: 6px;
+    overflow: hidden;
+}
+
+/* Two-column layout */
+#page-bc #BuildersClubContainer #LeftColumn {
+    float: left;
+    width: 660px;
+    box-sizing: border-box;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 15px;
+    min-height: 300px;
+}
+#page-bc #BuildersClubContainer #RightColumn {
+    float: right;
+    width: 295px;
+    box-sizing: border-box;
+}
+
+/* Titles (high specificity to beat base Upgrades CSS) */
+#page-bc #BuildersClubContainer #LeftColumn #BuildersClubTitle,
+#page-bc #BuildersClubContainer #LeftColumn #TurboBuildersClubTitle {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 26px;
+    font-weight: bold;
+    color: #363636;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    background: none;
+}
+#page-bc #BuildersClubContainer #LeftColumn #TurboBuildersClubTitle .TurboSpan {
+    color: #e2911d;
+}
+
+/* Membership tier buttons */
+#page-bc #MembershipPanelStyle2 #MembershipOptions {
+    overflow: hidden;
+}
+#page-bc .MembershipButton {
+    float: left;
+    width: 100px;
+    margin: 0 12px 6px 0;
+    text-align: center;
+    cursor: pointer;
+}
+#page-bc .MembershipButton .BuildersClubButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 90px;
+}
+#page-bc .MembershipButton .BCButtonLabel {
+    margin-top: 4px;
+    font-weight: bold;
+    color: #363636;
+    font-size: 12px;
+}
+#page-bc .MembershipButton:hover .BCButtonLabel {
+    color: #095fb5;
+}
+
+/* Benefits comparison table — flat 2013 */
+#page-bc #upgrades-membership-options {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    border-top: 1px solid #9e9e9e;
+    background: #fff;
+}
+#page-bc #upgrades-membership-options th,
+#page-bc #upgrades-membership-options td {
+    border: 1px solid #e2e2e2;
+    padding: 6px 8px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 12px;
+    color: #000;
+}
+#page-bc #upgrades-membership-options thead th {
+    background: #f1f1f1;
+    font-weight: bold;
+    color: #363636;
+    height: 40px;
+}
+#page-bc #upgrades-membership-options th.LeftText,
+#page-bc #upgrades-membership-options td.LeftText {
+    text-align: left;
+    font-weight: bold;
+    color: #333;
+}
+#page-bc #upgrades-membership-options tbody tr.odd {
+    background: #f7f7f7;
+}
+#page-bc #upgrades-membership-options tbody tr:hover {
+    background: #eef4fb;
+}
+#page-bc #upgrades-membership-options .icons {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Windows-only / reference note */
+#page-bc #WindowsOnlyWarning {
+    clear: both;
+    margin-top: 15px;
+    padding: 8px 10px;
+    background: #fffbe6;
+    border: 1px solid #f0e6a8;
+    font-size: 11px;
+    color: #665c00;
+}
+#page-bc #WindowsOnlyWarning p {
+    margin: 2px 0;
+}
+
+/* Right-column panels — flat 2013 (no rbx2 sprite tabs) */
+#page-bc #RightColumn .StandardTabWhite {
+    background: none;
+    border: none;
+    padding: 0;
+    float: none;
+    margin: 12px 0 0;
+}
+#page-bc #RightColumn .StandardTabWhite:first-child {
+    margin-top: 0;
+}
+#page-bc #RightColumn .StandardTabWhite span {
+    display: block;
+    width: 100%;
+    height: auto;
+    box-sizing: border-box;
+    padding: 5px 9px;
+    background: none;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    font-weight: bold;
+    color: #363636;
+    border-bottom: 1px solid #ccc;
+    overflow: visible;
+}
+#page-bc #RightColumn .StandardBoxWhite {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    padding: 10px;
+    box-sizing: border-box;
+    color: #000;
+    font-size: 12px;
+}
+#page-bc #RightColumn .StandardBoxWhite p {
+    margin: 0 0 8px;
+    line-height: 1.4;
+}
+#page-bc #RightColumn .StandardBoxWhite h3 {
+    font-size: 13px;
+    font-weight: bold;
+    color: #363636;
+    margin: 8px 0 4px;
+}
+
+/* Account status button */
+#page-bc #ManageAccountButton {
+    margin-bottom: 8px;
+}
+#page-bc #bcAccountStatus {
+    display: inline-block;
+    background: #4e9c00 url('../../images/Buttons/bg-btn-green.png') repeat-x;
+    color: #fff;
+    border: 1px solid #007001;
+    border-radius: 2px;
+    padding: 6px 14px;
+    font-weight: bold;
+    letter-spacing: -1px;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+}
+
+#page-bc .StrongRed {
+    color: #c00;
+    font-weight: bold;
+}
+
+#page-bc a {
+    color: #095fb5;
+    text-decoration: none;
+}
+#page-bc a:hover {
+    text-decoration: underline;
+}

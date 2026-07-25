@@ -1,483 +1,284 @@
+/* Games page — faithful 2013 Games.aspx port.
+   Structure from reference/archive-games-2013.html; CSS lifted VERBATIM from
+   reference/authentic-css/main-bundle-2013.css (all games rules live in the main bundle),
+   image paths re-pointed local (../../images). Rovloo enhancements preserved below:
+   search-mode animations, category selector, custom lists, playtime stat. */
 
-/* Authentic 2013 Games Page Header Structure */
+/* ---------- Authentic layout columns ---------- */
+.Column1e { margin-top: 10px; margin-left: 10px; width: 150px; float: left; }
+.Column2e { margin-top: 10px; width: 790px; margin-left: 10px; float: left; }
+.Column1e .StandardBox { width: 136px; }
+
 .GamesPageHeader {
   font-size: 40px;
   color: #363636;
   font-weight: bold;
   letter-spacing: -2px;
   margin-left: 9px;
-  margin-top: 10px;
 }
 
-.NewMenuLook #GamesLeftColumn {
-  background: none;
-  border: none;
-  padding: 9px 0;
-}
+#GamesLeftColumn { width: 126px; padding: 20px 5px; }
+.NewMenuLook #GamesLeftColumn { background: none; border: none; padding: 9px 0; }
+.NewMenuLook .StandardBox { background: none; border: none; }
 
-.NewMenuLook .StandardBox {
-  background: none;
-  border: none;
+/* ---------- Authentic sidebar filters ---------- */
+.GameFilter { color: #555; font-size: 14px; }
+.GameFilter ul { list-style-type: none; padding-left: 0; margin: 0; }
+.GameFilter ul li { margin: 5px 0; }
+.GameFilter .SelectedFilter,
+.GameFilter .SelectedGenre,
+.GameFilter .SelectedSort {
+  background: url('../../images/gamesPage_filterArrow.png') no-repeat 0 1px;
+  cursor: pointer;
+  padding-left: 20px;
+  font-weight: normal;
 }
+.GameFilter .GamesFilter,
+.GameFilter .GamesGenre,
+.GameFilter .GamesSort { padding-left: 20px; display: inline-block; }
+.GamesGenre a { display: inline-block; cursor: pointer; font-weight: normal; font-size: 15px; }
+.SelectedFilter, .SelectedGenre, .SelectedSort { font-weight: normal; }
+.GameFilter a { color: #095fb5; text-decoration: none; }
+.GameFilter a:hover { text-decoration: underline; }
+.GameFilter .SelectedFilter, .GameFilter .SelectedSort, .GameFilter .SelectedGenre { color: #555; cursor: default; }
+.GameFilter .SelectedFilter:hover, .GameFilter .SelectedSort:hover, .GameFilter .SelectedGenre:hover { text-decoration: none; }
 
-#GamesList {
-  overflow: visible !important;
-  width: 100% !important;
+/* ---------- Authentic tab bar + tab content ---------- */
+.tab-container { overflow: hidden; padding-left: 5px; }
+.tab {
+  float: left; background-color: #D6D6D6; padding: 7px; border: 1px solid #9e9e9e;
+  font: bold 15px arial; margin: 4px 2px 0 1px; border-bottom-width: 0; position: relative; top: -1px;
 }
-
-.GamesGrid {
-  overflow: visible !important;
-  padding: 0 !important;
-  width: 100% !important;
+.tab:hover { background-color: #e9e9e9; cursor: pointer; }
+.tab a { color: #363636; text-decoration: none; }
+.tab.active {
+  background-color: #fff; margin-top: 0; padding: 9px 7px 9px 7px; border-bottom: 0;
+  position: relative; border-color: #ccc; z-index: 1; margin: 0 1px 0 0; top: 1px;
 }
+#PlayTabs a { text-decoration: none; }
+.tab-content { top: -1px; position: relative; background-color: #fff; border-top: 1px solid #CCC; }
+#page-games .divider-top { border-top: 1px solid #ccc; }
 
-.GameItem {
-  float: left !important;
-  width: 160px !important;
-  margin: 5px !important;
-  position: relative !important;
-  background: transparent !important;
-  border: none !important;
-  font-family: Verdana, Arial, sans-serif !important;
-  font-size: 11px !important;
-  box-sizing: content-box !important;
-  display: block !important;
-  min-height: 140px !important; 
-  z-index: 1; 
+/* ---------- Authentic search ---------- */
+.SearchIconButton {
+  background: url('../../images/searchIcon.png') no-repeat;
+  cursor: pointer; width: 16px; height: 16px; position: absolute; top: 5px; right: 4px;
 }
+#GamesSearchBox { padding-right: 22px; }
+#GamesSearchBox::placeholder { color: #888; }
 
-.GameItem .AlwaysShown {
-  padding: 0 !important;
-  display: block !important;
-  position: relative !important;
-  z-index: 1001 !important; 
-}
-
+/* ---------- Authentic game cards ---------- */
+/* .GameItem verbatim; float:left stands in for the archive's floated #PlaceTemplate wrapper.
+   margin:0 kills the 2011 AllCSS leak (.GameItem{margin-left:8px;margin-bottom:8px} — crams cards).
+   height:130px pins every card to the AlwaysShown box: modern emoji names render a taller line
+   (16px vs 13.6px) which un-equalized card heights and made the floats snag into staggered holes. */
+.GameItem { padding: 0 5px 20px 5px; margin: 0; height: 130px; position: relative; text-align: left; float: left; }
+.GameItem:hover { display: block; z-index: 99; }
+.GameItem .AlwaysShown { position: relative; width: 160px; height: 130px; z-index: 2; }
+.GameItem:hover .AlwaysShown { z-index: 999; }
 .GameItem .HoverShown {
-  display: none !important;
-  position: absolute !important;
-  background-color: #fff !important;
-  border: 1px solid #aaa !important;
-  z-index: 1000 !important; 
-  font-size: 11px !important;
-  color: #555 !important;
-  box-shadow: 2px 2px 3px rgba(0,0,0,0.2) !important;
-  margin-top: 5px !important; 
+  display: none; position: absolute; width: 160px; padding: 158px 15px 15px;
+  top: -15px; left: -10px; border: solid 1px #888; background: #fff;
+  font-size: 11px; text-align: left; color: #888; border-radius: 5px;
 }
+.GameItem:hover .HoverShown { display: block; }
+.GameName { font-weight: bold; font-size: 12px; overflow: hidden; white-space: nowrap; }
+.GameName a { text-decoration: none; }
+.GameName a:hover { text-decoration: underline; }
+.online-player { font-size: 12px; color: #393; }
+.GamesInfoIcon, .GenreIcon, .GearIcon { margin-top: 1px; margin-right: 1px; position: relative; top: 3px; }
+.GameItem .GenreIcon, .GameItem .GearIcon { position: static; top: 0; margin-top: 0; margin-right: 0; }
+.GameItem .CreatorName { position: relative; font-size: 11px; color: #888; top: -5px; display: none; }
+.GameItem:hover .CreatorName { display: block; }
+.GameItem .CreatorName a { color: #095fb5; text-decoration: none; }
+.GameItem .CreatorName a:hover { text-decoration: underline; }
 
-.GameItem:hover .HoverShown {
-  display: block !important;
-}
+/* Thumbnail helper (the archive's a.roblox-thumbnail carries the 160x100 image) */
+.GameItem .GameThumbnail { width: 160px; height: 100px; overflow: hidden; line-height: 0; margin-bottom: 2px; }
+.GameItem .GameThumbnail a { display: block; line-height: 0; }
+.GameItem .GameThumbnail img { width: 160px; height: 100px; object-fit: cover; border: none; display: block; }
 
-.GameItem .GameThumbnail {
-  width: 160px;
-  height: 100px;
-  background: #e8e8e8;
-  border: 1px solid #555;
-  margin: 0 0 2px 0;
-  overflow: hidden;
-  line-height: 0;
-}
-
-.GameItem .GameThumbnail a {
-  display: block;
-  line-height: 0;
-}
-
-.GameItem .GameThumbnail img {
-  width: 160px !important;
-  height: 100px !important;
-  object-fit: cover;
-  border: none;
-  display: block;
-}
-
-.GameItem .GameName {
-  font-weight: bold;
-  font-size: 12px;
-  margin-bottom: 1px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-family: Arial, Helvetica, sans-serif !important;
-}
-
-.GameItem .GameName a {
-  color: #00F;
-  text-decoration: none;
-}
-
-.GameItem .GameName a:hover {
-  text-decoration: underline;
-}
-
-.GameItem .PlayerCount {
-  color: #FF0000;
-  margin-top: -2px;
-  font-size: 12px;
-  font-family: Arial, Helvetica, sans-serif !important;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.GameItem .PlayerCount .GenreIcon {
-  width: 16px;
-  height: 16px;
-  border: none;
-  flex-shrink: 0;
-}
-
-.GameItem .GenreIcons {
-  display: none; 
-}
-
-.GameItem .CreatorName {
-  clear: both;
-  font-size: 11px;
-  color: #666;
-  margin-top: 18px;
-  display: none !important;
-  font-family: Arial, Helvetica, sans-serif !important;
-  
-  max-width: 160px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.GameItem:hover .CreatorName {
-  display: block !important;
-}
-
-.GameItem .CreatorName a {
-  color: #00f;
-  text-decoration: none;
-}
-
-.GameItem .CreatorName a:hover {
-  text-decoration: underline;
-}
-
+/* Hover-card stats (authentic .HoverShown children carry the font from the panel) */
 .GameItem .HoverShown .StatsPlayed,
 .GameItem .HoverShown .StatsFavorited,
 .GameItem .HoverShown .StatsUpdated,
-.GameItem .HoverShown .StatsPlaytime {
-  font-size: 11px;
-  line-height: 1.3;
-  color: #888 !important;
-  white-space: nowrap;
-  font-family: Arial, Helvetica, sans-serif !important;
-}
-
+.GameItem .HoverShown .StatsPlaytime { font-size: 11px; line-height: 1.3; color: #888; white-space: nowrap; }
 .GameItem .HoverShown .StatsPlaytime .playtime-icon {
-  width: 14px;
-  height: 14px;
-  vertical-align: middle;
-  margin-right: 4px;
-  margin-top: -2px;
+  width: 14px; height: 14px; vertical-align: middle; margin-right: 4px; margin-top: -2px;
 }
 
-#page-games .Column2e .StandardBoxHeader {
-  position: relative;
+/* ---------- Authentic #BCOnlyPlaces showcase (repurposed: Rovloo Reviewed) ---------- */
+/* text-align:left + margin resets kill the 2011 AllCSS leak
+   (#BCOnlyPlaces{text-align:center;margin-top:8px;margin-bottom:6px}) which centered the
+   header and mis-spaced the box — the real 2013 page never loaded that rule. */
+#BCOnlyPlaces {
+  position: relative; float: left; margin-left: 15px; height: 248px; width: 420px;
+  text-align: left; margin-top: 0; margin-bottom: 0;
+}
+/* Divider under the showcase row (present in the archive's rendered page — drawn by the games JS,
+   not the CSS bundle; the class is toggled by initRovlooShowcase together with the pane). */
+[roblox-bc-games-clear].showcase-divider {
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+#BCOnlyPlaces .BCHat { position: absolute; top: -4px; }
+.BCHat {
+  background: url('../../images/Games/gamesPage_bcHelmet.png') no-repeat;
+  width: 35px; height: 29px; display: inline-block; margin-top: 3px;
+}
+#BCOnlyPlacesTitle { display: inline; font-weight: bold; font-size: 19px; position: relative; }
+#BCOnlyPlaces .content { width: 100%; height: 188px; padding-top: 40px; }
+#BCOnlyGamesContent { width: 340px; margin: auto auto; }
+#BCOnlyGamesContentPrevNavButton { position: absolute; top: 90px; left: 10px; }
+#BCOnlyGamesContentNextNavButton { position: absolute; top: 90px; right: 10px; }
+/* The 2011 AllCSS ships `#BCOnlyGamesContentPrevNavButton{visibility:hidden}` (2011 hid the prev
+   arrow and toggled it in JS). 2013 keeps it VISIBLE and greys it via the sprite's disabled band —
+   re-assert (games.css loads after AllCSS, same id specificity, later wins). */
+#BCOnlyGamesContentPrevNavButton { visibility: visible; }
+/* Verbatim .arrow — 17x152 3-state strip (normal / hover -51px / disabled -102px) */
+.arrow { cursor: pointer; background-repeat: no-repeat; width: 17px; height: 50px; display: inline-block; }
+.arrow:hover { background-position: 0 -51px; }
+.arrow.disabled { cursor: default; background-position: 0 -102px; width: 17px; height: 50px; }
+.arrow.disabled:hover { background-position: 0 -102px; }
+.arrow.left { background-image: url('../../images/GamesPage/arrow_left.png'); }
+.arrow.right { background-image: url('../../images/GamesPage/arrow_right.png'); }
+/* Showcase loading placeholders (Rovloo) — GameItem-shaped grey blocks with a soft pulse so the
+   section is visible instantly while the Rovloo pipeline warms up. */
+.showcase-skeleton .skeleton-box {
+  background: #e8e8e8;
+  animation: showcasePulse 1.2s ease-in-out infinite;
+}
+@keyframes showcasePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
-#GamesSearchBox {
-  position: absolute;
-  right: -372px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 169px;
-  height: 25px;
-  box-sizing: border-box;
-  border: 1px solid #999;
-  padding: 2px 26px 2px 6px;
-  font-size: 13px;
-  background: #fff url('../../images/searchIcon.png') no-repeat right 6px center;
-  background-size: 16px 16px;
-  transition: right 0.4s ease-in-out;
-}
+/* Showcase hides with the rest of the chrome in search mode */
+#Body.search-mode #BCOnlyPlaces,
+#Body.search-mode [roblox-bc-games-clear] { display: none !important; }
 
-#GamesSearchBox::placeholder {
-  color: #999;
+/* ---------- Authentic silver pager (shared 27x81 3-state sprite) ---------- */
+/* Verbatim bundle .pager — NO vertical-align (it fights the archive's inline `top:9px`, which is
+   what actually centers the 27px arrows on the "Page X of Y" text line). */
+#page-games .pager.previous,
+#page-games .pager.next {
+  display: inline-block; width: 27px; height: 27px;
+  background-repeat: no-repeat; background-position: top left;
 }
+#page-games .pager.previous { background-image: url('../../images/Buttons/Arrows/btn-silver-left-27.png'); }
+#page-games .pager.next { background-image: url('../../images/Buttons/Arrows/btn-silver-right-27.png'); }
+#page-games .pager.previous:hover,
+#page-games .pager.next:hover { background-position: bottom left; cursor: pointer; }
+#page-games .pager.disabled,
+#page-games .pager.disabled:hover { background-position: 0 -27px; cursor: default; }
 
-#GamesList {
-  transition: opacity 0.15s ease-out;
-}
+/* =====================================================================================
+   ROVLOO ENHANCEMENTS (preserved) — search-mode animations, category selector, lists
+   ===================================================================================== */
 
-#GamesList.games-fading-out {
-  opacity: 0;
-}
+/* Results fade when switching pages / entering search */
+#GamesList { transition: opacity 0.15s ease-out; }
+#GamesList.games-fading-out { opacity: 0; }
 
-/* GamesPageHeader transitions with sidebar */
+/* GamesPageHeader + sidebar slide away in search mode */
 #page-games .GamesPageHeader,
 #Body .GamesPageHeader {
   transition: transform 0.4s ease-in-out, opacity 0.3s ease-out, margin-left 0.4s ease-in-out;
   transform: translateX(0);
   opacity: 1;
 }
-
 #page-games .GamesPageHeader.sidebar-hidden,
 #Body .GamesPageHeader.sidebar-hidden {
-  transform: translateX(-100%);
-  opacity: 0;
-  margin-left: -175px;
-  pointer-events: none;
+  transform: translateX(-100%); opacity: 0; margin-left: -175px; pointer-events: none;
 }
-
 #page-games .GamesPageHeader.sidebar-hidden.sidebar-peek,
 #Body .GamesPageHeader.sidebar-hidden.sidebar-peek {
-  transform: translateX(0) !important;
-  opacity: 1 !important;
-  margin-left: 0 !important;
-  pointer-events: auto;
-  z-index: 100;
+  transform: translateX(0) !important; opacity: 1 !important; margin-left: 0 !important;
+  pointer-events: auto; z-index: 100;
 }
-
 #page-games .Column1e,
 #Body .Column1e {
   transition: transform 0.4s ease-in-out, opacity 0.3s ease-out, margin-left 0.4s ease-in-out;
   transform: translateX(0);
   opacity: 1;
 }
-
 #page-games .Column1e.sidebar-hidden,
 #Body .Column1e.sidebar-hidden {
-  transform: translateX(-100%);
-  opacity: 0;
-  margin-left: -175px; 
-  pointer-events: none; 
+  transform: translateX(-100%); opacity: 0; margin-left: -175px; pointer-events: none;
 }
-
 #page-games .Column1e.sidebar-hidden.sidebar-peek,
 #Body .Column1e.sidebar-hidden.sidebar-peek {
-  transform: translateX(0) !important;
-  opacity: 1 !important;
-  margin-left: 0 !important;
-  pointer-events: auto;
-  z-index: 100;
+  transform: translateX(0) !important; opacity: 1 !important; margin-left: 0 !important;
+  pointer-events: auto; z-index: 100;
 }
 
-#page-games .Column2e.search-mode-expanded.sidebar-peeking,
-#Body .Column2e.search-mode-expanded.sidebar-peeking {
-  width: 740px !important; 
-  margin-left: 10px !important; 
-}
-
-.Column2e.search-mode-expanded.sidebar-peeking #GamesSearchBox {
-  right: -372px !important; 
-}
-
-.search-mode-hover-trigger {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 20px;
-  height: 100%;
-  z-index: 100;
-  cursor: pointer;
-  background: transparent;
-}
-
-.search-mode-hover-trigger::after {
-  content: '◀';
-  position: absolute;
-  left: 3px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #aaa;
-  font-size: 12px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.search-mode-hover-trigger:hover::after {
-  opacity: 1;
-}
-
+/* Main column expands in search mode */
 #page-games .Column2e,
-#Body .Column2e {
-  transition: width 0.4s ease-in-out, margin-left 0.4s ease-in-out;
-}
-
+#Body .Column2e { transition: width 0.4s ease-in-out, margin-left 0.4s ease-in-out; }
 #page-games .Column2e.search-mode-expanded,
 #Body .Column2e.search-mode-expanded {
   width: calc(100% - 20px) !important;
   margin-left: 10px !important;
 }
-
-.search-mode-expanded #GamesSearchBox,
-.Column2e.search-mode-expanded #GamesSearchBox {
-  right: -501px; 
+#page-games .Column2e.search-mode-expanded.sidebar-peeking,
+#Body .Column2e.search-mode-expanded.sidebar-peeking {
+  width: 740px !important;
+  margin-left: 10px !important;
 }
+/* The expanded column also relaxes the authentic fixed-width content region and tab-content */
+.search-mode-expanded .tab-content { width: 100% !important; }
+.search-mode-expanded #GamesContent {
+  width: auto !important; left: 0 !important; display: block !important;
+}
+
+/* Edge hover trigger to peek the hidden sidebar */
+.search-mode-hover-trigger {
+  position: absolute; left: 0; top: 0; width: 20px; height: 100%;
+  z-index: 100; cursor: pointer; background: transparent;
+}
+.search-mode-hover-trigger::after {
+  content: '\25C0';
+  position: absolute; left: 3px; top: 50%; transform: translateY(-50%);
+  color: #aaa; font-size: 12px; opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.search-mode-hover-trigger:hover::after { opacity: 1; }
 
 #page-games #Body.search-mode,
-#Body.search-mode {
-  overflow-x: hidden; 
-}
+#Body.search-mode { overflow-x: hidden; }
 
 .search-mode-expanded #GamesList .GamesGrid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
+  display: flex; flex-wrap: wrap; justify-content: flex-start;
 }
-
-.search-mode-expanded .GameItem {
-  flex: 0 0 160px;
-}
-
-.search-mode-expanded #GamesList {
-  animation: fadeInResults 0.3s ease-in forwards;
-}
-
+.search-mode-expanded .GameItem { flex: 0 0 170px; }
+.search-mode-expanded #GamesList { animation: fadeInResults 0.3s ease-in forwards; }
 @keyframes fadeInResults {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-#GamesSearchBox:focus {
-  outline: none;
-  border-color: #4a90d9;
-  box-shadow: 0 0 3px rgba(74, 144, 217, 0.3);
-}
+/* Category selector (Rovloo) — pure authentic GameFilter typography (14px, #555 header, normal-weight
+   blue links, arrow sprite on selected). NO Verdana/bold/11-12px 2011 leftovers — those clashed with
+   the rest of the 2013 sidebar. Only the separator rule below is Rovloo-specific. */
+#CategorySelector { margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
 
-#CategorySelector {
-  margin-bottom: 15px;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 10px;
-}
-
-#CategorySelector .GamesFilter {
-  font-weight: bold;
-  font-size: 12px;
-}
-
-#CategorySelector .GamesFilter.SelectedFilter {
-  color: #000;
-  text-decoration: none;
-  cursor: default;
-  background: url('../../images/gamesPage_filterArrow.png') no-repeat scroll 0 1px transparent;
-}
-
-#CategorySelector .GamesFilter:not(.SelectedFilter) {
-  color: #00f;
-  text-decoration: none;
-}
-
-#CategorySelector .GamesFilter:not(.SelectedFilter):hover {
-  text-decoration: underline;
-}
-
-.category-filters {
-  transition: opacity 0.2s ease-in-out;
-}
-
-.category-filters.fading-out {
-  opacity: 0.5;
-}
+.category-filters { transition: opacity 0.2s ease-in-out; }
+.category-filters.fading-out { opacity: 0.5; }
+/* Per-group spacing matches the authentic sidebar (#Timespan/#Genres get margin-top:20px inline in
+   the archive; our groups replicate it here) — typography comes from .GameFilter alone. */
+.category-filters .GameFilter { margin-top: 20px; }
+.category-filters .GameFilter:first-child { margin-top: 0; }
+#CategorySelector + .category-filters .GameFilter:first-child { margin-top: 0; }
 
 #CustomListsContainer .GamesFilter[data-filter="NoLists"] {
-  font-style: italic;
-  color: #999 !important;
-  cursor: default !important;
+  font-style: italic; color: #999 !important; cursor: default !important;
 }
+#CustomListsContainer .GamesFilter[data-filter="NoLists"]:hover { text-decoration: none !important; }
+.custom-list-item { position: relative; }
+.custom-list-item .list-info { font-size: 10px; color: #666; font-style: italic; margin-left: 10px; }
+.custom-list-item .list-count { color: #999; font-size: 10px; }
 
-#CustomListsContainer .GamesFilter[data-filter="NoLists"]:hover {
-  text-decoration: none !important;
-}
+.category-switching #GamesContent { opacity: 0.6; transition: opacity 0.2s ease-in-out; }
 
-.custom-list-item {
-  position: relative;
-}
-
-.custom-list-item .list-info {
-  font-size: 10px;
-  color: #666;
-  font-style: italic;
-  margin-left: 10px;
-}
-
-.custom-list-item .list-count {
-  color: #999;
-  font-size: 10px;
-}
-
-#RecommendedFilters .GameFilter div {
-  color: #333;
-  font-weight: bold;
-}
-
-#FavoritesFilters .GameFilter div {
-  color: #333;
-  font-weight: bold;
-}
-
-#RecentFilters .GameFilter div {
-  color: #333;
-  font-weight: bold;
-}
-
-.category-filters .GameFilter {
-  margin-bottom: 15px;
-  font-family: Verdana, Arial, sans-serif;
-  font-size: 11px;
-}
-
-.category-filters .GameFilter div {
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: #333;
-}
-
-.category-filters .GameFilter ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.category-filters .GameFilter li {
-  margin: 2px 0;
-  padding-left: 10px;
-}
-
-.category-filters .GamesFilter {
-  color: #00f;
-  text-decoration: none;
-  font-size: 11px;
-}
-
-.category-filters .GamesFilter:hover {
-  text-decoration: underline;
-}
-
-.category-filters .GamesFilter.SelectedFilter {
-  color: #000;
-  font-weight: bold;
-  text-decoration: none;
-  cursor: default;
-}
-
-.category-switching #GamesContent {
-  opacity: 0.6;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.games-display-label {
-  transition: opacity 0.15s ease-out;
-}
-
-.games-display-label.updating {
-  opacity: 0.7;
-}
-
-#RecentSortBy .GameFilter div {
-  color: #333;
-  font-weight: bold;
-}
+.games-display-label { transition: opacity 0.15s ease-out; }
+.games-display-label.updating { opacity: 0.7; }

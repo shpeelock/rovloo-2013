@@ -71,11 +71,13 @@ body {
     display: block;
 }
 
-.Friend {
+/* Friends-page card overrides (scoped so they don't fight the authentic 125x180
+   .Friend on the profile — the profile lifts .Friend verbatim from the bundle). */
+#page-friends .Friend {
     height: auto !important;
 }
 
-.Friend .Avatar img {
+#page-friends .Friend .Avatar img {
     border: none !important;
 }
 
@@ -520,13 +522,13 @@ body {
 }
 
 /* Generic btn-primary - scope to avoid affecting 2013 game detail page */
-.btn-primary:not(#page-game-detail .btn-primary) {
+.btn-primary:not(#page-game-detail .btn-primary):not(#page-catalog-item .btn-primary):not(#page-badge .btn-primary):not(#page-gamepass .btn-primary):not(#page-groups .btn-primary) {
     background: #6e99c9;
     border-color: #5a85b5;
     color: #fff;
 }
 
-.btn-primary:not(#page-game-detail .btn-primary):hover {
+.btn-primary:not(#page-game-detail .btn-primary):not(#page-catalog-item .btn-primary):not(#page-badge .btn-primary):not(#page-gamepass .btn-primary):not(#page-groups .btn-primary):hover {
     background: #5a85b5;
 }
 
@@ -588,63 +590,8 @@ body {
     margin-left: 10px;
 }
 
-#BrowseContainer {
-    padding: 0;
-    width: 880px;
-    margin: 0 auto;
-}
-
-#BrowseContainer .StandardBox {
-    margin-bottom: 0;
-}
-
-.SearchBox input {
-    padding: 5px 8px;
-    font-size: 12px;
-    border: 1px solid #999;
-}
-
-.SearchButton input,
-#SearchGroupsButton {
-    padding: 5px 12px;
-    font-size: 12px;
-    background: #f0f0f0;
-    border: 1px solid #999;
-    cursor: pointer;
-}
-
-.SearchButton input:hover,
-#SearchGroupsButton:hover {
-    background: #e0e0e0;
-}
-
-.SearchLinks sup {
-    color: #fff;
-}
-
-.SearchLinks a {
-    position: relative;
-}
-
-.SearchLinks a:hover span {
-    display: block !important;
-    position: absolute;
-    background: #fff;
-    border: 1px solid #999;
-    padding: 10px;
-    width: 300px;
-    right: 0;
-    top: 20px;
-    z-index: 100;
-    color: #333;
-    font-size: 11px;
-    text-align: left;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-}
-
-.UserSearchResult {
-    transition: transform 0.1s;
-}
+/* (Legacy Browse/People search styling removed — the page is now the authentic 2013
+   Browse.aspx port: native inputs + AllCSS's Grid classes, styled in pages/people.css.) */
 
 .UserSearchResult:hover {
     transform: scale(1.02);
@@ -704,16 +651,8 @@ body {
     text-align: center;
 }
 
-.TileBadges {
-    float: none !important;
-    display: inline-block;
-}
-
-#GroupsList {
-    width: 100%;
-    margin: 0 auto;
-    text-align: center;
-}
+/* (Old-profile .TileBadges float:none override removed — the authentic profile lifts
+   .TileBadges verbatim as float:left; nothing else uses this class.) */
 
 #ProfileHeader {
     font-weight: bold;
@@ -870,7 +809,8 @@ body {
     clear: both;
 }
 
-.Friend {
+/* Friends-PAGE friend cards (scoped to #page-friends; profile .Friend is authentic 125x180) */
+#page-friends .Friend {
     display: inline-block;
     text-align: center;
     margin: 0 !important;
@@ -878,36 +818,36 @@ body {
     width: 110px;
 }
 
-.Friend .Avatar {
+#page-friends .Friend .Avatar {
     margin-bottom: 0;
 }
 
-.Friend .Avatar a {
+#page-friends .Friend .Avatar a {
     display: inline-block;
 }
 
-.Friend .Avatar img {
+#page-friends .Friend .Avatar img {
     border: 1px solid #ccc;
     display: block;
 }
 
-.Friend .Summary {
+#page-friends .Friend .Summary {
     font-size: 11px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.Friend .Summary .Name a {
+#page-friends .Friend .Summary .Name a {
     color: #006699;
     text-decoration: none;
 }
 
-.Friend .Summary .Name a:hover {
+#page-friends .Friend .Summary .Name a:hover {
     text-decoration: underline;
 }
 
-.Friend .Summary .OnlineStatus img {
+#page-friends .Friend .Summary .OnlineStatus img {
     vertical-align: middle;
     margin-right: 3px;
 }
@@ -1081,7 +1021,7 @@ body {
 }
 
 #UserContainer {
-    font-family: Verdana, Sans-Serif;
+    font-family: Arial, Helvetica, sans-serif;
     clear: both;
     margin-top: 10px;
 }
@@ -1097,12 +1037,10 @@ body {
 #UserAssetsPane #UserAssets.StandardBox,
 #UserAssetsPane #StuffUserAssets,
 #UserAssetsPane #StuffUserAssets.StandardBox {
-    padding: 5px;
     margin-bottom: 8px;
-    background: url('../images/cssspecific/rbx2/standardBox_01_bkg.png') top repeat-x #fff;
-    border: 1px solid #aaa;
+    background: #fff;
     width: auto !important;
-    overflow: hidden; 
+    overflow: hidden;
 }
 
 #UserAssetsPane .StandardBoxHeader {
@@ -1117,35 +1055,37 @@ body {
 
 #UserAssetsPane .AssetsMenuItem,
 #UserAssetsPane .AssetsMenuItem_Selected {
-    border: solid 1px #777;
-    margin: 15px;
-    padding: 3px 10px;
-    width: 100px;
+    border: solid 1px #ccc;
+    margin: 6px 8px;
+    padding: 4px 10px;
+    width: 110px;
     box-sizing: content-box;
+    border-radius: 2px;
 }
 
 #UserAssetsPane .AssetsMenuItem:hover {
-    border-color: #000;
+    border-color: #095fb5;
+    background-color: #eef4fb;
     cursor: pointer;
 }
 
 #UserAssetsPane .AssetsMenuItem_Selected {
-    background-color: #6e99c9;
-    border-color: #000;
+    background-color: #095fb5;
+    border-color: #095fb5;
 }
 
 #UserAssetsPane .AssetsMenuButton,
 #UserAssetsPane .AssetsMenuButton_Selected,
 #UserAssetsPane a.AssetsMenuButton,
 #UserAssetsPane a.AssetsMenuButton_Selected {
-    color: #777 !important;
-    font: normal 14px/normal Verdana, sans-serif;
+    color: #095fb5 !important;
+    font: bold 12px/normal Arial, Helvetica, sans-serif;
     text-decoration: none !important;
 }
 
 #UserAssetsPane .AssetsMenuButton:hover,
 #UserAssetsPane a.AssetsMenuButton:hover {
-    color: #000 !important;
+    color: #095fb5 !important;
     text-decoration: none !important;
 }
 
@@ -1157,7 +1097,7 @@ body {
 #AssetsContent,
 #StuffAssetsContent {
     float: left;
-    font-family: Verdana, Sans-Serif;
+    font-family: Arial, Helvetica, sans-serif;
     margin-left: 10px;
     min-width: 0;
     padding-bottom: 10px;
@@ -1183,7 +1123,7 @@ body {
 }
 
 #UserContainer .Asset .AssetThumbnail {
-    border: solid 1px #000;
+    border: solid 1px #ccc;
     height: 110px;
     position: relative;
     text-align: center;
@@ -1207,7 +1147,7 @@ body {
     font-weight: bold;
     line-height: 1.5em;
     vertical-align: top;
-    color: #00f;
+    color: #095fb5;
     text-decoration: none;
 }
 
@@ -1240,7 +1180,7 @@ body {
 }
 
 #UserContainer .PriceInRobux {
-    color: Green;
+    color: #060;
     font-weight: bold;
 }
 
@@ -1262,7 +1202,7 @@ body {
 }
 
 .FooterPager a {
-    color: #00f;
+    color: #095fb5;
     text-decoration: none;
 }
 
@@ -1274,360 +1214,36 @@ body {
     font-weight: bold;
 }
 
-#page-badge.active {
-    display: flex;
-    justify-content: center;
-}
+/* Badge page styles live in styles/pages/badge.css (faithful 2013 Item.aspx port). */
 
-#page-badge #ItemContainer {
-    width: 700px;
-    margin: 0 auto;
-}
-
-#page-badge #ItemContainer .StandardBoxHeader {
-    width: 99%;
-}
-
-#page-badge #ItemContainer .StandardBox {
-    width: auto;
-    box-sizing: border-box;
-}
-
-#page-badge #Item {
-    padding: 15px;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-}
-
-#page-badge #Item #LeftColumn {
-    flex-shrink: 0;
-}
-
-#page-badge #Item #LeftColumn a {
-    color: #00f;
-    text-decoration: underline;
-    font-size: 14px;
-}
-
-#page-badge #Item #LeftColumn img {
-    width: 300px;
-    height: 300px;
-    border: 0;
-    display: block;
-    margin-bottom: 5px;
-}
-
-#page-badge #Item #RightColumn {
-    width: 300px;
-    flex-shrink: 0;
-}
-
-#page-badge #Item #RightColumn h3 {
-    margin: 0 0 10px 0;
-    font-size: 12px;
-    font-weight: normal;
-    color: #888;
-}
-
-#CreatorThumbnail {
-    margin-bottom: 10px;
-}
-
-#CreatorThumbnail img {
-    max-width: 100px;
-    max-height: 100px;
-    border: 0;
-}
-
-.badge-stats {
-    margin-bottom: 15px;
-    font-size: 12px;
-    color: #000;
-}
-
-.badge-stats .stat-row {
-    margin-bottom: 2px;
-}
-
-.badge-stats .label {
-    color: #888;
-}
-
-.badge-stats a {
-    color: #00f;
-    text-decoration: none;
-}
-
-.badge-stats a:hover {
-    text-decoration: underline;
-}
-
-.badge-section {
-    margin-bottom: 12px;
-}
-
-.badge-section .section-header {
-    font-weight: bold;
-    color: #000;
-    margin-bottom: 3px;
-}
-
-.badge-section .section-box {
-    border: 1px solid #ccc;
-    padding: 6px 8px;
-    background: #fff;
-    font-size: 12px;
-    color: #000;
-}
-
-.badge-section .genre-icon {
-    margin-right: 5px;
-}
-
-.badge-section .genre-link {
-    color: #00f;
-    text-decoration: none;
-}
-
-.badge-section .genre-link:hover {
-    text-decoration: underline;
-}
-
-.badge-section .place-box {
-    border: 1px solid #000;
-    padding: 8px;
-    background: #fff;
-}
-
-.badge-section .place-header {
-    margin-bottom: 5px;
-    color: #000;
-}
-
-.badge-section .place-box img {
-    max-width: 200px;
-    max-height: 150px;
-    border: 1px solid #000000;
-    display: block;
-    margin-bottom: 5px;
-}
-
-.badge-section .place-name a {
-    color: #00f;
-    text-decoration: none;
-    font-size: 12px;
-}
-
-.badge-section .place-name a:hover {
-    text-decoration: underline;
-}
-
+/* Generic report-abuse link (used by inbox + index.html) */
 .report-abuse {
+    clear: both;
     text-align: right;
-    margin-top: 10px;
+    margin-top: 12px;
 }
 
 .report-abuse .abuse-link {
-    color: #f99;
+    color: #999;
     text-decoration: none;
     font-size: 11px;
 }
 
 .report-abuse .abuse-link:hover {
-    color: #f00;
+    color: #c00;
     text-decoration: underline;
 }
 
-#page-gamepass.active {
-    display: flex !important;
-    justify-content: center !important;
-}
+/* Game Pass page styles live in styles/pages/gamepass.css (faithful 2013 Item.aspx port). */
 
-#page-gamepass #gamepass-content {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-#page-gamepass #gamepass-content #ItemContainer,
-#page-gamepass #ItemContainer {
-    width: 700px !important;
-}
-
-#page-gamepass #ItemContainer .StandardBoxHeader {
-    width: 99% !important;
-}
-
-#page-gamepass #ItemContainer .StandardBox {
-    width: auto !important;
-    box-sizing: border-box;
-    min-height: 350px;
-}
-
-#page-gamepass #Item {
-    padding: 15px !important;
-    overflow: hidden;
-    display: flex !important;
-    justify-content: flex-start !important;
-    gap: 30px !important;
-}
-
-#page-gamepass #Item #LeftColumn {
-    flex-shrink: 0;
-}
-
-#page-gamepass #Item #LeftColumn a {
-    color: #00f;
-    text-decoration: underline;
-    font-size: 14px;
-}
-
-#page-gamepass #Item #LeftColumn img {
-    width: 150px;
-    height: 150px;
-    border: 0;
-    display: block;
-    margin-bottom: 5px;
-    image-rendering: pixelated;
-}
-
-#page-gamepass #Item #RightColumn {
-    flex: 1;
-    min-width: 300px;
-}
-
-#page-gamepass #Item #RightColumn h3 {
-    margin: 0 0 10px 0;
-    font-size: 12px;
-    font-weight: normal;
-    color: #888;
-}
-
-#page-gamepass #CreatorThumbnail {
-    margin-bottom: 10px;
-}
-
-#page-gamepass #CreatorThumbnail img {
-    max-width: 100px;
-    max-height: 100px;
-    border: 0;
-}
-
-.gamepass-stats {
-    margin-bottom: 15px;
-    font-size: 12px;
-}
-
-.gamepass-stats .stat-row {
-    margin-bottom: 2px;
-}
-
-.gamepass-stats .label {
-    color: #888;
-}
-
-.gamepass-stats a {
-    color: #00f;
-    text-decoration: none;
-}
-
-.gamepass-stats a:hover {
-    text-decoration: underline;
-}
-
-.gamepass-stats .price-robux {
-    color: green;
-    font-weight: bold;
-}
-
-.gamepass-stats .price-free {
-    color: #090;
-    font-weight: bold;
-}
-
-.gamepass-stats .price-offsale {
-    color: #999;
-}
-
-.gamepass-section {
-    margin-bottom: 12px;
-}
-
-.gamepass-section .section-header {
-    font-weight: bold;
-    color: #000;
-    margin-bottom: 3px;
-}
-
-.gamepass-section .section-box {
-    border: 1px solid #ccc;
-    padding: 6px 8px;
-    background: #fff;
-    font-size: 12px;
-}
-
-.gamepass-section .place-box {
-    border: 1px solid #000;
-    padding: 8px;
-    background: #f0f0f0;
-}
-
-.gamepass-section .place-header {
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #000;
-}
-
-.gamepass-section .place-box img {
-    max-width: 200px;
-    max-height: 150px;
-    display: block;
-    margin-bottom: 5px;
-}
-
-.gamepass-section .place-name a {
-    color: #00f;
-    text-decoration: none;
-    font-size: 12px;
-}
-
-.gamepass-section .place-name a:hover {
-    text-decoration: underline;
-}
-
-.gamepass-section .buy-button {
-    background: #0a0;
-    color: #fff;
-    border: 1px solid #080;
-    border-radius: 0;
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.gamepass-section .buy-button:hover {
-    background: #0c0;
-}
-
-.gamepass-section .owned-label {
-    color: #090;
-    font-weight: bold;
-    font-size: 12px;
-}
-
-.gamepass-section .offsale-label {
-    color: #999;
-    font-size: 12px;
-}
-
+/* ===== Character / Avatar page — 2013 look ===== */
 #CharacterContainer {
-    width: 880px;
+    width: 940px;
     margin: 0 auto;
-    font-family: Verdana, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
+    color: #000;
+    padding-top: 6px;
 }
 
 .CharacterRow {
@@ -1649,17 +1265,34 @@ body {
     flex: 1;
 }
 
-#page-character .CharacterLeft .StandardBoxHeader {
-    width: auto;
-}
-
+#page-character .CharacterLeft .StandardBoxHeader,
 #page-character .CharacterRight .StandardBoxHeader {
     width: auto;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    text-align: left;
+    padding: 4px 2px 6px;
+    margin: 0 0 10px;
+    height: auto;
+}
+#page-character .CharacterLeft .StandardBoxHeader span,
+#page-character .CharacterRight .StandardBoxHeader span {
+    display: inline;
+    width: auto;
+    height: auto;
+    background: none;
+    padding: 0;
+    overflow: visible;
+    font-size: 18px;
+    font-weight: bold;
+    color: #363636;
+    letter-spacing: -1px;
 }
 
 .CharacterBox {
-    background: #e8e8e8;
-    border: 1px solid #999;
+    background: #fff;
+    border: 1px solid #ccc;
     padding: 15px;
     min-height: 200px;
 }
@@ -1682,7 +1315,7 @@ body {
 }
 
 #AvatarRedraw a {
-    color: #06c;
+    color: #095fb5;
     text-decoration: none;
 }
 
@@ -1716,7 +1349,7 @@ body {
     background: linear-gradient(to bottom, #fff, #e8e8e8);
     color: #333;
     cursor: pointer;
-    font-family: Verdana, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 11px;
     font-weight: bold;
 }
@@ -1741,7 +1374,7 @@ body {
 }
 
 .WardrobeTab {
-    color: #00c;
+    color: #095fb5;
     text-decoration: none;
     padding: 2px 4px;
 }
@@ -1810,7 +1443,7 @@ body {
 }
 
 .ItemAction a {
-    color: #00c;
+    color: #095fb5;
     text-decoration: none;
     font-size: 11px;
     border: 1px solid #99c;
@@ -1825,7 +1458,7 @@ body {
 
 .WearBtn,
 .RemoveBtn {
-    color: #00c !important;
+    color: #095fb5 !important;
 }
 
 .ItemThumb {
@@ -1855,7 +1488,7 @@ body {
 
 .ItemName {
     font-weight: bold;
-    color: #00c;
+    color: #095fb5;
     font-size: 12px;
     margin-bottom: 3px;
     word-wrap: break-word;
@@ -1873,7 +1506,7 @@ body {
 }
 
 .ItemCreator a {
-    color: #00c;
+    color: #095fb5;
 }
 
 .ItemLabel {
@@ -1891,12 +1524,13 @@ body {
     text-align: center;
     margin-top: 15px;
     padding: 8px;
-    background: #ddd;
+    background: #f0f0f0;
+    border: 1px solid #e0e0e0;
     font-size: 11px;
 }
 
 .ItemPagination a {
-    color: #00c;
+    color: #095fb5;
     text-decoration: none;
     margin: 0 5px;
 }
@@ -1911,7 +1545,7 @@ body {
 }
 
 .ItemPagination .PageNum {
-    color: #00c;
+    color: #095fb5;
     text-decoration: none;
     margin: 0 2px;
 }

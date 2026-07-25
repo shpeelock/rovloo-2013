@@ -1,0 +1,142 @@
+/* Settings — Rovloo's own config page (theme / performance / blacklist), single column.
+   Not an attempt at an authentic Roblox Account page — the tab widget and .MyRobloxContainer/
+   h1 chrome are reused verbatim from main-bundle-2013.css (the same tab system Character/Inbox
+   use), but the tabs and content are purely this build's own settings, organized by what they
+   actually are (Theme / Performance / Blacklist) rather than imitating Roblox's Account tabs.
+   Scoped #page-account (2011 AllCSS leak protection). */
+
+#page-account {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000;
+    padding-top: 6px;
+}
+#page-account .MyRobloxContainer { width: 970px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; }
+
+/* Authentic h1 cascade (verbatim, same values used on Character): 40px bold #363636, -2px tracking */
+#page-account .MyRobloxContainer h1 { display: block; }
+#page-account h1 {
+    font-size: 40px;
+    font-weight: bold;
+    letter-spacing: -2px;
+    margin: 12px 0;
+    color: #363636;
+}
+
+#page-account #AccountPageContainer { font-family: Arial, Helvetica, sans-serif; padding-bottom: 10px; }
+#page-account #AccountPageLeft { width: 100%; }
+
+/* Tabs (verbatim main-bundle-2013.css .tab-container/.tab widget) */
+#page-account .tab-container { overflow: hidden; padding-left: 5px; }
+#page-account .tab {
+    float: left;
+    background-color: #D6D6D6;
+    padding: 7px;
+    border: 1px solid #9e9e9e;
+    font: bold 15px Arial, Helvetica, sans-serif;
+    margin: 4px 2px 0 1px;
+    border-bottom-width: 0;
+    position: relative;
+    top: -1px;
+    cursor: pointer;
+}
+#page-account .tab:hover { background-color: #e9e9e9; }
+#page-account .tab.active {
+    background-color: #fff;
+    margin-top: 0;
+    padding: 9px 7px;
+    border-bottom: 0;
+    position: relative;
+    border-color: #ccc;
+    z-index: 1;
+    margin: 0 1px 0 0;
+    top: 1px;
+}
+#page-account .tab-content {
+    display: none;
+    top: -1px;
+    position: relative;
+    background-color: #fff;
+    border-top: 1px solid #CCC;
+    padding-top: 10px;
+}
+#page-account .tab-content.active { display: block; }
+
+#page-account .settings-section { padding: 15px 0; }
+#page-account #AccountPageLeft a { color: #095fb5; text-decoration: none; }
+#page-account #AccountPageLeft a:hover { text-decoration: underline; }
+
+/* Settings groups — same idiom the real Account page uses for its own rows
+   (.SettingSubTitle{padding-bottom:15px;clear:both} + divider between sections), h3 is the
+   authentic base rule (verbatim, same values used on Character/profile section headers):
+   15px bold #363636, NOT uppercase. Native checkbox/radio inputs are intentionally UNstyled —
+   the real 2013 site never skinned them either (main-bundle-2013.css only resets their margin),
+   so bare OS controls are the period-accurate choice here, not an oversight. */
+#page-account .settings-group {
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ccc;
+}
+#page-account .settings-group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+#page-account .settings-group h3 {
+    font-size: 15px;
+    font-weight: bold;
+    color: #363636;
+    margin-bottom: 8px;
+}
+#page-account .settings-group label {
+    display: block;
+    padding: 3px 0;
+    cursor: pointer;
+    font-size: 12px;
+}
+#page-account input[type="radio"],
+#page-account input[type="checkbox"] {
+    margin: 4px 4px 0 0;
+    vertical-align: top;
+}
+
+/* .form-label/.form-select verbatim from main-bundle-2013.css (the same classes the real
+   Account/Character pages use for their own dropdowns) */
+#page-account label.form-label {
+    display: inline;
+    font-size: 13px;
+    color: #000;
+    font-weight: bold;
+    margin-right: 8px;
+}
+#page-account .form-select { margin: 0 5px 0 0; height: 21px; }
+
+/* .footnote verbatim (main-bundle-2013.css: color:#666 — size/margin are this page's own
+   layout choice, matching the existing indent under each toggle) */
+#page-account .footnote { color: #666; font-size: 11px; margin-left: 20px; margin-top: 3px; }
+
+/* .urgent-text verbatim from main-bundle-2013.css — replaces the inline red text + emoji,
+   which was never period-accurate (color emoji didn't render this way on the 2013 web) */
+#page-account .urgent-text { color: #c00; font-weight: bold; font-size: 11px; margin-left: 20px; margin-top: 5px; }
+
+/* btn-control system (main-bundle-2013.css verbatim, same sprite/values already used on
+   Character/Inbox) for the Manage Hidden Content button */
+#page-account .btn-control,
+#page-account .btn-control:active,
+#page-account .btn-control:hover {
+    border: 1px solid #777;
+    padding: 0 6px;
+    color: #000;
+    text-decoration: none;
+    background-color: #ccc;
+    text-align: center;
+    font-weight: normal;
+    cursor: pointer;
+    background-position: top;
+    display: inline-block;
+}
+#page-account .btn-control:hover { background-position: bottom; border-color: #888; }
+#page-account .btn-control.btn-control-large {
+    height: 25px;
+    line-height: 24px;
+    font-size: 13px;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 0 7px;
+    background-image: url('../../images/StyleGuide/btn-control-large-tile.png');
+}

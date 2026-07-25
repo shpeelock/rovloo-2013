@@ -1,23 +1,29 @@
-
+// Friends — faithful 2013 /My/EditFriends.aspx port.
+// Structure from reference/roblonium-editfriends.aspx: tab-container (Friends/Friend Requests —
+// "Best Friends" omitted, that concept doesn't exist in Roblox's current API), .friends-container
+// grid of .friend-container tiles with a hover-revealed gear .dropdown (Remove Friend /
+// Accept-Decline Friend Request). Data layer: getFriends/getUserPresence/getUserThumbnails
+// (unchanged from the previous version) plus newly-wired acceptFriendRequest/
+// declineFriendRequest/unfriend (added to roblox-api.js + preload this session — previously
+// implemented in the backend but never exposed to the renderer).
 
 (function() {
     'use strict';
 
     let currentUserId = null;
-    let allFriends = [];
-    let currentPage = 1;
-    let isLoading = false; 
-    const friendsPerPage = 30; 
-    const isStandalone = window.location.pathname.includes('friends.html');
-    const assetPath = isStandalone ? '../images/' : 'images/';
-    const uiPath = isStandalone ? '../assets/ui/' : 'assets/ui/';
+    let viewingOwnFriends = false;
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const isStandalonePage = window.location.pathname.includes('friends.html');
-        if (isStandalonePage && document.getElementById('FriendsLoading')) {
-            init();
-        }
-    });
+    let allFriends = [];
+    let friendsPage = 1;
+    const FRIENDS_PER_PAGE = 28;
+    // Roblox's friend-requests endpoint only accepts specific limit values (10/18/25/50/100) —
+    // an arbitrary value like FRIENDS_PER_PAGE gets rejected with a 400, which is exactly what
+    // surfaced as "Failed to load friend requests."
+    const REQUESTS_PER_PAGE = 25;
+
+    let requestsCursor = '';
+    let requestsCursorHistory = [];
+    let requestsItems = [];
 
     document.addEventListener('pageChange', function(e) {
         if (e.detail && e.detail.page === 'friends') {
@@ -29,15 +35,11 @@
         load: loadFriendsFromHash
     };
 
-    function init() {
-        console.log('Friends page initialized');
-        loadFriendsFromHash();
-    }
-
     function loadFriendsFromHash() {
         const userId = getUserIdFromHash();
         if (userId) {
             currentUserId = userId;
+            initTabs();
             loadFriends(userId);
         } else {
             showError('No user ID specified.');
@@ -55,16 +57,39 @@
         return null;
     }
 
+    function initTabs() {
+        document.querySelectorAll('#page-friends .tab-container .tab').forEach(tab => {
+            if (tab.dataset.bound) return;
+            tab.dataset.bound = 'true';
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('#page-friends .tab-container .tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('#page-friends .tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.id)?.classList.add('active');
+
+                if (tab.dataset.id === 'requests_tab' && requestsItems.length === 0) {
+                    loadRequests();
+                }
+            });
+        });
+
+        document.getElementById('AcceptAllButton')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await bulkRequestAction('accept');
+        });
+        document.getElementById('DeclineAllButton')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await bulkRequestAction('decline');
+        });
+    }
+
     async function loadFriends(userId) {
-        if (!document.getElementById('FriendsLoading')) return;
-
-        if (isLoading) return;
-        isLoading = true;
-
         showLoading();
 
         try {
-            
+            const currentUser = await window.RobloxClient.api.getCurrentUser().catch(() => null);
+            viewingOwnFriends = !!currentUser && String(currentUser.id) === String(userId);
+
             const [userInfo, friendsResult] = await Promise.all([
                 window.roblox.getUserInfo(userId),
                 window.roblox.getFriends(userId)
@@ -74,246 +99,290 @@
 
             document.title = `${userInfo.displayName || userInfo.name}'s Friends - ROBLOX`;
             const headerEl = document.getElementById('FriendsPageHeader');
-            if (headerEl) headerEl.textContent = `${userInfo.displayName || userInfo.name}'s Friends`;
+            if (headerEl) headerEl.textContent = viewingOwnFriends ? 'My Friends' : `${userInfo.displayName || userInfo.name}'s Friends`;
 
             allFriends = friendsResult.data || [];
 
-            renderPage(1);
+            const requestsTab = document.querySelector('.tab[data-id="requests_tab"]');
+            if (requestsTab) requestsTab.style.display = viewingOwnFriends ? '' : 'none';
+
+            renderFriendsPage(1);
             showContent();
+
+            if (viewingOwnFriends) {
+                loadRequestCount();
+            }
         } catch (error) {
             console.error('Failed to load friends:', error);
             showError('Failed to load friends list.');
-        } finally {
-            isLoading = false;
         }
     }
 
-    function renderPage(page) {
-        currentPage = page;
-        const container = document.getElementById('FriendsTable');
-        const noFriendsEl = document.getElementById('NoFriendsMessage');
-        
-        if (!container) return;
-        container.innerHTML = '';
+    async function loadRequestCount() {
+        try {
+            const result = await window.roblox.getFriendRequestCount();
+            const tab = document.querySelector('.tab[data-id="requests_tab"]');
+            if (tab && result?.count) {
+                tab.textContent = `Friend Requests (${result.count})`;
+            }
+        } catch (e) {
+            console.warn('Failed to load friend request count:', e);
+        }
+    }
+
+    // ---------- Friends tab ----------
+
+    function renderFriendsPage(page) {
+        friendsPage = page;
+        const grid = document.getElementById('FriendsGrid');
+        if (!grid) return;
 
         if (allFriends.length === 0) {
-            if (noFriendsEl) noFriendsEl.style.display = 'block';
-            updatePagers(0);
+            grid.innerHTML = '<div class="no-content-message">This user has no friends. <a href="/browse.aspx" class="text-link">Find friends</a> on ROBLOX.</div>';
+            renderPager('FriendsPager', 0, 1, renderFriendsPage);
             return;
         }
 
-        if (noFriendsEl) noFriendsEl.style.display = 'none';
+        const totalPages = Math.ceil(allFriends.length / FRIENDS_PER_PAGE);
+        const startIndex = (page - 1) * FRIENDS_PER_PAGE;
+        const pageFriends = allFriends.slice(startIndex, startIndex + FRIENDS_PER_PAGE);
 
-        const totalPages = Math.ceil(allFriends.length / friendsPerPage);
-        const startIndex = (page - 1) * friendsPerPage;
-        const pagedFriends = allFriends.slice(startIndex, startIndex + friendsPerPage);
-
-        renderFriendsGrid(pagedFriends);
-        updatePagers(totalPages);
+        renderFriendTiles(grid, pageFriends, 'remove');
+        renderPager('FriendsPager', page, totalPages, renderFriendsPage);
     }
 
-    async function renderFriendsGrid(friends) {
-        const container = document.getElementById('FriendsTable');
-        if (!container) return;
+    // ---------- Friend Requests tab ----------
 
-        container.innerHTML = '';
-        
-        const friendIds = friends.map(f => f.id);
+    async function loadRequests(cursor = '', isGoingBack = false) {
+        const grid = document.getElementById('RequestsGrid');
+        if (!grid) return;
 
-        renderSkeletonGrid(container, friends.length);
+        grid.innerHTML = '<div class="no-content-message">Loading...</div>';
 
-        const [userDetailsResult, thumbnailsResult, presenceResult] = await Promise.all([
-            window.roblox.getUsersByIds(friendIds).catch(() => ({ data: [] })),
-            window.roblox.getUserThumbnails(friendIds, '100x100', 'AvatarBust').catch(() => ({ data: [] })),
-            window.roblox.getUserPresence(friendIds).catch(() => ({ userPresences: [] }))
-        ]);
+        try {
+            const result = await window.roblox.getFriendRequests(REQUESTS_PER_PAGE, cursor);
+            requestsItems = result?.data || [];
+            requestsCursor = result?.nextPageCursor || '';
 
-        const userDetails = {};
-        if (userDetailsResult?.data) userDetailsResult.data.forEach(u => userDetails[u.id] = u);
-
-        const thumbnails = {};
-        if (thumbnailsResult?.data) thumbnailsResult.data.forEach(t => thumbnails[t.targetId] = t.imageUrl);
-
-        const presenceMap = {};
-        if (presenceResult?.userPresences) presenceResult.userPresences.forEach(p => presenceMap[p.userId] = p);
-
-        const PREMIUM_CACHE_TTL = 24 * 60 * 60 * 1000;
-        const cachedPremiumStatus = {};
-        const uncachedFriendIds = [];
-        
-        if (window.premiumStatusCache) {
-            friends.forEach(friend => {
-                const cached = window.premiumStatusCache.get(String(friend.id));
-                if (cached && cached.value !== null && (Date.now() - cached.timestamp < PREMIUM_CACHE_TTL)) {
-                    cachedPremiumStatus[friend.id] = cached.value;
-                } else {
-                    uncachedFriendIds.push(friend.id);
-                }
-            });
-        }
-
-        container.innerHTML = '';
-
-        const uncachedContainers = {};
-
-        let currentRow = null;
-        friends.forEach((friend, index) => {
-            if (index % 6 === 0) {
-                currentRow = document.createElement('tr');
-                container.appendChild(currentRow);
-            }
-
-            const name = userDetails[friend.id]?.name || userDetails[friend.id]?.displayName || friend.name || 'Unknown';
-            const thumb = thumbnails[friend.id] || `${uiPath}guest.png`;
-            const presence = presenceMap[friend.id];
-            const isOnline = presence && presence.userPresenceType > 0;
-            const statusIcon = isOnline ? `${assetPath}online.png` : `${assetPath}offline.png`;
-            
-            let statusText = isOnline ? `${name} is online` : `${name} is offline`;
-            if (presence?.lastLocation) statusText += ` at ${presence.lastLocation}`;
-
-            const td = document.createElement('td');
-            td.style.cssText = 'padding: 10px; text-align: center; vertical-align: top; width: 16.66%;';
-            td.innerHTML = `
-                <div class="Friend">
-                    <div class="Avatar" style="position: relative; display: inline-block; width: 100px; height: 100px;">
-                        <a href="#profile?id=${friend.id}" title="${escapeHtml(name)}" style="display:inline-block;height:100px;width:100px;cursor:pointer;">
-                            <img src="${thumb}" border="0" alt="${escapeHtml(name)}" style="width:100px;height:100px;object-fit:cover;" onerror="this.src='${uiPath}guest.png'"/>
-                        </a>
-                    </div>
-                    <div class="Summary">
-                        <span class="OnlineStatus"><img src="${statusIcon}" alt="${escapeHtml(statusText)}" title="${escapeHtml(statusText)}" style="border-width:0px; vertical-align:middle; margin-right:2px;"/></span>
-                        <span class="Name"><a href="#profile?id=${friend.id}" style="color:#00F;">${escapeHtml(name)}</a></span>
-                    </div>
-                </div>
-            `;
-            currentRow.appendChild(td);
-            
-            const avatarContainer = td.querySelector('.Avatar');
-
-            if (cachedPremiumStatus[friend.id] === true && avatarContainer) {
-                addObcOverlay(avatarContainer, friend.id);
-            } else if (uncachedFriendIds.includes(friend.id) && avatarContainer) {
-                uncachedContainers[friend.id] = avatarContainer;
-            }
-        });
-
-        if (window.addObcOverlayIfPremium && uncachedFriendIds.length > 0) {
-            
-            const sortedUncached = uncachedFriendIds.sort((a, b) => {
-                const aOnline = presenceMap[a]?.userPresenceType > 0 ? 1 : 0;
-                const bOnline = presenceMap[b]?.userPresenceType > 0 ? 1 : 0;
-                return bOnline - aOnline;
-            });
-
-            const MAX_PREMIUM_CHECKS = 6;
-            const friendsToCheck = sortedUncached.slice(0, MAX_PREMIUM_CHECKS);
-
-            const rateLimitResetIn = window.getPremiumRateLimitResetIn ? window.getPremiumRateLimitResetIn() : 0;
-            if (rateLimitResetIn > 30000) {
-                
-                console.log(`Skipping premium checks - rate limited for ${Math.ceil(rateLimitResetIn/1000)}s`);
+            if (requestsItems.length === 0 && !cursor) {
+                grid.innerHTML = '<div class="no-content-message">You have no pending friend requests.</div>';
+                renderPager('RequestsPager', 0, 1, () => {});
                 return;
             }
 
-            friendsToCheck.forEach((friendId, index) => {
-                const container = uncachedContainers[friendId];
-                if (container && document.body.contains(container)) {
-                    
-                    setTimeout(() => {
-                        if (document.body.contains(container)) {
-                            window.addObcOverlayIfPremium(container, friendId);
-                        }
-                    }, index * 2000);
+            renderFriendTiles(grid, requestsItems, 'request');
+
+            const prevBtn = document.getElementById('RequestsPrev');
+            const nextBtn = document.getElementById('RequestsNext');
+            renderPager('RequestsPager', 1, requestsCursor ? 2 : 1, null, {
+                hasPrev: requestsCursorHistory.length > 0,
+                hasNext: !!requestsCursor,
+                onPrev: () => {
+                    requestsCursorHistory.pop();
+                    const prevCursor = requestsCursorHistory[requestsCursorHistory.length - 1] || '';
+                    loadRequests(prevCursor, true);
+                },
+                onNext: () => {
+                    requestsCursorHistory.push(cursor);
+                    loadRequests(requestsCursor);
                 }
             });
+        } catch (error) {
+            console.error('Failed to load friend requests:', error);
+            grid.innerHTML = '<div class="no-content-message">Failed to load friend requests.</div>';
         }
     }
 
-    function renderSkeletonGrid(container, count) {
-        container.innerHTML = '';
-        let currentRow = null;
-        
-        for (let i = 0; i < count; i++) {
-            if (i % 6 === 0) {
-                currentRow = document.createElement('tr');
-                container.appendChild(currentRow);
+    async function bulkRequestAction(action) {
+        if (requestsItems.length === 0) return;
+        const ids = requestsItems.map(r => r.id || r.requesterId || r.senderId).filter(Boolean);
+
+        for (const id of ids) {
+            try {
+                if (action === 'accept') {
+                    await window.roblox.acceptFriendRequest(id);
+                } else {
+                    await window.roblox.declineFriendRequest(id);
+                }
+            } catch (e) {
+                console.warn(`Failed to ${action} friend request from`, id, e);
             }
-            
-            const td = document.createElement('td');
-            td.style.cssText = 'padding: 10px; text-align: center; vertical-align: top; width: 16.66%;';
-            td.innerHTML = `
-                <div class="Friend skeleton-friend">
-                    <div class="Avatar" style="position: relative; display: inline-block; width: 100px; height: 100px; background: #e0e0e0; animation: skeleton-pulse 1.5s ease-in-out infinite;">
+        }
+
+        await loadRequests();
+        loadRequestCount();
+    }
+
+    // ---------- shared tile renderer ----------
+
+    async function renderFriendTiles(grid, people, mode) {
+        grid.innerHTML = '';
+
+        renderSkeletonTiles(grid, people.length);
+
+        const ids = people.map(p => p.id || p.requesterId || p.senderId).filter(Boolean);
+
+        // The friends/friend-requests list endpoints don't reliably include name/displayName on
+        // their own — getUsersByIds is the real source of truth for that (same as the pre-port
+        // version of this file relied on).
+        const [userDetailsResult, thumbnailsResult, presenceResult] = await Promise.all([
+            window.roblox.getUsersByIds(ids).catch(() => ({ data: [] })),
+            window.roblox.getUserThumbnails(ids, '100x100', 'AvatarBust').catch(() => ({ data: [] })),
+            mode === 'remove' ? window.roblox.getUserPresence(ids).catch(() => ({ userPresences: [] })) : Promise.resolve({ userPresences: [] })
+        ]);
+
+        const userDetails = {};
+        (userDetailsResult?.data || []).forEach(u => { userDetails[u.id] = u; });
+
+        const thumbnails = {};
+        (thumbnailsResult?.data || []).forEach(t => { thumbnails[t.targetId] = t.imageUrl; });
+
+        const presenceMap = {};
+        (presenceResult?.userPresences || []).forEach(p => { presenceMap[p.userId] = p; });
+
+        grid.innerHTML = '';
+
+        people.forEach(person => {
+            const id = person.id || person.requesterId || person.senderId;
+            const details = userDetails[id];
+            const name = details?.name || details?.displayName || person.name || person.displayName || 'Unknown';
+            const thumb = thumbnails[id] || 'images/spinners/spinner100x100.gif';
+
+            let statusIcon = 'images/offline.png';
+            let statusText = `${name} is offline`;
+            if (mode === 'remove') {
+                const presence = presenceMap[id];
+                const isOnline = presence && presence.userPresenceType > 0;
+                statusIcon = isOnline ? 'images/online.png' : 'images/offline.png';
+                statusText = isOnline ? `${name} is online` : `${name} is offline`;
+            }
+
+            const actionsHtml = mode === 'remove'
+                ? `<li><a href="#" class="friend-action" data-action="remove" data-user-id="${id}">Remove Friend</a></li>`
+                : `<li><a href="#" class="friend-action" data-action="accept" data-user-id="${id}">Accept Friend Request</a></li>
+                   <li><a href="#" class="friend-action" data-action="decline" data-user-id="${id}">Decline Friend Request</a></li>`;
+
+            const tile = document.createElement('div');
+            tile.className = 'friend-container notranslate';
+            tile.dataset.userId = id;
+            tile.innerHTML = `
+                <div class="friend-hover">
+                    <div class="friend-dropdown">
+                        <div class="dropdown">
+                            <div class="button gear"></div>
+                            <ul class="dropdown-list">
+                                ${actionsHtml}
+                            </ul>
+                        </div>
                     </div>
-                    <div class="Summary" style="margin-top: 5px;">
-                        <span style="display: inline-block; width: 60px; height: 12px; background: #e0e0e0; animation: skeleton-pulse 1.5s ease-in-out infinite;"></span>
+                    <div class="friend-avatar roblox-avatar-image">
+                        <a href="#profile?id=${id}" title="${escapeHtml(name)}">
+                            <img src="${thumb}" width="100" height="100" border="0" alt="${escapeHtml(name)}" onerror="this.src='images/spinners/spinner100x100.gif'"/>
+                        </a>
                     </div>
                 </div>
+                <div class="friend-name">
+                    <img src="${statusIcon}" alt="${escapeHtml(statusText)}" title="${escapeHtml(statusText)}"/>
+                    <a class="text-link" title="${escapeHtml(name)}" href="#profile?id=${id}">${escapeHtml(name)}</a>
+                </div>
             `;
-            currentRow.appendChild(td);
+            grid.appendChild(tile);
+        });
+
+        wireTileInteractions(grid);
+    }
+
+    function renderSkeletonTiles(grid, count) {
+        grid.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'friend-container skeleton-friend';
+            tile.innerHTML = '<div class="friend-avatar"></div><div class="friend-name">&nbsp;</div>';
+            grid.appendChild(tile);
         }
     }
 
-    function addObcOverlay(container, userId) {
-        if (!container) return;
-
-        const existing = container.querySelector('.obc-overlay');
-        if (existing) existing.remove();
-
-        const bcType = window.isRandomizeBCEnabled && window.isRandomizeBCEnabled() 
-            ? window.getBCTypeForUser(userId) 
-            : 'OBC';
-        const overlayImage = window.getBCOverlayImage 
-            ? window.getBCOverlayImage(bcType) 
-            : (isStandalone ? '../images/icons/overlay_obcOnly.png' : 'images/icons/overlay_obcOnly.png');
-
-        let finalImage = overlayImage;
-        if (isStandalone && !overlayImage.startsWith('../')) {
-            finalImage = '../' + overlayImage;
-        }
-        
-        const overlay = document.createElement('img');
-        overlay.src = finalImage;
-        overlay.alt = bcType;
-        overlay.className = 'obc-overlay';
-        overlay.style.cssText = 'position: absolute; bottom: 0; left: 0; height: auto; pointer-events: none;';
-        container.appendChild(overlay);
-    }
-
-    function updatePagers(totalPages) {
-        const topPager = document.getElementById('FriendsPagerTop');
-        const bottomPager = document.getElementById('FriendsPagerBottom');
-        
-        const pagerHtml = totalPages <= 1 ? '' : `
-            <div class="Pager">
-                Pages: 
-                ${currentPage > 1 ? `<a href="#" class="prev-page" style="color:#00F; font-weight:bold;">&lt;&lt; Previous</a>` : ''}
-                ${Array.from({length: totalPages}, (_, i) => i + 1).map(p => 
-                    p === currentPage ? `<span>${p}</span>` : `<a href="#" class="goto-page" data-page="${p}" style="color:#00F; margin: 0 5px;">${p}</a>`
-                ).join('')}
-                ${currentPage < totalPages ? `<a href="#" class="next-page" style="color:#00F; font-weight:bold;">Next &gt;&gt;</a>` : ''}
-            </div>
-        `;
-
-        [topPager, bottomPager].forEach(pager => {
-            if (!pager) return;
-            pager.innerHTML = pagerHtml;
-            
-            pager.querySelectorAll('.prev-page').forEach(el => el.onclick = (e) => {
-                e.preventDefault();
-                renderPage(currentPage - 1);
+    function wireTileInteractions(grid) {
+        grid.querySelectorAll('.dropdown .button.gear').forEach(gear => {
+            gear.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const dropdown = gear.closest('.dropdown');
+                const wasOpen = dropdown.classList.contains('open');
+                grid.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+                if (!wasOpen) dropdown.classList.add('open');
             });
-            pager.querySelectorAll('.next-page').forEach(el => el.onclick = (e) => {
+        });
+
+        grid.querySelectorAll('.friend-action').forEach(link => {
+            link.addEventListener('click', async (e) => {
                 e.preventDefault();
-                renderPage(currentPage + 1);
-            });
-            pager.querySelectorAll('.goto-page').forEach(el => el.onclick = (e) => {
-                e.preventDefault();
-                renderPage(parseInt(el.getAttribute('data-page')));
+                const userId = link.dataset.action === 'remove' || link.dataset.action === 'accept' || link.dataset.action === 'decline'
+                    ? link.dataset.userId
+                    : null;
+                const action = link.dataset.action;
+                if (!userId) return;
+
+                try {
+                    if (action === 'remove') {
+                        await window.roblox.unfriend(userId);
+                        allFriends = allFriends.filter(f => String(f.id) != String(userId));
+                        renderFriendsPage(friendsPage);
+                    } else if (action === 'accept') {
+                        await window.roblox.acceptFriendRequest(userId);
+                        requestsItems = requestsItems.filter(r => String(r.id || r.requesterId) != String(userId));
+                        renderFriendTiles(document.getElementById('RequestsGrid'), requestsItems, 'request');
+                        loadRequestCount();
+                    } else if (action === 'decline') {
+                        await window.roblox.declineFriendRequest(userId);
+                        requestsItems = requestsItems.filter(r => String(r.id || r.requesterId) != String(userId));
+                        renderFriendTiles(document.getElementById('RequestsGrid'), requestsItems, 'request');
+                        loadRequestCount();
+                    }
+                } catch (err) {
+                    console.error(`Failed to ${action}:`, err);
+                    alert(`Failed to ${action.replace('-', ' ')}. Please try again.`);
+                }
             });
         });
     }
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('#page-friends .dropdown.open').forEach(d => d.classList.remove('open'));
+    });
+
+    // ---------- pager (silver arrow sprite, established sitewide pattern) ----------
+
+    function renderPager(containerId, currentPage, totalPages, goToPage, custom) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        if (totalPages <= 1 && !custom) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const hasPrev = custom ? custom.hasPrev : currentPage > 1;
+        const hasNext = custom ? custom.hasNext : currentPage < totalPages;
+
+        container.innerHTML = `
+            <a id="${containerId}Prev" href="javascript:void(0)"><span class="pager previous${hasPrev ? '' : ' disabled'}"></span></a>
+            <span class="pageInfo">Page ${currentPage}${totalPages > 1 && !custom ? ' of ' + totalPages : ''}</span>
+            <a id="${containerId}Next" href="javascript:void(0)"><span class="pager next${hasNext ? '' : ' disabled'}"></span></a>
+        `;
+
+        document.getElementById(`${containerId}Prev`)?.addEventListener('click', () => {
+            if (!hasPrev) return;
+            if (custom) custom.onPrev();
+            else goToPage(currentPage - 1);
+        });
+        document.getElementById(`${containerId}Next`)?.addEventListener('click', () => {
+            if (!hasNext) return;
+            if (custom) custom.onNext();
+            else goToPage(currentPage + 1);
+        });
+    }
+
+    // ---------- page state ----------
 
     function showLoading() {
         document.getElementById('FriendsLoading').style.display = 'block';
@@ -328,11 +397,9 @@
     }
 
     function showError(message) {
-        
         if (window.showErrorPage) {
             window.showErrorPage(message, 'friends-content');
         } else {
-            
             document.getElementById('FriendsLoading').style.display = 'none';
             const errorEl = document.getElementById('FriendsError');
             errorEl.style.display = 'block';
@@ -347,5 +414,4 @@
         div.textContent = text;
         return div.innerHTML;
     }
-
 })();

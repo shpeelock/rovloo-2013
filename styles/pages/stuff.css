@@ -1,0 +1,82 @@
+/* Stuff — faithful 2013 /My/Stuff.aspx port.
+   Structure transcribed from reference/archive-stuff-2013.html: the same #UserContainer >
+   #UserAssetsPane > #AssetsMenu/#AssetsContent widget as the Profile page's Inventory section
+   (styles/pages/profile.css) — Stuff.aspx is that widget standalone, minus Recommended Hats.
+   CSS values are the SAME verified rules from the profile port (main-bundle-2013.css), just
+   re-scoped #page-stuff. Image paths re-pointed local. */
+
+#page-stuff #stuff-content {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000;
+    padding-top: 6px;
+}
+#page-stuff .MyRobloxContainer { width: 970px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; }
+#page-stuff .clear { clear: both; }
+
+/* Authentic base h2 = 16px bold #000 UPPERCASE; .title adds margins (same as profile.css) */
+#page-stuff h2,
+#page-stuff h2.title {
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+    color: #000;
+    text-transform: uppercase;
+    margin: 0;
+    padding: 0;
+    letter-spacing: 0;
+}
+#page-stuff h2.title { display: block; margin: 20px 0; }
+#page-stuff h2 span, #page-stuff h2.title span { font: inherit; color: inherit; text-transform: inherit; background: none; padding: 0; }
+
+#page-stuff .divider-right { border-right: 1px solid #ccc; }
+
+/* Authentic #UserAssetsPane has NO text-align (archive + bundle); overrides.css sets a
+   non-authentic centered text-align on the global #UserAssetsPane (2011 leak, same trap
+   documented in profile.css) — override it #page-stuff-scoped. */
+#page-stuff #UserAssetsPane { text-align: left; }
+#page-stuff #UserContainer { clear: both; font-family: Arial, Helvetica, sans-serif; }
+#page-stuff #UserAssets { overflow: hidden; }
+#page-stuff #UserContainer #AssetsMenu { float: left; width: 158px; }
+#page-stuff .verticaltab { text-decoration: none; }
+#page-stuff .verticaltab:hover { background: #efefef; }
+#page-stuff .verticaltab.selected { background: #efefef; border: 1px solid #ccc; font-weight: bold; border-right: none; text-align: left; }
+#page-stuff .verticaltab a {
+    font-size: 14px; color: #363636; display: block; height: 35px; line-height: 35px;
+    text-decoration: none; padding-left: 15px; text-align: left;
+}
+#page-stuff .verticaltab a:hover { text-decoration: none; }
+#page-stuff #UserContainer #AssetsContent { float: left; width: 685px; margin: 0 28px; min-width: 0; position: relative; text-align: left; font-family: Verdana, Sans-Serif; }
+#page-stuff #UserContainer #AssetsList { clear: both; }
+
+/* Silver 27px sprite pager (.pager.previous/.next) — verbatim from main-bundle, same sprite
+   as Profile's Badges/Groups/Inventory/Favorites pagers. */
+#page-stuff .pager.previous,
+#page-stuff .pager.next {
+    display: inline-block; width: 27px; height: 27px; vertical-align: middle;
+    background-repeat: no-repeat; background-position: top left;
+}
+#page-stuff .pager.previous { background-image: url('../../images/Buttons/Arrows/btn-silver-left-27.png'); }
+#page-stuff .pager.next { background-image: url('../../images/Buttons/Arrows/btn-silver-right-27.png'); }
+#page-stuff .pager.previous:hover,
+#page-stuff .pager.next:hover { background-position: bottom left; cursor: pointer; }
+#page-stuff .pager.disabled,
+#page-stuff .pager.disabled:hover { background-position: 0 -27px; cursor: default; }
+#page-stuff .FooterPager .pager { margin: 0 12px; }
+#page-stuff .FooterPager > span { vertical-align: middle; font: 12px Arial, Helvetica, sans-serif; }
+#page-stuff .FooterPager { text-align: center; padding: 4px 0; font-size: 12px; }
+#page-stuff .FooterPager a { color: #095fb5; text-decoration: none; }
+
+/* Asset tiles (#UserContainer .Asset family) — verbatim from main-bundle-2013.css.
+   2011 AllCSS's #UserContainer .Asset .AssetThumbnail (same 2-id+2-class specificity, loads
+   after) sets a BLACK border; the authentic bundle value is #CCC — re-assert it. */
+#page-stuff #UserContainer .Asset .AssetThumbnail { border: solid 1px #ccc; }
+
+#page-stuff #stuff-content a {
+    color: #095fb5;
+    text-decoration: none;
+}
+#page-stuff #stuff-content a:hover {
+    text-decoration: underline;
+}
+#page-stuff .Label { color: #000; }

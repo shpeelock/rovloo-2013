@@ -1,0 +1,22 @@
+/* Search page (nav-renamed from "People") = the real Browse.aspx user search.
+   FLAT late-2013 generation (reference/archive-browse-oct2013.html + the populated
+   archive-browse-search-oct2014.html; rules verbatim from
+   reference/authentic-css/main-bundle-oct2013.css — the classic blue #006699 bar/.Grid skin
+   was retired between Jul and Oct 2013). Layout is inline in the scripts/main.js template;
+   the shared flat vocabulary lives here. Inputs/buttons are NATIVE, as shipped.
+   Source Sans Pro @font-face is declared in styles/pages/groups.css (shared fonts/ files). */
+
+#page-people #BrowseContainer { font-family: 'Source Sans Pro', Arial, Helvetica, sans-serif; color: #343434; font-size: 14px; line-height: 1.428; }
+#page-people #BrowseContainer a { color: #095fb5; text-decoration: none; }
+#page-people #BrowseContainer a:hover { text-decoration: underline; }
+
+/* Verbatim Oct-2013 bundle rules: */
+#page-people .form-label { font-size: 14px; color: #343434; font-weight: 600; }
+#page-people .table { border-top: 1px solid #9e9e9e; }
+#page-people .table td,
+#page-people .table th { padding: 5px; border-top: 1px solid #ccc; margin: 0; text-align: left; }
+#page-people .table-header th { border-left: 1px solid #ccc; font-weight: 600; background-color: #f1f1f1; border-top: none; }
+#page-people .table-header .first { border-left: 1px solid #f1f1f1; }
+#page-people .footnote { color: #666; }
+#page-people .SearchError { clear: both; margin: 2px; float: none; padding: 2px; text-align: center; color: Red; }
+#page-people #BrowseContainer input { font-family: 'Source Sans Pro', Arial, Helvetica, sans-serif; }
