@@ -97,3 +97,84 @@ window.addEventListener('loginStateChanged', function(e) {
 });
 
 window.update2013Header = update2013Header;
+
+/* ===== DropDownNav — faithful port of the real 2013 DropDownNav.js (recovered from the master
+   bundle js.rbxcdn.com/4b6c541583d4b076f3b6c29ea97129ba.js; saved at
+   reference/nav-js/4b6c541583d4b076f3b6c29ea97129ba.js).
+
+   Authentic behaviour, preserved exactly:
+     - mouseenter on a [drop-down-nav-button] OPENS it and, while open that way, mouseleave closes
+       it (the click handler is unbound for the duration, so hovering never "sticks").
+     - clicking instead PINS it open: the hover handlers are unbound, a document click closes it,
+       and the next click on the button closes it too.
+     - opening adds .active to the button, shows the container whose
+       drop-down-nav-container value matches, hides every other container, clears .active
+       elsewhere, and fires a "showDropDown" event on the button.
+   The page's own inline script then equalized option widths on showDropDown — ported below. */
+(function () {
+  function containers() { return Array.from(document.querySelectorAll('[drop-down-nav-container]')); }
+  function buttons() { return Array.from(document.querySelectorAll('[drop-down-nav-button]')); }
+
+  function closeAll() {
+    containers().forEach(c => { c.style.display = 'none'; });
+    buttons().forEach(b => b.classList.remove('active'));
+  }
+
+  function open(target) {
+    const button = target.closest('[drop-down-nav-button]');
+    if (!button) return;
+    button.classList.add('active');
+    const key = button.getAttribute('drop-down-nav-button');
+    containers().forEach(c => {
+      c.style.display = c.getAttribute('drop-down-nav-container') === key ? 'block' : 'none';
+    });
+    buttons().forEach(b => { if (b !== button) b.classList.remove('active'); });
+    button.dispatchEvent(new CustomEvent('showDropDown', { bubbles: false }));
+  }
+
+  let pinned = false;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    buttons().forEach(button => {
+      button.addEventListener('mouseenter', function () {
+        if (pinned) return;
+        open(button);
+      });
+      button.addEventListener('mouseleave', function () {
+        if (pinned) return;
+        closeAll();
+      });
+      button.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (pinned && button.classList.contains('active')) {
+          pinned = false;
+          closeAll();
+        } else {
+          pinned = true;
+          open(button);
+        }
+      });
+    });
+
+    document.addEventListener('click', function () {
+      if (pinned) { pinned = false; closeAll(); }
+    });
+
+    // Verbatim port of the capture's inline handler: widen every option to the widest one
+    // so the dropdown is a clean rectangle (see archive-browse-oct2013.html).
+    const moreItem = document.querySelector('.more-list-item');
+    if (moreItem) {
+      moreItem.addEventListener('showDropDown', function () {
+        const container = document.querySelector('#navigation-menu .dropdownnavcontainer');
+        if (!container) return;
+        let maxWidth = container.offsetWidth;
+        const spans = document.querySelectorAll('a.dropdownoption span');
+        spans.forEach(s => { maxWidth = Math.max(maxWidth, Math.ceil(s.getBoundingClientRect().width)); });
+        maxWidth += 5;
+        document.querySelectorAll('#navigation-menu .dropdownoption').forEach(opt => {
+          if (opt.getBoundingClientRect().width < maxWidth) opt.style.width = maxWidth + 'px';
+        });
+      });
+    }
+  });
+})();

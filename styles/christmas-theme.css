@@ -61,21 +61,19 @@ body.christmas-theme #navigation-container a.btn-logo {
     height: 35px;
 }
 
-/* Fallback for when Flash doesn't load */
+/* Fallback for when Flash doesn't load. Toggled by christmas-banner.js via the `no-flash` class
+   on <body> (it used to write an inline background on .site-header, which could never be undone —
+   once a load failed the JPEG stayed behind every later banner). */
 body.christmas-theme.no-flash .site-header {
     background: url('../images/cssthemes/christmas/bg-holiday_banner_no_flash.jpg') repeat-x center top !important;
 }
 
-/* Christmas-themed link colors */
-body.christmas-theme a {
-    color: #c41e3a; /* Christmas red for links */
-}
+/* NO global link recolour. The real /CSS/Themes/Holiday2013/Holiday2013.css
+   (reference/seasonal/holiday2013.css) only swaps the nav logo and adds the snow strip — it never
+   touches page links. The previous `body.christmas-theme a{color:#c41e3a}` turned EVERY link in
+   the app Christmas red on every page, which is the most visible bug this theme had. */
 
-body.christmas-theme a:hover {
-    color: #ff4444;
-}
-
-/* Keep navigation links white */
+/* Nav links stay white (matches the base 2013 header). */
 body.christmas-theme #navigation-menu a,
 body.christmas-theme #AlertSpace a,
 body.christmas-theme .subMenu a {

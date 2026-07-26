@@ -591,3 +591,34 @@ body.theme-2013 #Announcement {
 body.theme-2013 #Footer {
     padding: 3em 55px;
 }
+
+/* ===== "More" nav dropdown — verbatim from the Oct-2013 bundle
+   (reference/authentic-css/catalog-page-bundle-2013.css, the generation matching our
+   #navigation-menu / .more-list-item header markup). Image paths localized. ===== */
+.more-list-item { cursor: pointer; width: 43px; text-decoration: none; outline: none; }
+#navigation-menu li.more-list-item { background: none; }
+.more-list-item .more-link-container { height: 35px; top: -8px; position: relative; }
+.more-list-item.active #nav-more { color: black; margin-top: 0; background-color: #efefef; }
+#nav-more { margin-top: 8px; text-decoration: none; white-space: nowrap; }
+.more-list-item span#more-menu-toggle,
+.more-list-item span#more-menu-toggle:hover {
+    text-decoration: none; outline: none; padding: 0 2px; cursor: pointer; border: none;
+    background: url('../images/Buttons/bg-drop_down_arrow.png') top no-repeat;
+    height: 5px; width: 7px; display: inline-block; margin-left: 2px; top: -1px; position: relative;
+}
+.more-list-item.active span#more-menu-toggle,
+.more-list-item.active span#more-menu-toggle:hover {
+    background: url('../images/Buttons/bg-drop_down_arrow.png') bottom no-repeat; top: -1px;
+}
+#navigation-menu .more-list-item.active:hover .more-link-container,
+#navigation-menu li.more-list-item.active .more-link-container {
+    background-color: #EFEFEF; border: 1px solid #777; border-bottom: none; background-image: none;
+    height: 35px; top: -7px; line-height: 33px; left: -8px; position: relative;
+    padding: 0 5px 0 7px; display: inline-block;
+}
+#navigation-menu .dropdownnavcontainer { margin-top: -8px; margin-left: -8px; color: black; min-height: 100px; }
+.dropdownnavcontainer .dropdownoption { position: relative; cursor: pointer; }
+#navigation-menu .dropdownmainnav { background-color: #efefef; border: 1px solid #777; display: inline-block; zoom: 1; }
+#navigation-menu .dropdownmainnav a { color: black; font-size: 13px; line-height: 23px; display: block; }
+#navigation-menu .dropdownnavcontainer a:hover { background-color: #d8d8d8; }
+.dropdownmainnav .dropdownoption span { margin-left: 1px; font-weight: normal; padding: 1px 10px 1px 5px; }

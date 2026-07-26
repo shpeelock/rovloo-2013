@@ -2188,7 +2188,7 @@ const badgePaginationState = {
   isLoading: false,
   thumbnailCache: new Map()
 };
-const badgesPerPage = 12;
+const badgesPerPage = 15;  // authentic profile badge grid: 3 rows of 5
 
 function handleBadgePagination(e) {
   const btn = e.target.closest('#badgePrevBtn, #badgeNextBtn');
@@ -2315,7 +2315,7 @@ const groupPaginationState = {
   isLoading: false,
   thumbnailCache: new Map()
 };
-const groupsPerPage = 15;
+const groupsPerPage = 12;  // authentic profile groups grid: 3 rows of 4
 
 function handleGroupPagination(e) {
   const btn = e.target.closest('#groupPrevBtn, #groupNextBtn');
@@ -2383,7 +2383,7 @@ async function renderProfileGroups(groups, isPageChange = false) {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'float: left;';
     wrap.innerHTML = `
-      <div class="groupEmblemThumbnail" style="width:70px; overflow:hidden;">
+      <div class="groupEmblemThumbnail" style="width:70px; overflow:hidden;margin:15px">
         <div class="groupEmblemImage notranslate" style="width:70px; height:72px; margin:0; padding-top:0; background-repeat:no-repeat; background-image:none;">
           <a href="#group?id=${group.id}" title="${escapeHtml(group.name)}" style="display:inline-block;height:62px;width:60px;cursor:pointer;">
             ${thumb ? `<img src="${thumb}" height="62" width="60" border="0" alt="${escapeHtml(group.name)}" onerror="this.style.display='none'"/>` : ''}
@@ -2445,15 +2445,57 @@ const assetCategories = [
   { id: 32, name: 'Packages' }
 ];
 
-let currentAssetCategory = 8; 
-let currentAssetCursor = '';
+let currentAssetCategory = 8;
 let currentAssetPage = 1;
 let currentInventoryUserId = null;
-let assetCursorHistory = []; 
+
+// The authentic 2013 inventory grid is 3 rows of 6 (the row chunking below is `index % 6`),
+// but the Roblox inventory/badges APIs only accept limits of 10/25/50/100 — so batches are
+// buffered client-side and sliced into full 18-item pages (same pattern as the group members
+// and wall pagers).
+const INVENTORY_PER_PAGE = 18;
+const INVENTORY_FETCH_LIMIT = 25;
+let inventoryBuffer = [];
+let inventoryBufferKey = '';
+let inventoryApiCursor = '';
+let inventoryHasMore = true;
+
+function resetInventoryBuffer() {
+  inventoryBuffer = [];
+  inventoryBufferKey = '';
+  inventoryApiCursor = '';
+  inventoryHasMore = true;
+}
+
+// Fills the buffer from the API until `page` can be served, then returns that page's slice
+// plus whether a further page exists.
+async function getInventoryPage(key, page, fetchBatch) {
+  if (inventoryBufferKey !== key) {
+    inventoryBuffer = [];
+    inventoryBufferKey = key;
+    inventoryApiCursor = '';
+    inventoryHasMore = true;
+  }
+
+  while (inventoryBuffer.length < page * INVENTORY_PER_PAGE && inventoryHasMore) {
+    const result = await fetchBatch(inventoryApiCursor);
+    const batch = result?.data || [];
+    inventoryBuffer.push(...batch);
+    inventoryApiCursor = result?.nextPageCursor || '';
+    inventoryHasMore = !!inventoryApiCursor;
+  }
+
+  const start = (page - 1) * INVENTORY_PER_PAGE;
+  return {
+    items: inventoryBuffer.slice(start, start + INVENTORY_PER_PAGE),
+    hasNext: inventoryBuffer.length > start + INVENTORY_PER_PAGE || inventoryHasMore
+  };
+}
 
 async function renderProfileInventory(userId, showRecommendations = true) {
   currentInventoryUserId = userId;
-  assetCursorHistory = []; 
+  currentAssetPage = 1;
+  resetInventoryBuffer();
   const menuContainer = document.getElementById('AssetsMenu');
   const assetsContent = document.getElementById('AssetsContent');
   if (!menuContainer) return;
@@ -2545,9 +2587,8 @@ async function renderProfileRecommendations() {
 
 window.selectAssetCategory = async function(categoryId) {
   currentAssetCategory = categoryId;
-  currentAssetCursor = '';
   currentAssetPage = 1;
-  assetCursorHistory = []; 
+  resetInventoryBuffer();
 
   const menuContainer = document.getElementById('AssetsMenu');
   if (menuContainer) {
@@ -2613,7 +2654,7 @@ function buildInventoryPriceHtml(details, ecoData) {
   }
 }
 
-async function loadInventoryCategory(userId, assetTypeId, cursor = '', isGoingBack = false) {
+async function loadInventoryCategory(userId, assetTypeId) {
   const container = document.getElementById('AssetsList');
   const paginationEl = document.getElementById('AssetsPagination');
 
@@ -2622,21 +2663,26 @@ async function loadInventoryCategory(userId, assetTypeId, cursor = '', isGoingBa
   container.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Loading...</td></tr>';
 
   try {
-    
+
     if (assetTypeId === 21) {
-      await loadInventoryBadges(userId, cursor, isGoingBack);
+      await loadInventoryBadges(userId);
       return;
     }
 
-    const result = await window.roblox.getUserInventory(userId, assetTypeId, 10, cursor, 'Desc');
+    const page = await getInventoryPage(
+      `assets:${userId}:${assetTypeId}`,
+      currentAssetPage,
+      (cursor) => window.roblox.getUserInventory(userId, assetTypeId, INVENTORY_FETCH_LIMIT, cursor, 'Desc')
+    );
+    const pageItems = page.items;
 
-    if (!result?.data || result.data.length === 0) {
+    if (pageItems.length === 0) {
       container.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666; padding: 20px;">No items to display.</td></tr>';
       if (paginationEl) paginationEl.style.display = 'none';
       return;
     }
 
-    const assetIds = result.data.map(item => item.assetId);
+    const assetIds = pageItems.map(item => item.assetId);
     let thumbnails = {};
     try {
       const thumbResult = await window.robloxAPI.getAssetThumbnails(assetIds, '110x110');
@@ -2666,8 +2712,8 @@ async function loadInventoryCategory(userId, assetTypeId, cursor = '', isGoingBa
 
     container.innerHTML = '';
     let currentRow = null;
-    result.data.forEach((item, index) => {
-      if (index % 6 === 0) {   // authentic 2013 inventory grid is 6 per row
+    pageItems.forEach((item, index) => {
+      if (index % 6 === 0) {   // authentic 2013 inventory grid is 6 per row (3 rows = 18/page)
         currentRow = document.createElement('tr');
         container.appendChild(currentRow);
       }
@@ -2718,64 +2764,63 @@ async function loadInventoryCategory(userId, assetTypeId, cursor = '', isGoingBa
       currentRow.appendChild(td);
     });
 
-    currentAssetCursor = result.nextPageCursor || '';
-    
     if (paginationEl) {
       const prevBtn = document.getElementById('AssetsPrevPage');
       const nextBtn = document.getElementById('AssetsNextPage');
       const pageInfo = document.getElementById('AssetsPageInfo');
-      
+
       if (pageInfo) pageInfo.textContent = `Page ${currentAssetPage}`;
-      
+
       if (prevBtn) {
         prevBtn.querySelector('.pager')?.classList.toggle('disabled', currentAssetPage <= 1);
         prevBtn.onclick = () => {
           if (currentAssetPage > 1) {
             currentAssetPage--;
-            
-            assetCursorHistory.pop();
-            const prevCursor = assetCursorHistory.length > 0 ? assetCursorHistory[assetCursorHistory.length - 1] : '';
-            loadInventoryCategory(userId, assetTypeId, prevCursor, true); 
+            loadInventoryCategory(userId, assetTypeId);
           }
         };
       }
-      
+
       if (nextBtn) {
-        nextBtn.querySelector('.pager')?.classList.toggle('disabled', !currentAssetCursor);
+        nextBtn.querySelector('.pager')?.classList.toggle('disabled', !page.hasNext);
         nextBtn.onclick = () => {
-          if (currentAssetCursor) {
+          if (page.hasNext) {
             currentAssetPage++;
-            assetCursorHistory.push(currentAssetCursor);
-            loadInventoryCategory(userId, assetTypeId, currentAssetCursor);
+            loadInventoryCategory(userId, assetTypeId);
           }
         };
       }
-      
-      paginationEl.style.display = (currentAssetPage > 1 || currentAssetCursor) ? 'block' : 'none';
+
+      paginationEl.style.display = (currentAssetPage > 1 || page.hasNext) ? 'block' : 'none';
     }
-    
+
   } catch (error) {
     console.error('Failed to load inventory:', error);
     container.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #cc0000; padding: 20px;">Failed to load inventory.</td></tr>';
   }
 }
 
-async function loadInventoryBadges(userId, cursor = '', isGoingBack = false) {
+async function loadInventoryBadges(userId) {
   const container = document.getElementById('AssetsList');
   const paginationEl = document.getElementById('AssetsPagination');
-  
+
   if (!container) return;
-  
+
   try {
-    const result = await window.roblox.getUserBadges(userId, 10, cursor);
-    
-    if (!result?.data || result.data.length === 0) {
+    const page = await getInventoryPage(
+      `badges:${userId}`,
+      currentAssetPage,
+      (cursor) => window.roblox.getUserBadges(userId, INVENTORY_FETCH_LIMIT, cursor)
+    );
+    const pageItems = page.items;
+
+    if (pageItems.length === 0) {
       container.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666; padding: 20px;">No items to display.</td></tr>';
       if (paginationEl) paginationEl.style.display = 'none';
       return;
     }
 
-    const badgeIds = result.data.map(badge => badge.id);
+    const badgeIds = pageItems.map(badge => badge.id);
     let thumbnails = {};
     try {
       const thumbResult = await window.roblox.getBadgeThumbnails(badgeIds, '150x150');
@@ -2790,12 +2835,12 @@ async function loadInventoryBadges(userId, cursor = '', isGoingBack = false) {
 
     container.innerHTML = '';
     let currentRow = null;
-    result.data.forEach((badge, index) => {
-      if (index % 6 === 0) {   // authentic 2013 inventory grid is 6 per row
+    pageItems.forEach((badge, index) => {
+      if (index % 6 === 0) {   // authentic 2013 inventory grid is 6 per row (3 rows = 18/page)
         currentRow = document.createElement('tr');
         container.appendChild(currentRow);
       }
-      
+
       const thumb = thumbnails[badge.id] || 'images/spinners/spinner100x100.gif';
       
       const td = document.createElement('td');
@@ -2818,41 +2863,36 @@ async function loadInventoryBadges(userId, cursor = '', isGoingBack = false) {
       currentRow.appendChild(td);
     });
 
-    currentAssetCursor = result.nextPageCursor || '';
-    
     if (paginationEl) {
       const prevBtn = document.getElementById('AssetsPrevPage');
       const nextBtn = document.getElementById('AssetsNextPage');
       const pageInfo = document.getElementById('AssetsPageInfo');
-      
+
       if (pageInfo) pageInfo.textContent = `Page ${currentAssetPage}`;
-      
+
       if (prevBtn) {
         prevBtn.querySelector('.pager')?.classList.toggle('disabled', currentAssetPage <= 1);
         prevBtn.onclick = () => {
           if (currentAssetPage > 1) {
             currentAssetPage--;
-            assetCursorHistory.pop();
-            const prevCursor = assetCursorHistory.length > 0 ? assetCursorHistory[assetCursorHistory.length - 1] : '';
-            loadInventoryBadges(userId, prevCursor, true);
+            loadInventoryBadges(userId);
           }
         };
       }
-      
+
       if (nextBtn) {
-        nextBtn.querySelector('.pager')?.classList.toggle('disabled', !currentAssetCursor);
+        nextBtn.querySelector('.pager')?.classList.toggle('disabled', !page.hasNext);
         nextBtn.onclick = () => {
-          if (currentAssetCursor) {
+          if (page.hasNext) {
             currentAssetPage++;
-            assetCursorHistory.push(currentAssetCursor);
-            loadInventoryBadges(userId, currentAssetCursor);
+            loadInventoryBadges(userId);
           }
         };
       }
-      
-      paginationEl.style.display = (currentAssetPage > 1 || currentAssetCursor) ? 'block' : 'none';
+
+      paginationEl.style.display = (currentAssetPage > 1 || page.hasNext) ? 'block' : 'none';
     }
-    
+
   } catch (error) {
     console.error('Failed to load badges:', error);
     container.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #cc0000; padding: 20px;">Failed to load badges.</td></tr>';

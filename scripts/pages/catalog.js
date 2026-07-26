@@ -3,7 +3,7 @@
     'use strict';
 
     let catalogLoaded = false;
-    let currentMode = 'Classic';
+    let currentMode = 'Featured';   // catalog opens on the Featured section (was Classic)
     let currentCategory = 'All';
     let currentSubcategory = '';
     let currentPage = 1;
@@ -337,7 +337,7 @@
             catalogLink.dataset.wired = '1';
             catalogLink.addEventListener('click', function(e) {
                 e.preventDefault();
-                currentMode = 'Classic';
+                currentMode = 'Featured';
                 const sm = document.getElementById('SortMain');
                 if (sm) sm.value = 'Relevance';
                 currentCategory = 'All';
@@ -2392,7 +2392,7 @@
 
         classicItemsList = null;
 
-        currentMode = 'Classic';
+        currentMode = 'Featured';
         currentCategory = 'All';
         currentSubcategory = '';
         currentSalesType = 'All';

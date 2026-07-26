@@ -1,25 +1,61 @@
-
+/**
+ * ROBLOX Halloween 2013 site theme — VERBATIM port.
+ *
+ * Source: the real /CSS/Themes/Halloween2013/Halloween2013.css, recovered from the Oct-28-2013
+ * homepage capture (reference/seasonal/archive-halloween-2013.html links it; the stylesheet itself
+ * is saved at reference/seasonal/halloween2013.css). Assets fetched from the 2013 CDN:
+ *   images/Themes/Halloween2013/Halloween-2013-header.png  (116x70 logo sprite: normal / hover)
+ *   images/RevisedHeader/bg-obc_header.png                 (the dark header tile — the real theme
+ *                                                           reuses the OBC header, it is not a
+ *                                                           Halloween-specific asset)
+ *
+ * The 2013 theme is deliberately restrained: black page, dark header, pumpkin logo. There is NO
+ * tiled spooky background and NO recolouring of page chrome — the previous version of this file
+ * was the 2011 theme (h11_background_4.jpg / h11_headerimg.jpg) plus invented hue-rotate() filters
+ * on 2011-only selectors (#HeaderContainer, #Header .Navigation, .ShadowedStandardBox) that do not
+ * exist in the 2013 markup, so most of it never applied at all.
+ *
+ * Adaptations, all mechanical:
+ *   - every rule is scoped to body.halloween-theme (the SPA toggles a body class instead of
+ *     swapping stylesheets, which is how the real site applied the theme);
+ *   - `html{background-color:Black}` becomes the body rule (same painted surface here);
+ *   - the real `#Footer.LanguageRedesign` class is not in our markup, so the footer rules target
+ *     `#Footer` directly — same elements, same values;
+ *   - !important is required on the header/logo backgrounds because styles/2013-layout.css sets
+ *     those with !important and loads earlier.
+ */
 
 body.halloween-theme {
-  background: url('../assets/backgrounds/h11_background_4.jpg') center 30px repeat-x #000 !important;
+    background-color: Black !important;
 }
 
-body.halloween-theme #HeaderContainer {
-  background: url('../assets/backgrounds/h11_headerimg.jpg') no-repeat scroll 0 0 transparent !important;
+body.halloween-theme .site-header {
+    background: url('../images/RevisedHeader/bg-obc_header.png') !important;
 }
 
-body.halloween-theme #Header .Navigation {
-  filter: hue-rotate(180deg) !important;
+body.halloween-theme #navigation-container a.btn-logo,
+body.halloween-theme #navigation-container a.btn-logo:visited {
+    background: url('../images/Themes/Halloween2013/Halloween-2013-header.png') !important;
 }
 
-body.halloween-theme .Navigation .dropdownmainnav {
-  filter: hue-rotate(180deg) !important;
+body.halloween-theme #navigation-container a.btn-logo:hover {
+    background: url('../images/Themes/Halloween2013/Halloween-2013-header.png') !important;
+    background-position: 0 35px !important;
 }
 
-body.halloween-theme .ShadowedStandardBox .Header {
-  filter: hue-rotate(180deg) !important;
+body.halloween-theme #navigation-container .HeaderDivider {
+    border-left: 1px solid #878988;
 }
 
-body.halloween-theme .ShadowedStandardBox {
-  border-color: #e67e22 !important;
+body.halloween-theme #Footer {
+    color: #555;
+    background-color: Black;
+}
+
+body.halloween-theme #Footer div.legal {
+    border-color: white;
+}
+
+body.halloween-theme #Footer p.Legalese {
+    color: #555;
 }

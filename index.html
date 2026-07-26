@@ -72,13 +72,31 @@
                 <a href="#" class="btn-logo" data-page="home" title="ROBLOX"></a>
                 
                 <!-- Main Navigation Menu -->
+                <!-- Authentic 2013 main nav (labels + More dropdown transcribed verbatim from
+                     reference/archive-browse-oct2013.html; the same markup appears in the Apr-2013
+                     and Feb-2014 captures). Real order was Home / Games / Catalog / Develop /
+                     Upgrade / Forum / More — Rovloo has no Develop or Forum, and "Reviews" takes
+                     the community slot. NO Upgrade/Builders Club entry: deliberate product
+                     decision (do not "restore" it for authenticity — it was removed on request).
+                     Search (our Browse.aspx port) sits in More, exactly where "People" lived. -->
                 <div id="navigation-menu">
                     <ul>
-                        <li><a href="#" data-page="home">Home</a></li>
-                        <li><a href="#" data-page="games" title="Games">Games</a></li>
-                        <li><a href="#" data-page="catalog" title="Catalog">Catalog</a></li>
-                        <li><a href="#" data-page="people" title="Search">Search</a></li>
-                        <li><a href="#" data-page="reviews" title="Reviews">Reviews</a></li>
+                        <li><a href="#" data-page="home" ref="nav-myroblox" title="Home">Home</a></li>
+                        <li><a href="#" data-page="games" ref="nav-games" title="Games">Games</a></li>
+                        <li><a href="#" data-page="catalog" ref="nav-catalog" title="Catalog">Catalog</a></li>
+                        <li><a href="#" data-page="reviews" ref="nav-reviews" title="Reviews">Reviews</a></li>
+                        <li class="more-list-item" drop-down-nav-button="more-list-item">
+                            <div class="more-link-container">
+                                <a id="nav-more" title="More" ref="nav-more">More<span id="more-menu-toggle"></span></a>
+                            </div>
+                            <div class="dropdownnavcontainer" style="display:none;" drop-down-nav-container="more-list-item">
+                                <div class="dropdownmainnav" style="z-index:1023">
+                                    <a class="dropdownoption" href="#" data-page="people" title="Search" ref="nav-people"><span>Search</span></a>
+                                    <a class="dropdownoption" href="#" data-page="groups" title="Groups" ref="nav-groups"><span>Groups</span></a>
+                                    <div style="clear:both;"></div>
+                                </div>
+                            </div>
+                        </li>
                     </ul>
                 </div>
 
@@ -144,16 +162,24 @@
         <!-- 2013 Sub-Navigation (Full Width) -->
         <!-- 2013 Sub-Navigation (Full Width) - Always visible -->
         <div class="mySubmenuFixed Redesign" id="SubNav2013">
+            <!-- Authentic 2013 My ROBLOX submenu — order and labels verbatim from
+                 reference/archive-home.html: Profile / Character / Friends / Groups / Inventory /
+                 Sets / Trade / Money / Advertising / Account. Rovloo has no Sets, Trade, Money or
+                 Advertising pages, so those are omitted; note "Stuff" was only ever the URL
+                 (/My/Stuff.aspx) — the real LABEL was "Inventory". "Home" is dropped because the
+                 main-nav Home already routes to My ROBLOX when logged in (as ref="nav-myroblox"
+                 did in 2013), and Inbox lives on the header envelope icon, same as the real site. -->
             <div class="subMenu">
                 <ul>
-                    <li><a href="#" data-page="myroblox">Home</a></li>
-                    <li><a href="#" data-page="inbox">Inbox</a></li>
-                    <li><a href="#" data-page="account">Account</a></li>
                     <li><a href="#" data-subnav="profile">Profile</a></li>
-                    <li><a href="#" data-subnav="friends">Friends</a></li>
                     <li><a href="#" data-page="character">Character</a></li>
-                    <li><a href="#" data-page="stuff">Stuff</a></li>
+                    <li><a href="#" data-subnav="friends">Friends</a></li>
                     <li><a href="#" data-page="groups">Groups</a></li>
+                    <li><a href="#" data-page="stuff">Inventory</a></li>
+                    <li><a href="#" data-page="inbox">Messages</a></li>
+                    <!-- Rovloo rename: the real 2013 label here was "Account", but this page is
+                         Rovloo's own settings, so it reads "Settings" (page key stays `account`). -->
+                    <li><a href="#" data-page="account">Settings</a></li>
                 </ul>
             </div>
         </div>
@@ -528,108 +554,94 @@
 
                 <!-- My ROBLOX Home Page - 2013 3-Column Layout -->
                 <div id="page-myroblox" class="page">
+                    <!-- Faithful 2013 My ROBLOX home (/home). Structure transcribed VERBATIM from
+                         reference/archive-home.html (a real logged-in Nov-2013 capture); CSS is the
+                         real ~/CSS/Pages/Home/Home.css + CSS/My/BestFriends.css, saved to
+                         reference/authentic-css/home-page-bundle-2013.css / bestfriends-2013.css.
+                         Column order left -> middle -> right is authentic (all three float:left).
+                         OMITTED, with reason: the skyscraper ad and Facebook facepile boxes (Rovloo
+                         has neither), and #statusUpdateBox — the status feature no longer exists on
+                         Roblox's API, and shipping a dead input would be a fake, not a port. -->
                     <div id="HomeContainer" class="home-container">
-                        <!-- Greeting -->
-                        <div class="home-greeting">
+                        <div>
                             <h1>Hello, <span id="myroblox-username" class="notranslate">User</span>!</h1>
                         </div>
 
-                        <!-- Left Column -->
                         <div class="left-column">
-                            <!-- User Avatar Box -->
-                            <div class="left-column-boxes user-avatar-container">
+                            <div class="left-column-boxes user-avatar-container no-top-border">
                                 <div id="UserAvatar" class="user-avatar-holder">
                                     <span class="user-avatar">
                                         <img id="myroblox-avatar-img" alt="Avatar" class="user-avatar-image" src="images/spinners/spinner100x100.gif"/>
                                     </span>
                                 </div>
-                                <div id="UserInfo" class="text">
+                                <div id="UserInfo" class="text user-avatar-text">
                                     <div>
-                                        <b><a id="myroblox-notifications-link" class="text-link" href="#inbox">
-                                            <span id="myroblox-notifications-count">0</span> System Notification(s)
-                                        </a></b>
+                                        <b><a id="myroblox-notifications-link" class="text-link" href="#" data-page="inbox"><span id="myroblox-notifications-count">0</span> System Notification(s)</a></b>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Roblox News -->
                             <div class="left-column-boxes">
                                 <h3>Roblox News</h3>
                                 <div class="notranslate text news-container">
                                     <div id="RobloxNews">
                                         <div class="roblox-news-feed" id="myroblox-news">
-                                            <div class="roblox-news-feed-item">
-                                                <span style="color: #666;">Loading news...</span>
-                                            </div>
+                                            <div class="roblox-news-feed-item"><span style="color: #666;">Loading news...</span></div>
                                         </div>
                                         <a href="https://blog.roblox.com/" class="SeeMore" target="_blank">See More</a>
-                                        <img alt="See more!" src="images/Icons/efe86a4cae90d4c37a5d73480dea4cb1.png" class="see-more-img"/>
+                                        <img alt="See more! " src="images/Icons/efe86a4cae90d4c37a5d73480dea4cb1.png" class="see-more-img"/>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Quick Stats -->
-                            <div class="left-column-boxes text">
-                                <h3>My Stats</h3>
-                                <div class="stats-container">
-                                    <div class="stat-row">
-                                        <span class="stat-label">Friends:</span>
-                                        <span id="myroblox-friends-count" class="stat-value">0</span>
+                            <div class="left-column-boxes">
+                                <div>
+                                    <h3 class="best-friends-title">My Best Friends</h3>
+                                    <div class="edit-friends-button">
+                                        <a href="#" data-subnav="friends" class="btn-small btn-neutral">Edit</a>
                                     </div>
-                                    <div class="stat-row">
-                                        <span class="stat-label">Robux:</span>
-                                        <span id="myroblox-robux-count" class="stat-value" style="color: #0a0;">0</span>
-                                    </div>
-                                    <div class="stat-row">
-                                        <span class="stat-label">Messages:</span>
-                                        <span id="myroblox-messages-count" class="stat-value">0</span>
-                                    </div>
-                                    <div class="stat-row">
-                                        <span class="stat-label">Rovloo Score:</span>
-                                        <span id="myroblox-rovloo-score" class="stat-value" style="color: #c90;">0</span>
-                                    </div>
+                                    <div class="clear"></div>
+                                </div>
+                                <div id="bestFriendsContainer" class="best-friends-container">
+                                    <div class="best-friends" id="myroblox-best-friends"></div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Right Column (must come before middle for float:right) -->
-                        <div class="right-column">
-                            <!-- Recently Played Games -->
-                            <div id="RecentlyVisitedPlacesContainer" class="right-column-box">
-                                <h3 style="padding-bottom: 6px;">Recently Played Games</h3>
-                                <div id="myroblox-recently-played">
-                                    <div style="color: #666; font-size: 11px; padding: 10px;">Loading...</div>
-                                </div>
-                                <div id="SeeMoreRecent">
-                                    <a href="#games" class="text-link">See More <img alt="See more!" src="images/Icons/efe86a4cae90d4c37a5d73480dea4cb1.png" class="see-more-img"/></a>
-                                </div>
-                            </div>
-
-                            <!-- Recommended Games -->
-                            <div id="RecommendedGamesContainer" class="right-column-box">
-                                <h3 style="padding-bottom: 6px;">Recommended For You</h3>
-                                <div id="myroblox-recommended-games">
-                                    <div style="color: #666; font-size: 11px; padding: 10px;">Loading recommendations...</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Middle Column -->
                         <div class="middle-column">
-                            <!-- My Feed -->
                             <div id="FeedContainer" class="middle-column-box feed-container">
                                 <h2>My Feed</h2>
                                 <div id="FeedPanel">
-                                    <div id="myroblox-feed" class="text">
-                                        <div class="text" style="color: #666; padding: 10px;">
-                                            Please wait... Roblox is getting your Feed :)
+                                    <div id="AjaxFeed" class="text">
+                                        <div class="text" id="myroblox-feed">
+                                            <div class="text" style="color: #666; padding: 10px;">
+                                                Please wait... Roblox is getting your Feed :)
+                                            </div>
                                         </div>
                                     </div>
+                                    <div id="FeedError" style="display: none" class="error-message">An error occurred while fetching your feed.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="right-column">
+                            <div id="RecentlyVisitedPlacesContainer" class="right-column-box no-top-border">
+                                <h3 style="padding-bottom: 6px;">Recently Played Games</h3>
+                                <div id="RecentlyVisitedPlaces">
+                                    <div id="myroblox-recently-played"></div>
+                                </div>
+                                <div id="SeeMore">
+                                    <a href="#" data-page="games" class="text-link">See More <img alt="See more! " src="images/Icons/efe86a4cae90d4c37a5d73480dea4cb1.png" class="see-more-img"/></a>
+                                </div>
+                                <div id="PlayGames" style="display: none">
+                                    You haven't played any games recently.
+                                    <a href="#" data-page="games" class="text-link">Play Now <img alt="See more! " src="images/Icons/efe86a4cae90d4c37a5d73480dea4cb1.png" class="see-more-img"/></a>
                                 </div>
                             </div>
                         </div>
 
                         <div class="clear"></div>
+                        <div id="UserScreenContainer"></div>
                     </div>
                 </div>
             </div>
@@ -1042,10 +1054,10 @@
     <script src="scripts/navigation.js"></script>
     <!-- 2013 Navigation Script -->
     <script src="scripts/2013-nav.js"></script>
-    <!-- Ruffle Flash Emulator (for Christmas banner) -->
-    <script src="scripts/ruffle/ruffle.js"></script>
-    <!-- swf2js Flash Emulator (alternative - lower RAM) -->
-    <script src="scripts/swf2js/swf2js.js"></script>
+    <!-- Flash engines are NOT loaded here on purpose. Between them Ruffle (417KB) and swf2js
+         (749KB) cost ~1.2MB of fetch+parse on every launch, for a banner that only exists while
+         the Christmas theme is active. christmas-banner.js injects whichever engine is selected,
+         on demand, the first time the banner is built. -->
     <!-- Christmas Banner (Flash animation support) -->
     <script src="scripts/christmas-banner.js"></script>
     <!-- Utilities -->

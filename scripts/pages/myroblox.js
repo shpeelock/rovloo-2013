@@ -6,6 +6,25 @@
 (function () {
     'use strict';
 
+    // Feed rows whose source has no usable image fall back to the ROBLOX mark rather than
+    // rendering an empty gap (Roblox notification payloads often carry no thumbnail, and CDN
+    // thumbnail URLs expire).
+    // roblox-icon-feed.png is a 100x100 Lanczos downscale of images/Icons/roblox-icon-hq.png
+    // (2091x2090, kept as the source of truth). Serving the 2091px original here would decode
+    // ~16.7 MB of RGBA for a 50px slot; the derivative is 13.6 KB and still 2x the slot, so it
+    // stays crisp on HiDPI. Regenerate with the snippet in styles/home.css if the source changes.
+    const FEED_FALLBACK_ICON = 'images/Icons/roblox-icon-feed.png';
+
+    function feedIconHtml(url, alt) {
+        const safeAlt = escapeHtml(alt || 'ROBLOX');
+        if (!url) {
+            return `<img class="feed-asset-image feed-fallback-icon" src="${FEED_FALLBACK_ICON}" alt="${safeAlt}"/>`;
+        }
+        // onerror covers expired/broken thumbnail URLs, which otherwise leave a broken-image glyph.
+        return `<img class="feed-asset-image" src="${url}" alt="${safeAlt}"`
+            + ` onerror="this.onerror=null; this.src='${FEED_FALLBACK_ICON}'; this.classList.add('feed-fallback-icon');"/>`;
+    }
+
     document.addEventListener('pageChange', function (e) {
         if (e.detail && e.detail.page === 'myroblox') {
             loadMyRobloxPage();
@@ -55,7 +74,10 @@
         if (!avatarImg) return;
 
         try {
-            const thumbnails = await window.roblox.getUserThumbnails([userId], '150x150', 'AvatarThumbnail');
+            // This generation renders the avatar as a 210x210 SQUARE (.user-avatar img), so a square
+            // source is correct here; 210 isn't an API-valid size, 250x250 is (verified live) and the
+            // CSS scales it down cleanly. (The older Nov-2013 generation used a 150x200 portrait.)
+            const thumbnails = await window.roblox.getUserThumbnails([userId], '250x250', 'Avatar');
             if (thumbnails?.data && thumbnails.data[0]?.imageUrl) {
                 avatarImg.src = thumbnails.data[0].imageUrl;
             }
@@ -133,25 +155,65 @@
         }
     }
 
+    // "Best Friends" in 2013 was a hand-picked subset of your friends. Its modern successor is
+    // Trusted Connections, and the roster IS retrievable — endpoint recovered from a real capture
+    // of roblox.com/users/friends (themes/roblox-trustedfriends.har):
+    //   GET friends/v1/users/{id}/friends/find?limit=50&findFriendsType=1&userSort=Created
+    // In that capture the account had a long friends list but findFriendsType=1 returned exactly
+    // one entry, confirming it is the trusted subset and not the full list. It returns IDs only
+    // ({"PageItems":[{"id":105756462}]}), so names are resolved separately.
+    // Fallbacks, in order, if the account has no trusted connections: Roblox's own
+    // friendFrequentRank ("most-interacted friends"), then plain list order.
+    const BEST_FRIENDS_SHOWN = 3;   // the Nov-2013 capture shows exactly 3
+
+    async function getBestFriends(userId) {
+        // 1. Trusted Connections (the real analogue of 2013 Best Friends)
+        try {
+            const trusted = await window.roblox.getTrustedFriends(userId);
+            const ids = (trusted?.data || []).slice(0, BEST_FRIENDS_SHOWN);
+            if (ids.length > 0) {
+                const info = await window.roblox.getUsersByIds(ids);
+                const users = info?.data || [];
+                if (users.length > 0) {
+                    console.log('[MyROBLOX] Best Friends: trusted connections (' + users.length + ')');
+                    return users;
+                }
+            }
+        } catch (e) {
+            console.warn('[MyROBLOX] Trusted connections unavailable, falling back:', e?.message || e);
+        }
+
+        // 2/3. Fall back to the friends list
+        const friendsResult = await window.roblox.getFriends(userId);
+        const allFriends = friendsResult?.data || [];
+        if (allFriends.length === 0) return [];
+
+        const ranked = allFriends.filter(f => typeof f.friendFrequentRank === 'number' && f.friendFrequentRank > 0);
+        if (ranked.length > 0) {
+            console.log('[MyROBLOX] Best Friends: friendFrequentRank (' + ranked.length + ' ranked)');
+            return ranked.sort((a, b) => a.friendFrequentRank - b.friendFrequentRank).slice(0, BEST_FRIENDS_SHOWN);
+        }
+
+        console.log('[MyROBLOX] Best Friends: list order (no trusted connections, no rank fields)');
+        return allFriends.slice(0, BEST_FRIENDS_SHOWN);
+    }
+
     async function loadBestFriends(userId) {
         const container = document.getElementById('myroblox-best-friends');
         if (!container) return;
 
         try {
-            // Get friends list (limited to 3 for display)
-            const friendsResult = await window.roblox.getFriends(userId, 3);
-            const friends = friendsResult?.data || [];
+            const friends = await getBestFriends(userId);
 
             if (friends.length === 0) {
-                container.innerHTML = '<div style="color: #666; font-size: 11px; padding: 5px;">No friends yet. Add some friends!</div>';
+                container.innerHTML = '<div class="text" style="color: #666;">You have no friends yet.</div>';
                 return;
             }
 
-            // Get thumbnails for friends
             const friendIds = friends.map(f => f.id);
             let thumbnailMap = {};
             try {
-                const thumbnails = await window.roblox.getUserThumbnails(friendIds, '48x48', 'AvatarHeadShot');
+                const thumbnails = await window.roblox.getUserThumbnails(friendIds, '48x48', 'Headshot');
                 if (thumbnails?.data) {
                     thumbnails.data.forEach(t => {
                         if (t.targetId && t.imageUrl) {
@@ -163,10 +225,11 @@
                 console.warn('Failed to load friend thumbnails:', e);
             }
 
-            // Get presence info
+            // NOTE: the preload bridge exposes this as getUserPresence — the old call to
+            // getUsersPresence silently threw, so every friend rendered as Offline.
             let presenceMap = {};
             try {
-                const presence = await window.roblox.getUsersPresence(friendIds);
+                const presence = await window.roblox.getUserPresence(friendIds);
                 if (presence?.userPresences) {
                     presence.userPresences.forEach(p => {
                         presenceMap[p.userId] = p;
@@ -176,26 +239,28 @@
                 console.warn('Failed to load friend presence:', e);
             }
 
+            // Authentic widget markup (CSS/My/BestFriends.css + the Nov-2013 capture):
+            // .user > .roblox-avatar-image + .info(status dot img + a.name + .status) + .clear
+            // The status line held the friend's status message in 2013; that field no longer
+            // exists, so it carries their presence location — real data in the same slot.
             let html = '';
             for (const friend of friends) {
                 const thumbnail = thumbnailMap[friend.id] || 'images/spinners/spinner100x100.gif';
                 const presence = presenceMap[friend.id];
-                const isOnline = presence?.userPresenceType > 0;
-                const statusIcon = isOnline
-                    ? 'images/Icons/online.png'
-                    : 'images/Icons/offline.png';
+                const isOnline = presence && presence.userPresenceType > 0;
+                const statusIcon = isOnline ? 'images/online.png' : 'images/offline.png';
                 const statusTitle = isOnline ? 'Online' : 'Offline';
+                const where = isOnline ? (presence.lastLocation || 'Website') : '';
 
                 html += `
                     <div class="user">
-                        <div class="roblox-avatar-image">
-                            <a href="#profile?id=${friend.id}">
-                                <img src="${thumbnail}" alt="${escapeHtml(friend.name)}" title="${escapeHtml(friend.name)}"/>
-                            </a>
-                        </div>
+                        <a class="avatar-image-link" href="#profile?id=${friend.id}">
+                            <img src="${thumbnail}" alt="${escapeHtml(friend.name)}" title="${escapeHtml(friend.name)}" border="0"/>
+                        </a>
                         <div class="info">
                             <img src="${statusIcon}" title="${statusTitle}" alt="${statusTitle}"/>
                             <a class="name" href="#profile?id=${friend.id}">${escapeHtml(friend.displayName || friend.name)}</a>
+                            ${where ? `<div class="status">${escapeHtml(where)}</div>` : ''}
                         </div>
                         <div class="clear"></div>
                     </div>
@@ -453,6 +518,10 @@
                 const thumbnail = thumbnailMap[game.universeId] || 'images/spinners/spinner100x100.gif';
                 const playtime = playtimeInfo ? window.PlaytimeTracker.formatPlaytimeMinutes(playtimeInfo.totalMinutes) : '< 1m';
 
+                // Authentic markup (reference/archive-home.html): .recent-place-container carries an
+                // inline display:block because Home.css hides the class by default (the real page kept
+                // a hidden #RecentlyVisitedPlaceTemplate to clone). Names were server-truncated to ~30
+                // chars with a trailing ellipsis, and the count reads "N players online".
                 html += `
                     <div class="recent-place-container">
                         <div class="recent-place-thumb">
@@ -461,11 +530,9 @@
                             </a>
                         </div>
                         <div class="recent-place-Info">
-                            <div class="recent-place-name">
-                                <a href="#game-detail?id=${game.placeId}&universe=${game.universeId}">${escapeHtml(game.name)}</a>
-                            </div>
-                            <div class="recent-place-players-online">${game.playing.toLocaleString()} playing</div>
-                            <div class="recent-place-playtime">Played: ${playtime}</div>
+                            <a class="recent-place-link" href="#game-detail?id=${game.placeId}&universe=${game.universeId}" title="${escapeHtml(game.name)}">${escapeHtml(game.name)}</a>
+                            <div class="recent-place-players-online text">${game.playing.toLocaleString()} players online</div>
+                            <div class="recent-place-playtime text">Played: ${playtime}</div>
                         </div>
                     </div>
                 `;
@@ -603,39 +670,45 @@
 
             let feedHtml = '';
             for (const item of allFeedItems) {
-                const date = new Date(item.timestamp).toLocaleString('en-US', {
-                    month: 'short', day: 'numeric', year: 'numeric',
-                    hour: 'numeric', minute: '2-digit', hour12: true
-                });
+                // Authentic feed timestamp format from the capture: "10/26/2013 at 3:35 PM"
+                const feedDate = new Date(item.timestamp);
+                const date = feedDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })
+                    + ' at ' + feedDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
                 if (item.type === 'groupShout') {
                     const shout = item.data;
+                    // Authentic group-shout feed item, verbatim shape from archive-home.html:
+                    // group link + <br> + .Feedtext quote + "(posted by <user>)", then the date span.
                     feedHtml += `
-                        <div class="feed-item feed-item-shout">
-                            <div class="feed-image-container">
-                                <a href="#groups?groupId=${shout.groupId}">
-                                    <img src="${item.thumbnail}" alt="${escapeHtml(shout.groupName)}"/>
+                        <div class="divider-top feed-container">
+                            <div class="feed-image-container notranslate">
+                                <a href="#groups?groupId=${shout.groupId}" class="feed-asset">
+                                    ${feedIconHtml(item.thumbnail, shout.groupName)}
                                 </a>
                             </div>
-                            <div class="feed-text-container">
-                                <div><a href="#groups?groupId=${shout.groupId}"><b>${escapeHtml(shout.groupName)}</b></a> posted a new shout:</div>
-                                <div class="Feedtext">"${escapeHtml(shout.shoutBody)}"</div>
-                                <div style="color: #999; font-size: 11px; margin-top: 4px;">- ${escapeHtml(shout.shoutPoster)} • ${date}</div>
+                            <div class="feed-text-container text">
+                                <span class="notranslate"><a href="#groups?groupId=${shout.groupId}">${escapeHtml(shout.groupName)}</a><br>
+                                    <div class="Feedtext">"${escapeHtml(shout.shoutBody)}"</div> (posted by ${escapeHtml(shout.shoutPoster)})
+                                </span>
+                                <span style="display: block; padding-top: 5px; color: #AAA; font-size: 11px;">${date}</span>
                             </div>
+                            <div class="clear"></div>
                         </div>
                     `;
                 } else if (item.type === 'rovloo') {
                     const notif = item.data;
                     feedHtml += `
-                        <div class="feed-item feed-item-rovloo">
-                            <div class="feed-image-container">
-                                <img src="images/rovloo/rovloo-ico64.png" alt="Rovloo" style="width: 32px; height: 32px; margin: 8px;"/>
+                        <div class="divider-top feed-container">
+                            <div class="feed-image-container notranslate">
+                                <img class="feed-asset-image" src="images/rovloo/rovloo-ico64.png" alt="Rovloo" style="width: 50px; height: 50px;"/>
                             </div>
-                            <div class="feed-text-container">
-                                <div><b style="color: #666;">Rovloo</b></div>
-                                <div>${escapeHtml(notif.message)}</div>
-                                <div style="color: #999; font-size: 11px; margin-top: 4px;">${date}</div>
+                            <div class="feed-text-container text">
+                                <span class="notranslate"><b>Rovloo</b><br>
+                                    <div class="Feedtext">${escapeHtml(notif.message)}</div>
+                                </span>
+                                <span style="display: block; padding-top: 5px; color: #AAA; font-size: 11px;">${date}</span>
                             </div>
+                            <div class="clear"></div>
                         </div>
                     `;
                 } else if (item.type === 'roblox') {
@@ -646,7 +719,7 @@
                         if (thumb && thumb[0]?.idType === 'userThumbnail' && thumb[0]?.id) {
                             const avatarUrl = item.thumbnailMap[thumb[0].id];
                             if (avatarUrl) {
-                                avatarHtml = `<img src="${avatarUrl}" alt=""/>`;
+                                avatarHtml = feedIconHtml(avatarUrl, '');
                             }
                         }
                     } catch (e) {}
@@ -664,12 +737,13 @@
                     }
 
                     feedHtml += `
-                        <div class="feed-item">
-                            <div class="feed-image-container">${avatarHtml}</div>
-                            <div class="feed-text-container">
-                                <div>${message}</div>
-                                <div style="color: #999; font-size: 11px; margin-top: 4px;">${date}</div>
+                        <div class="divider-top feed-container">
+                            <div class="feed-image-container notranslate">${avatarHtml || feedIconHtml(null, 'ROBLOX')}</div>
+                            <div class="feed-text-container text">
+                                <span class="notranslate">${message}</span>
+                                <span style="display: block; padding-top: 5px; color: #AAA; font-size: 11px;">${date}</span>
                             </div>
+                            <div class="clear"></div>
                         </div>
                     `;
                 }

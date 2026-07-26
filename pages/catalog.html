@@ -67,7 +67,7 @@
                      dropdownUl exactly. Sections carry data-mode; the Sort by select is pure sorts. -->
                 <div id="dropdown" class="splashdropdown">
                     <ul id="CategoryList">
-                        <li class="subcategories" data-delay="never"><a href="#" data-mode="Featured" data-category="All">Featured</a>
+                        <li class="subcategories selected" data-delay="never"><a href="#" data-mode="Featured" data-category="All">Featured</a>
                             <ul class="slideOut">
                                 <li class="slideHeader"><span>Featured Types</span></li>
                                 <li><a href="#" data-mode="Featured" data-category="All">All Featured Items</a></li>
@@ -85,7 +85,7 @@
                                 <li><a href="#" data-salestype="Collectible" data-category="Gear">Collectible Gear</a></li>
                             </ul>
                         </li>
-                        <li class="selected"><a href="#" data-mode="Classic" data-category="All">Classic</a></li>
+                        <li><a href="#" data-mode="Classic" data-category="All">Classic</a></li>
 
                         <li class="slideHeader DropdownDivider divider-bottom" data-delay="ignore"></li>
 
@@ -152,8 +152,8 @@
                              (All / Featured / Collectibles / Clothing / Body Parts / Gear / ...) with
                              our sections + whole-group categories. -->
                         <ul id="FlatCategoryList">
-                            <li><a href="#" class="assetTypeFilter selected" data-keepfilters="true" data-category="All">All Categories</a></li>
-                            <li><a href="#" class="assetTypeFilter" data-keepfilters="true" data-mode="Featured" data-category="All">Featured</a></li>
+                            <li><a href="#" class="assetTypeFilter" data-keepfilters="true" data-category="All">All Categories</a></li>
+                            <li><a href="#" class="assetTypeFilter selected" data-keepfilters="true" data-mode="Featured" data-category="All">Featured</a></li>
                             <li><a href="#" class="assetTypeFilter" data-keepfilters="true" data-salestype="Collectible" data-category="All">Collectibles</a></li>
                             <li><a href="#" class="assetTypeFilter" data-keepfilters="true" data-mode="Classic" data-category="All">Classic</a></li>
                             <li><a href="#" class="assetTypeFilter" data-keepfilters="true" data-category="Accessories">Accessories</a></li>
@@ -212,7 +212,7 @@
                      then #secondRow = "Showing X - Y of Z results" (left) + #SortOptions selects (right).
                      Sort option LABELS verbatim from the real #SortMain (Most Favorited / Bestselling /
                      Recently updated); values stay Rovloo mode keys. SortCurrency omitted (Tickets dead). -->
-                <a href="#" class="breadCrumbFilter bolded selected" id="ctl00_cphRoblox_rbxCatalog_AssetsDisplaySetLabel" data-filter="category">Classic Items</a>
+                <a href="#" class="breadCrumbFilter bolded selected" id="ctl00_cphRoblox_rbxCatalog_AssetsDisplaySetLabel" data-filter="category">Featured Items</a>
                 <div id="secondRow">
                     <div style="float: left; padding-top: 5px;">
                         <span id="CatalogResultsCount"></span>

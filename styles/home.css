@@ -1,510 +1,130 @@
 /**
- * 2013 ROBLOX Home Page Styles
- * 3-column layout matching the original 2013 design
+ * My ROBLOX home (/home) — VERBATIM port of the LATER ("connected columns") generation.
+ *
+ * Two generations exist and they look very different:
+ *   - Nov-2013: every left box fully bordered (border:1px #ccc) with 5px gaps -> a stack of
+ *     separate boxes. Kept for reference at reference/authentic-css/home-page-bundle-2013.css.
+ *   - 2014 (THIS ONE, user-selected from a real screenshot): columns are joined by rules instead
+ *     of boxed — .left-column/.middle-column carry a border-RIGHT, and each section carries only
+ *     a border-TOP, so the left side reads as one continuous column connected to the feed.
+ *     Source: the real ~/CSS/Pages/Home/Home.css via ROBLONIUM ->
+ *     reference/authentic-css/home-page-css-2014.css. Rules below are verbatim from it, with
+ *     image paths re-pointed local and scoped to #page-myroblox (the 2011 AllCSS loads after the
+ *     2013 CSS and would otherwise win equal-specificity ties).
  */
 
-/* ============================================
-   HOME CONTAINER - Main wrapper
-   ============================================ */
-
-.home-container {
-    width: 970px;
-    margin: 0 auto;
-    padding: 10px 0;
-    background: #ffffff;
-    overflow: hidden;
-}
-
-/* Greeting */
-.home-container .home-greeting {
-    padding: 0 0 10px 0;
-}
-
-.home-container .home-greeting h1 {
-    font-size: 32px;
-    font-weight: bold;
-    color: #333;
-    margin: 0;
-    padding: 0;
-}
-
-/* ============================================
-   LEFT COLUMN - Avatar, News, Friends
-   ============================================ */
-
-.home-container .left-column {
-    float: left;
-    width: 220px;
-    margin-right: 10px;
-    box-sizing: border-box;
-}
-
-.home-container .left-column-boxes {
-    background: #fff;
-    border: 1px solid #d4d4d4;
-    margin-bottom: 10px;
-    padding: 10px;
-}
-
-.home-container .left-column-boxes h3 {
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-    margin: 0 0 10px 0;
-    padding: 0;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
-}
-
-/* User Avatar Container */
-.home-container .user-avatar-container {
-    text-align: center;
-}
-
-.home-container .user-avatar-holder {
-    margin-bottom: 10px;
-}
-
-.home-container .user-avatar {
-    display: block;
-}
-
-.home-container .user-avatar-image {
-    width: 200px;
-    height: 200px;
-    object-fit: contain;
-}
-
-.home-container #UserInfo {
-    font-size: 12px;
-    text-align: center;
-}
-
-.home-container #UserInfo a.text-link {
-    color: #0066cc;
-    text-decoration: none;
-}
-
-.home-container #UserInfo a.text-link:hover {
-    text-decoration: underline;
-}
-
-/* News Feed */
-.home-container .news-container {
-    font-size: 12px;
-}
-
-.home-container .roblox-news-feed {
-    margin-bottom: 10px;
-}
-
-.home-container .roblox-news-feed-item {
-    background: url('../images/BulletPointArrow.png') no-repeat center left;
-    padding-left: 13px;
-    margin-bottom: 8px;
-    line-height: 1.4;
-}
-
-.home-container .roblox-news-feed-item a {
-    color: #0066cc;
-    text-decoration: none;
-    font-size: 11px;
-}
-
-.home-container .roblox-news-feed-item a:hover {
-    text-decoration: underline;
-}
-
-.home-container .SeeMore {
-    color: #0066cc;
-    text-decoration: none;
-    font-size: 11px;
-}
-
-.home-container .see-more-img {
-    display: none; /* Hide broken image */
-}
-
-/* CSS-based arrow for See More links */
-.home-container .SeeMore::after,
-.home-container #SeeMoreRecent a::after {
-    content: "►";
-    font-size: 8px;
-    margin-left: 3px;
-    vertical-align: middle;
-}
-
-/* Best Friends */
-.home-container .best-friends-title {
-    float: left;
-    margin: 0 !important;
-    border: none !important;
-    padding-bottom: 0 !important;
-}
-
-.home-container .edit-friends-button {
-    float: right;
-}
-
-.home-container .edit-friends-button .btn-small {
-    font-size: 10px;
-    padding: 2px 8px;
-    background: #e0e0e0;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    color: #333;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.home-container .edit-friends-button .btn-small:hover {
-    background: #d0d0d0;
-}
-
-.home-container .best-friends-container {
-    margin-top: 10px;
-}
-
-.home-container .best-friends .user {
-    display: flex;
-    align-items: flex-start;
-    padding: 5px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.home-container .best-friends .user:last-child {
-    border-bottom: none;
-}
-
-.home-container .best-friends .user .roblox-avatar-image {
-    width: 48px;
-    height: 48px;
-    flex-shrink: 0;
-    margin-right: 8px;
-}
-
-.home-container .best-friends .user .roblox-avatar-image img {
-    width: 48px;
-    height: 48px;
-    border: 1px solid #ccc;
-}
-
-.home-container .best-friends .user .info {
-    flex: 1;
-    min-width: 0;
-    font-size: 11px;
-}
-
-.home-container .best-friends .user .info .name {
-    color: #0066cc;
-    text-decoration: none;
-    font-weight: bold;
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.home-container .best-friends .user .info .name:hover {
-    text-decoration: underline;
-}
-
-.home-container .best-friends .user .info .status {
-    color: #666;
-    font-style: italic;
-    font-size: 10px;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.home-container .best-friends .user .info img {
-    width: 10px;
-    height: 10px;
-    vertical-align: middle;
-    margin-right: 3px;
-}
-
-/* Stats Container */
-.home-container .stats-container {
-    font-size: 12px;
-}
-
-.home-container .stat-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 4px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.home-container .stat-row:last-child {
-    border-bottom: none;
-}
-
-.home-container .stat-label {
-    color: #666;
-}
-
-.home-container .stat-value {
-    font-weight: bold;
-    color: #333;
-}
-
-/* ============================================
-   MIDDLE COLUMN - Status & Feed
-   ============================================ */
-
-.home-container .middle-column {
-    overflow: hidden;
-    box-sizing: border-box;
-}
-
-.home-container .middle-column-box {
-    background: transparent;
-    margin-bottom: 10px;
-}
-
-/* Status Update Box */
-.home-container .status-update {
-    background: #e8f4fc;
-    border: 1px solid #b8d4e8;
-}
-
-.home-container .status-textbox {
-    width: calc(100% - 80px);
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    font-size: 12px;
-    float: left;
-    box-sizing: border-box;
-}
-
-.home-container .share-button {
-    float: right;
-    padding: 8px 15px;
-    background: linear-gradient(to bottom, #5c9fd4, #3a7ab0);
-    border: 1px solid #2a6a9f;
-    border-radius: 3px;
-    color: #fff;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.home-container .share-button:hover {
-    background: linear-gradient(to bottom, #6cafdf, #4a8ac0);
-}
-
-.home-container .status-update-image {
-    margin-left: 10px;
-    vertical-align: middle;
-}
-
-/* Feed Container */
-.home-container .feed-container h2 {
-    font-size: 30px;
-    font-weight: normal;
-    color: black;
-    margin: 0 0 10px 0;
-    padding: 0 0 5px 0;
-}
-
-.home-container #FeedPanel {
-    max-height: 600px;
-    overflow-y: auto;
-}
-
-/* Feed Items */
-.home-container .feed-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 10px 0;
-    background: #e8e8e8;
-    border-bottom: 1px solid #eee;
-}
-
-.home-container .feed-item:last-child {
-    border-bottom: none;
-}
-
-.home-container .feed-image-container {
-    width: 48px;
-    height: 48px;
-    flex-shrink: 0;
-    margin-right: 10px;
-}
-
-.home-container .feed-image-container img {
-    width: 48px;
-    height: 48px;
-    object-fit: cover;
-    border: 1px solid #ccc;
-}
-
-.home-container .feed-text-container {
-    flex: 1;
-    min-width: 0;
-    font-size: 12px;
-}
-
-.home-container .feed-text-container a {
-    color: #0066cc;
-    text-decoration: none;
-}
-
-.home-container .feed-text-container a:hover {
-    text-decoration: underline;
-}
-
-.home-container .Feedtext {
-    font-style: italic;
-    color: #333;
-    margin: 3px 0;
-}
-
-/* ============================================
-   RIGHT COLUMN - Recent Games
-   ============================================ */
-
-.home-container .right-column {
-    float: right;
-    width: 230px;
-    box-sizing: border-box;
-}
-
-.home-container .right-column-box {
-    background: #fff;
-    border: 1px solid #d4d4d4;
-    margin-bottom: 10px;
-    padding: 10px;
-}
-
-/* Recently Played & Recommended - transparent background like original */
-.home-container #RecentlyVisitedPlacesContainer,
-.home-container #RecommendedGamesContainer {
-    background: transparent;
-    border: none;
-    padding: 0;
-}
-
-.home-container .right-column-box h3 {
-    font-size: 15px;
-    font-weight: bold;
-    color: #363636;
-    margin: 0;
-    padding: 0 0 6px 0;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 10px;
-}
-
-/* Recent Place Container */
-.home-container .recent-place-container {
-    display: flex;
-    align-items: flex-start;
-    border-bottom: 1px solid #eee;
-}
-
-.home-container .recent-place-container:last-child {
-    border-bottom: none;
-}
-
-.home-container .recent-place-thumb {
-    width: 80px;
-    height: 45px;
-    flex-shrink: 0;
-    margin-right: 10px;
-}
-
-.home-container .recent-place-thumb img,
-.home-container .recent-place-thumb-img {
-    width: 80px;
-    height: 45px;
-    object-fit: cover;
-    border: 1px solid #ccc;
-}
-
-.home-container .recent-place-Info {
-    flex: 1;
-    min-width: 0;
-}
-
-.home-container .recent-place-name {
-    font-size: 11px;
-    font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.home-container .recent-place-name a {
-    color: #0066cc;
-    text-decoration: none;
-}
-
-.home-container .recent-place-name a:hover {
-    text-decoration: underline;
-}
-
-.home-container .recent-place-players-online {
-    font-size: 10px;
-    color: #666;
-    margin-top: 3px;
-}
-
-.home-container .recent-place-playtime {
-    font-size: 10px;
-    color: #999;
-    margin-top: 2px;
-}
-
-#SeeMoreRecent {
-    margin-top: 10px;
-    text-align: right;
-}
-
-#SeeMoreRecent a {
-    color: #0066cc;
-    text-decoration: none;
-    font-size: 11px;
-}
-
-#SeeMoreRecent a:hover {
-    text-decoration: underline;
-}
-
-/* ============================================
-   UTILITY CLASSES
-   ============================================ */
-
-.home-container .clear {
-    clear: both;
-}
-
-.home-container .text {
-    font-size: 12px;
-    color: #333;
-}
-
-.home-container .text-link {
-    color: #0066cc;
-    text-decoration: none;
-}
-
-.home-container .text-link:hover {
-    text-decoration: underline;
-}
-
-/* Group shout feed items */
-.home-container .feed-item-shout {
-    background: #fffef0;
-}
-
-/* Rovloo notification feed items */
-.home-container .feed-item-rovloo {
-    background: #f0f8ff;
-}
+/* ---- Headings: verbatim from the home capture's own main bundle
+   (reference/authentic-css/main-bundle-nov2013.css). Required because the 2011 AllCSS reset
+   (h1..h6{font-size:100%;font-weight:inherit}) loads AFTER the 2013 CSS and flattens every
+   heading on this page to 12px/normal. ---- */
+#page-myroblox h1, #page-myroblox h1 a, #page-myroblox h1 a:visited, #page-myroblox h1 a:active, #page-myroblox h1 a:link { font-size: 32px; font-weight: bold; margin: 12px 0 12px 0; color: #343434; letter-spacing: -1px; }
+#page-myroblox h2 .text, #page-myroblox h2 { font-size: 30px; font-weight: normal; color: #343434; letter-spacing: -1px; display: block; }
+#page-myroblox h3, #page-myroblox h3 a { font-size: 15px; font-weight: bold; color: #363636; display: block; }
+#page-myroblox .home-container h1 { display: block; }
+#page-myroblox .middle-column h2 { margin: 10px 0; }
+
+/* ---- Links, dividers, feed chrome: verbatim from main-bundle-nov2013.css. Re-asserted because
+   the 2011 AllCSS re-colours links and drops the divider rule. ---- */
+#page-myroblox a:link, #page-myroblox a:visited, #page-myroblox a:active { color: #095fb5; text-decoration: none; }
+#page-myroblox a:hover { text-decoration: underline; }
+#page-myroblox .text-link { font-weight: normal; text-decoration: none; color: #095fb5; }
+#page-myroblox .text-link:hover { text-decoration: underline; }
+#page-myroblox .divider-top { border-top: 1px solid #ccc; }
+#page-myroblox .divider-bottom { border-bottom: 1px solid #ccc; }
+#page-myroblox .error-message { color: black; background-color: #FAE5E5; border: solid 1px #c00; margin-bottom: 10px; text-align: left; padding: 3px 10px; }
+
+/* ---- OLD-GENERATION NEUTRALIZER ----------------------------------------------------------
+   The theme's own CSS/2013/page-2013.css ships the EARLIER (Nov-2013 "boxes") generation of many
+   of these selectors and loads before this file. Any property it sets that the 2014 generation
+   does NOT set will survive unless it is explicitly reset here — that is what made the avatar sit
+   off-centre (.user-avatar was still a 150x200 inline-block around a 210px image) and what hid
+   Recently Played entirely (.recent-place-container{display:none}, which the old markup countered
+   with an inline display:block that this generation doesn't use).
+   Found with scripts/css-generation-leak-audit.py — re-run it after any generation switch. ---- */
+#page-myroblox .user-avatar { display: block; width: auto; height: auto; }
+#page-myroblox .user-avatar-image { width: 210px; height: 210px; }
+#page-myroblox .user-avatar-container { padding: 0; }
+#page-myroblox .recent-place-container { display: block; }
+#page-myroblox .recent-place-thumb-img { padding: 0; }
+#page-myroblox .feed-container { float: none; }
+#page-myroblox .feed-report-abuse { padding: 0; }
+#page-myroblox .best-friends-title { margin-top: 0; }
+#page-myroblox .right-column { margin-left: 0; }
+#page-myroblox .right-column-box { overflow: visible; }
+
+/* ---- Layout: columns joined by rules, sections divided by border-top ---- */
+#page-myroblox .home-container { margin-left: 10px; }
+#page-myroblox .left-column { width: 230px; float: left; border-right: 1px solid #ccc; }
+/* `border:none;margin:0` first: the theme's own page-2013.css ships the OLDER generation of this
+   selector (border:1px solid #ccc + margin-bottom:5px) and loads earlier, so without an explicit
+   reset the other three sides and the 5px gap survive — which is exactly what made the column
+   read as separate boxes instead of one connected column. */
+#page-myroblox .left-column-boxes { border: none; margin: 0; padding: 10px; overflow: hidden; border-top: 1px solid #ccc; }
+#page-myroblox .middle-column { margin-left: 10px; padding-right: 10px; float: left; width: 460px; border-right: 1px solid #ccc; }
+#page-myroblox .middle-column-box { overflow: hidden; }
+#page-myroblox .right-column { float: left; width: 230px; }
+#page-myroblox .right-column-box { border: none; margin: 0; padding: 10px; border-top: 1px solid #ccc; }
+#page-myroblox .no-top-border { border-top: none !important; }
+#page-myroblox .clear { clear: both; }
+
+/* ---- Avatar: 210x210 square in a centred 210px holder (the 150x200 portrait is the older gen) ---- */
+#page-myroblox .user-avatar-holder { margin: 0 auto; position: relative; width: 210px; }
+#page-myroblox .user-avatar img { height: 210px; width: 210px; }
+#page-myroblox .user-avatar-text { padding-top: 10px; }
+#page-myroblox .user-avatar-container { text-align: center; }
+#page-myroblox .user-avatar-overlay-image { position: absolute; left: 0; bottom: 0; }
+
+/* ---- Roblox News ---- */
+#page-myroblox .news-container { margin-top: 6px; }
+#page-myroblox .roblox-news-feed { margin-bottom: 15px; }
+#page-myroblox .roblox-news-feed-item { background: url('../images/BulletPointArrow.png') no-repeat 0 5px; padding-left: 15px; margin-bottom: 10px; }
+#page-myroblox .see-more-img { width: 9px; height: 9px; margin-left: 5px; }
+
+/* ---- My Best Friends ---- */
+#page-myroblox .best-friends-container { margin-top: 9px; }
+#page-myroblox .best-friends-title { float: left; }
+#page-myroblox .edit-friends-button { float: right; margin-right: 4px; }
+#page-myroblox .best-friends { font-family: Arial, sans-serif; font-size: 12px; }
+#page-myroblox .best-friends .user { margin: 10px 0; }
+#page-myroblox .best-friends .user .avatar-image-link { float: left; }
+#page-myroblox .best-friends .user .avatar-image-link img { height: 48px; width: 48px; }
+#page-myroblox .best-friends .user .info { float: left; width: 144px; margin-left: 5px; margin-top: 5px; }
+#page-myroblox .best-friends .user .info img { height: 9px; width: 9px; margin-right: 2px; }
+#page-myroblox .best-friends .user .name { font-weight: bold; }
+#page-myroblox .best-friends .user .status { color: #000; margin-top: 5px; word-wrap: break-word; overflow-x: hidden; }
+
+/* ---- Feed: full-width rows (no float in this generation) ---- */
+#page-myroblox .feed-container { padding: 10px 0; width: 100%; margin-right: 10px; }
+#page-myroblox .feed-image-container { float: left; padding: 0 5px 5px 5px; }
+#page-myroblox .feed-text-container { float: left; width: 380px; overflow-x: hidden; word-wrap: break-word; }
+#page-myroblox .feed-report-abuse { float: left; }
+#page-myroblox .feed-asset-image { width: 50px; }
+/* Fallback ROBLOX mark. Now backed by a high-res source, so this is a DOWNSCALE (100px asset ->
+   50px slot) and the browser's default smooth interpolation is the correct filter — the earlier
+   `image-rendering: pixelated` + 2x integer snap existed only to make a 24px source survive being
+   blown UP, and would now throw away detail. Square source, so it fills the slot exactly.
+   Asset regenerated from images/Icons/roblox-icon-hq.png (2091x2090) with:
+     python -c "from PIL import Image; Image.open('images/Icons/roblox-icon-hq.png').convert('RGBA')       .resize((100,100), Image.LANCZOS).save('images/Icons/roblox-icon-feed.png', optimize=True)"
+   */
+#page-myroblox .feed-fallback-icon { width: 50px; height: 50px; }
+#page-myroblox .feed-image-container img { max-width: 50px; }
+#page-myroblox #FeedificationsContainer { float: left; width: 470px; }
+
+/* ---- Recently Played Games ---- */
+#page-myroblox .recent-place-container { margin-bottom: 12px; overflow: hidden; }
+#page-myroblox .recent-place-thumb { float: left; margin-right: 8px; }
+#page-myroblox .recent-place-link { font: bold 12px Arial; display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+#page-myroblox .recent-place-players-online { color: #666; }
+#page-myroblox .recent-place-thumb-img { width: 50px; height: 31px; }
+#page-myroblox .recent-place-thumb-ps-overlay { vertical-align: bottom; padding-left: 2px; }
+/* Rovloo extra: playtime line under the player count (2013/14 had no equivalent) */
+#page-myroblox .recent-place-playtime { color: #666; }
+
+/* ---- Status update box (markup omitted — no status API; kept so it can be restored) ---- */
+#page-myroblox .status-update { padding: 5px; background-color: #e6e6e6; }
+#page-myroblox .status-textbox { width: 360px; float: left; }
+#page-myroblox .share-button { padding: 0 20px !important; float: right; }
+#page-myroblox .status-update-image { margin: 5px; }
 
 /* =====================================================================================
    2013 LANDING (logged-out index) — faithful port of reference/archive-landing-2013.html.

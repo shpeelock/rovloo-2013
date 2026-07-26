@@ -1,9 +1,69 @@
-
+/**
+ * ROBLOX Thanksgiving 2013 site theme — VERBATIM port.
+ *
+ * Source: the real /CSS/Themes/Thanksgiving2013/Thanksgiving2013.css (saved at
+ * reference/seasonal/thanksgiving2013.css; found via a CDX prefix scan of /CSS/Themes/, which also
+ * turned up Halloween2013 and Holiday2013). Assets fetched from the 2013 CDN:
+ *   images/Themes/Thanksgiving2013/nav-bar-bkg.png  (5x36 header tile over #8D4A00)
+ *   images/Themes/Thanksgiving2013/leaves.png       (750x13 leaf strip, bottom-centre of the nav)
+ *   images/Themes/Thanksgiving2013/nav-logo.png     (116x70 logo sprite: normal / hover)
+ *
+ * The real theme is a brown header with a leaf strip along its bottom edge, a brown page, and a
+ * lightened nav-link colour. The previous version of this file was the 2011 theme
+ * (t11_background_5.jpg / t11_headerimg.jpg on #HeaderContainer — a 2011-only element), so it did
+ * essentially nothing here beyond tinting the page background.
+ *
+ * Adaptations, all mechanical:
+ *   - every rule is scoped to body.thanksgiving-theme (the SPA toggles a body class instead of
+ *     swapping stylesheets, which is how the real site applied the theme);
+ *   - `html{background-color:#6F3800}` becomes the body rule (same painted surface here);
+ *   - the real `#Footer.footer-container` class is not in our markup, so the footer rules target
+ *     `#Footer` directly — same elements, same values;
+ *   - !important is required on the header/logo backgrounds because styles/2013-layout.css sets
+ *     those with !important and loads earlier.
+ */
 
 body.thanksgiving-theme {
-  background: url('../assets/backgrounds/t11_background_5.jpg') top center repeat-x #470801 !important;
+    background-color: #6F3800 !important;
 }
 
-body.thanksgiving-theme #HeaderContainer {
-  background: url('../assets/backgrounds/t11_headerimg.jpg') no-repeat scroll 0 0 transparent !important;
+body.thanksgiving-theme .site-header {
+    background: url('../images/Themes/Thanksgiving2013/nav-bar-bkg.png') #8D4A00 !important;
+}
+
+body.thanksgiving-theme #navigation-container {
+    background-image: url('../images/Themes/Thanksgiving2013/leaves.png');
+    background-repeat: no-repeat;
+    background-position: bottom center;
+}
+
+body.thanksgiving-theme #navigation-container a.btn-logo,
+body.thanksgiving-theme #navigation-container a.btn-logo:visited {
+    background: url('../images/Themes/Thanksgiving2013/nav-logo.png') !important;
+}
+
+body.thanksgiving-theme #navigation-container a.btn-logo:hover {
+    background: url('../images/Themes/Thanksgiving2013/nav-logo.png') !important;
+    background-position: 0 35px !important;
+}
+
+body.thanksgiving-theme #navigation-container .HeaderDivider {
+    border-left: 1px solid #B18C66;
+}
+
+body.thanksgiving-theme #navigation-menu a {
+    color: #eee;
+}
+
+body.thanksgiving-theme #Footer {
+    color: #555;
+    background-color: #6F3800;
+}
+
+body.thanksgiving-theme #Footer div.legal {
+    border-color: white;
+}
+
+body.thanksgiving-theme #Footer p.Legalese {
+    color: #999;
 }
